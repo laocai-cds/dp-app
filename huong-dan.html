@@ -1,0 +1,65 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Hướng dẫn sử dụng - Đồng bộ đảng phí</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,"Segoe UI",sans-serif;color:#1b2b44;background:#eef3fa}
+header{background:#0f3a6e;color:#fff;padding:16px 26px;position:sticky;top:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+header h1{margin:0;font-size:19px}header p{margin:3px 0 0;opacity:.85;font-size:13px}
+main{max-width:860px;margin:0 auto;padding:18px 22px 40px}
+section{background:#fff;border-radius:12px;padding:14px 20px;margin:14px 0;box-shadow:0 1px 4px rgba(15,58,110,.12)}
+h2{margin:0 0 8px;font-size:16.5px;color:#0f3a6e}h2 span{display:inline-block;background:#0f3a6e;color:#fff;border-radius:50%;width:24px;height:24px;line-height:24px;text-align:center;font-size:13px;margin-right:8px}
+ol,ul{margin:6px 0 4px;padding-left:22px}li{margin:3px 0}
+.b{display:inline-block;background:#e07b00;color:#fff;font-weight:700;border-radius:6px;padding:0 8px;font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.g{display:inline-block;background:#169a4a;color:#fff;font-weight:700;border-radius:6px;padding:0 8px;font-size:13px}
+.k{display:inline-block;background:#e8f1ff;color:#0f3a6e;font-weight:700;border-radius:6px;padding:0 8px;font-size:13px;border:1px solid #c5d8f5}
+.warn{background:#fff6e5;border-left:4px solid #e07b00;padding:8px 12px;border-radius:6px;margin:8px 0}
+.ok{background:#e9f8ef;border-left:4px solid #169a4a;padding:8px 12px;border-radius:6px;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #d6e0ef;padding:6px 9px;text-align:left;vertical-align:top}th{background:#eaf1fb}
+</style></head><body>
+<header><h1>📖 Hướng dẫn sử dụng — Đồng bộ đảng phí gqtthc → Google Sheet</h1><p>Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai</p></header>
+<main>
+
+<section><h2><span>1</span>Lấy số liệu một xã (cách dùng hằng ngày)</h2>
+<ol>
+<li>Trong khung gqtthc ở bên dưới, <b>đăng nhập</b> bằng tài khoản của bạn (ứng dụng nhớ phiên đăng nhập).</li>
+<li>Bấm nút ĐP (màu cam) của xã, ví dụ <span class="b">ĐP Võ Lao</span>.</li>
+<li>Lần đầu, ứng dụng hỏi <b>mã đồng bộ</b> của xã: nhập mã rồi bấm OK (mã được nhớ trên máy, lần sau không hỏi nữa).</li>
+<li>Chọn tháng nếu được hỏi. Chờ khung xanh ở góc phải trang báo <b>✅ HOÀN THÀNH</b>. Máy chủ gqtthc có thể mất 1–2 phút.</li>
+</ol>
+<div class="ok">Bấm xong thấy khung đỏ "đã gửi … nhưng chưa thấy Google Sheet cập nhật": thường là <b>mã đồng bộ sai</b>. Bấm lại nút xã đó, ứng dụng sẽ hỏi lại mã.</div></section>
+
+<section><h2><span>2</span>Lấy nhiều xã một lúc (chế độ quản trị)</h2>
+<ol>
+<li>Tích ô vuông cạnh các xã cần lấy (hoặc tích <span class="k">Chọn tất cả</span>).</li>
+<li>Chọn <b>tháng</b>.</li>
+<li>Bấm <span class="g">▶ Lấy dữ liệu các xã đã chọn</span>. Ứng dụng chạy lần lượt từng xã và báo kết quả cuối cùng.</li>
+<li>Muốn dừng giữa chừng: bấm <b>■ Dừng</b> trên thanh công cụ.</li>
+</ol>
+<div class="warn">Có thể thu nhỏ cửa sổ khi đang chạy, nhưng <b>đừng đóng hẳn ứng dụng</b>. Xã nào chưa có mã thì bị bỏ qua, bấm riêng nút xã đó một lần để nhập mã.</div></section>
+
+<section><h2><span>3</span>Mã đồng bộ: mã chung và mã riêng</h2>
+<table><tr><th>Loại mã</th><th>Dùng khi nào</th></tr>
+<tr><td><b>Mã riêng</b> của từng xã</td><td>Nhập khi bấm nút xã. Chỉ dùng cho xã đó.</td></tr>
+<tr><td><b>Mã chung</b></td><td>Nhập vào ô <b>Mã chung</b> ở hàng Quản trị rồi bấm <span class="k">Lưu mã chung</span>. Dấu <b style="color:#169a4a">✓</b> xanh báo đã lưu. Xã nào chưa có mã riêng sẽ dùng mã chung. Nếu cấu hình qua Apps Script <b>DP-CHUNG</b>, một mã chung dùng được cho tất cả xã.</td></tr></table>
+<ul><li>Muốn xóa mã chung: xóa trống ô rồi bấm Lưu mã chung.</li><li>Nhập sai mã riêng: bấm lại nút xã (ứng dụng hỏi lại), hoặc xóa thư mục <code>%APPDATA%\DP-DangPhi</code> rồi nhập lại.</li></ul></section>
+
+<section><h2><span>4</span>Tự động lấy dữ liệu</h2>
+<p><b>🔁 Tự động lấy dữ liệu (API đảng phí): mỗi [N] phút</b></p>
+<ul><li>Tích xã cần chạy, tích ô 🔁, nhập số phút (<b>tối thiểu 5</b>; nên 15–30 phút nếu nhiều xã).</li><li>Mỗi N phút ứng dụng tự lấy số liệu các xã đã tích rồi đẩy lên Google Sheet. Lần đầu chạy sau N phút kể từ lúc bật.</li></ul>
+<p><b>⏰ Tự chạy hằng ngày lúc [giờ]</b></p>
+<ul><li>Tích xã, tích ô ⏰, chọn giờ (ví dụ 06:00). Chỉ chạy trong 3 giờ sau giờ hẹn, mỗi ngày một lần.</li><li>Tích <b>Tự mở cùng Windows</b> để ứng dụng tự bật khi mở máy.</li><li><span class="k">Chạy thử ngay</span> để kiểm tra; <span class="k">Xem nhật ký</span> để xem kết quả các lần chạy.</li></ul>
+<div class="warn">Điều kiện: máy <b>luôn bật</b>, ứng dụng <b>đang mở</b> và <b>đã đăng nhập gqtthc</b>. Nếu gqtthc hết phiên đăng nhập thì cần đăng nhập lại.</div></section>
+
+<section><h2><span>5</span>Cập nhật phiên bản mới</h2>
+<ul><li>Góc trên bên trái ghi <b>"Phiên bản mới nhất: …"</b> (xanh = bạn đang dùng bản mới nhất, vàng = còn bản mới hơn).</li><li>Bấm <span class="k">Kiểm tra cập nhật</span>. Nút sẽ báo "Đã là bản mới nhất" hoặc "Có bản mới", rồi hiện nút <span class="g">⬇ Cập nhật lên bản …</span>.</li><li>Bấm nút xanh và đồng ý: ứng dụng tự tải, đóng, mở lại bằng phiên bản mới (cài đặt và mã được giữ nguyên).</li><li>Nên cập nhật khi <b>không đang chạy lấy số liệu</b>.</li></ul></section>
+
+<section><h2><span>6</span>Xử lý sự cố thường gặp</h2>
+<table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
+<tr><td>Chưa đăng nhập / không thấy tiến độ</td><td>Đăng nhập lại gqtthc trong khung bên dưới, bấm <span class="k">Trang gqtthc</span> hoặc <span class="k">Tải lại</span> rồi bấm lại nút xã.</td></tr>
+<tr><td>Lỗi 500 / 504, API chậm</td><td>Máy chủ gqtthc đang bận. Ứng dụng tự thử lại tối đa 3 lần. Nếu vẫn lỗi, chạy lại vào giờ ít người dùng (sáng sớm, trưa).</td></tr>
+<tr><td>"Đã gửi … nhưng chưa thấy Google Sheet cập nhật"</td><td>Mã đồng bộ sai. Bấm lại nút xã và nhập đúng mã.</td></tr>
+<tr><td>Nút xã báo "chưa có mã"</td><td>Bấm riêng nút xã đó một lần để nhập mã, hoặc lưu Mã chung.</td></tr>
+<tr><td>Muốn xem lịch sử các lần chạy</td><td>Bấm <span class="k">Xem nhật ký</span> (mở bằng Notepad).</td></tr></table></section>
+
+<section><h2><span>7</span>Cài đặt</h2>
+<ul><li><b>Bản một file:</b> tải <b>DP-DangPhi-Setup.exe</b> ở trang Releases của github.com/laocai-cds/dp-app, bấm đôi để cài (không cần quyền admin). Mở bằng biểu tượng DP-DangPhi ngoài Desktop hoặc trong Start.</li><li>Windows có thể cảnh báo: bấm <b>More info → Run anyway</b>.</li></ul></section>
+
+</main></body></html>

@@ -39,6 +39,12 @@ if(!window.__dpCancelInit){window.__dpCancelInit=1;window.__dpCancelled=false;wi
  new MutationObserver(()=>{document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px'&&true)addX(d)})}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});}
 new MutationObserver(()=>{if(!window.__dpMonth)return;const ov=[...document.querySelectorAll('div')].find(d=>d.querySelector&&d.querySelector('select')&&d.querySelector('[data-ok]'));if(ov&&!ov.__auto){ov.__auto=1;const sel=ov.querySelector('select');const o=[...sel.options].find(x=>x.value===window.__dpMonth);if(o)sel.value=o.value;setTimeout(()=>{const b=ov.querySelector('[data-ok]');if(b)b.click()},300)}}).observe(document.documentElement,{childList:true,subtree:true});
 window.__dpCancelled=false;})();\n`;
+let helpWin=null;
+ipcMain.handle('help:open',()=>{
+  if(helpWin&&!helpWin.isDestroyed()){helpWin.show();helpWin.focus();return true}
+  helpWin=new BrowserWindow({width:900,height:780,parent:win,title:'Hướng dẫn sử dụng - Đồng bộ đảng phí',icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{sandbox:true}});
+  helpWin.setMenuBarVisibility(false);helpWin.loadFile('huong-dan.html');
+  helpWin.on('closed',()=>{helpWin=null});return true});
 ipcMain.handle('bar',(e,h)=>{const n=Math.round(Math.min(Math.max(+h||0,60),520));if(n!==BAR){BAR=n;try{layout()}catch(_){}}return true});
 function layout(){const [w,h]=win.getContentSize();view.setBounds({x:0,y:BAR,width:w,height:Math.max(100,h-BAR)})}
 function createWindow(){
