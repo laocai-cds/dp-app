@@ -151,7 +151,7 @@ async function runBatchMain(ids,label){
 function tickSched(){
   const s=readSched();
   /* tự động lấy dữ liệu định kỳ: cứ mỗi N phút chạy các xã đã tích */
-  if(s.everyOn&&!schedBusy&&s.ids.length&&Date.now()-lastActive>180000&&Date.now()-(s.lastEvery||0)>=Math.max(15,+s.everyMins||60)*60000){
+  if(s.everyOn&&!schedBusy&&s.ids.length&&Date.now()-lastActive>180000&&Date.now()-(s.lastEvery||0)>=Math.max(5,+s.everyMins||60)*60000){
     s.lastEvery=Date.now();writeSched(s);schedBusy=true;
     runBatchMain(s.ids,'🔁 Tự động').finally(()=>{schedBusy=false});return}if(!s.enabled||schedBusy||!s.ids.length)return;
   const now=new Date(),today=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
@@ -161,7 +161,7 @@ function tickSched(){
   runBatchMain(s.ids,'⏰ Tự chạy').finally(()=>{schedBusy=false});
 }
 ipcMain.handle('sched:get',()=>readSched());
-ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin,everyOn:!!o.everyOn,everyMins:Math.min(1440,Math.max(15,parseInt(o.everyMins)||60))});if(!old.everyOn&&s.everyOn)s.lastEvery=Date.now();if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
+ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin,everyOn:!!o.everyOn,everyMins:Math.min(1440,Math.max(5,parseInt(o.everyMins)||60))});if(!old.everyOn&&s.everyOn)s.lastEvery=Date.now();if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
 ipcMain.handle('sched:runnow',async()=>{const s=readSched();if(schedBusy||!s.ids.length)return false;schedBusy=true;try{await runBatchMain(s.ids,'⏰ Chạy thử')}finally{schedBusy=false}return true});
 ipcMain.handle('log:add',(e,t)=>{log(String(t).slice(0,600));return true});
 ipcMain.handle('sched:openlog',async()=>{const f=logFile();try{if(!fs.existsSync(f))fs.writeFileSync(f,'Nhật ký chạy ĐP (chưa có lần chạy nào)\n')}catch(err){}return await shell.openPath(f)||f});
