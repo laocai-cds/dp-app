@@ -38,7 +38,7 @@ function parseDp(raw){
   if(!/^[\w.-]+$/.test(String(C.k))||!/^[\w.-]+$/.test(String(C.src)))throw new Error('Thông số nút ĐP không hợp lệ.');
   return C;
 }
-ipcMain.handle('xa:add',(e,raw)=>{
+function addXaCore(raw){
   try{const C=parseDp(raw);
     const dup=cfg.xa.find(x=>x.arg&&typeof x.arg==='object'&&(x.arg.src===C.src||x.arg.ep===C.ep));
     if(dup)return{err:'Xã này đã có nút "'+dup.label+'" trong app.'};
@@ -48,7 +48,9 @@ ipcMain.handle('xa:add',(e,raw)=>{
     const ent={id,label,fn:'apiBookmarklet',file:'bm/xuanhoa.js',key:C.k,arg,extra:true};
     const a=readExtra().filter(x=>x.id!==id);a.push(ent);writeExtra(a);log('Thêm nút '+label+' (kéo từ website xã)');
     return{ok:true,label}}catch(err){return{err:String(err&&err.message||err)}}
-});
+}
+ipcMain.handle('xa:add',(e,raw)=>addXaCore(raw));
+ipcMain.on('xa:add:internal',(e,raw)=>{const r=addXaCore(raw);try{win.webContents.send('xaadded',r)}catch(_){}});
 ipcMain.handle('xa:remove',(e,id)=>{const a=readExtra();if(!a.some(x=>x.id===id))return{err:'Chỉ gỡ được nút do bạn tự thêm.'};writeExtra(a.filter(x=>x.id!==id));const c=readCodes();delete c[id];writeCodes(c);return{ok:true}});
 loadExtra();
 const xaList=()=>cfg.xa.filter(x=>!cfg.only||x.id===cfg.only);
@@ -88,6 +90,11 @@ function createWindow(){
   view=new WebContentsView({webPreferences:{partition:'persist:gqtthc',contextIsolation:true,backgroundThrottling:false}});
   win.contentView.addChildView(view);layout();win.on('resize',layout);
   view.webContents.on('will-navigate',(e,u)=>{if(!/^https?:/i.test(u))e.preventDefault()});
+  /* kéo nút ĐP từ website xã thả thẳng vào khung gqtthc cũng được */
+  const DROPJS="(()=>{if(window.__dpDrop)return;window.__dpDrop=1;const g=(dt,k)=>{try{return dt.getData(k)||''}catch(e){return''}};const t=dt=>g(dt,'text/uri-list')||g(dt,'URL')||g(dt,'text/plain');const ok=dt=>/apiBookmarklet|^javascript:/i.test(t(dt));addEventListener('dragover',e=>{if(e.dataTransfer&&(e.dataTransfer.types||[]).some(x=>/uri-list|text\\/plain|URL/.test(x))){e.preventDefault();e.stopPropagation()}},true);addEventListener('drop',e=>{const x=t(e.dataTransfer);if(!/apiBookmarklet|^javascript:/i.test(x))return;e.preventDefault();e.stopPropagation();console.log('\\u0001DPADD\\u0001'+x)},true)})();void 0";
+  view.webContents.on('dom-ready',()=>{try{view.webContents.executeJavaScript(DROPJS)}catch(_){}});
+  view.webContents.on('console-message',(e,level,message)=>{const m=String((e&&e.message)||message||'');if(m.charAt(0)!=='\u0001'||m.indexOf('\u0001DPADD\u0001')!==0)return;
+    ipcMain.emit('xa:add:internal',null,m.slice(7))});
   view.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/[^/]*dcs\.vn\//.test(url))view.webContents.loadURL(url);else shell.openExternal(url);return{action:'deny'}});
   view.webContents.loadURL(cfg.home);
   view.webContents.on('did-fail-load',(e,c,d)=>{if(c!==-3)win.webContents.send('status','Không mở được trang: '+d)});

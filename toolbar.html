@@ -47,6 +47,7 @@ async function batch(){const ids=[...document.querySelectorAll('#xs input[type=c
   if(r.err){res.push('✕ '+label(id)+': '+r.err);if(/đăng nhập/.test(r.err))break;continue}
   if(r.result==='done')res.push('✅ '+label(id));else if(r.result==='stop'||r.result==='cancel'){res.push('■ '+label(id)+': đã hủy');break}else res.push('✕ '+label(id)+': '+(r.msg||'lỗi').slice(0,70))}
  $('go').disabled=false;$('stop').style.display='none';$('prog').textContent='';st('Xong lô: '+res.join(' · '));api.addLog('Chạy tay — '+res.join(' · '))}
+api.onXaAdded(r=>{if(r.err){st('⚠ '+r.err)}else{st('✅ Đã thêm nút '+r.label+'. Đang tải lại…');setTimeout(()=>location.reload(),700)}});
 async function addXa(t){const r=await api.xaAdd(t);if(r.err){st('⚠ '+r.err);return false}st('✅ Đã thêm nút '+r.label+'. Đang tải lại…');setTimeout(()=>location.reload(),700);return true}
 $('addxa').onclick=()=>{mode='xa';cur=null;$('ask').style.display='flex';$('code').value='';$('code').type='text';$('code').placeholder='Dán mã dấu trang ĐP của website xã (hoặc kéo nút ĐP thả vào thanh này)';$('code').focus();st('Kéo nút "ĐP" từ website xã thả vào thanh này, hoặc dán mã dấu trang vào ô bên dưới rồi bấm Lưu.')};
 const dropTxt=dt=>{const g=k=>{try{return dt.getData(k)||''}catch(e){return''}};return g('text/uri-list')||g('URL')||g('text/plain')||g('text/html')};
