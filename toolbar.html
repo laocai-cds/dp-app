@@ -22,7 +22,7 @@ let mode='code';
 async function run(id,code,apiUrl){st('Đang chạy… xem tiến độ ở góc phải khung gqtthc');const r=await api.run(id,code,apiUrl);
  if(r.need){cur=id;mode=r.need;$('ask').style.display='flex';$('code').value='';$('code').type=mode==='api'?'text':'password';$('code').placeholder=mode==='api'?'Dán địa chỉ Apps Script (…/exec) của trang tthc':'Nhập mã đồng bộ (chỉ nhập 1 lần)';$('code').focus();st(mode==='api'?'Cần địa chỉ Apps Script đảng phí (lưu 1 lần)':'Nhập mã đồng bộ của xã này');return}
  $('ask').style.display='none';if(r.err)st('⚠ '+r.err);else st('Đã chạy. Chờ thông báo HOÀN THÀNH ở góc phải trang (máy chủ gqtthc có thể mất 1–2 phút).')}
-(async()=>{const c=await api.init();$('t').textContent=c.title+'  (v'+c.ver+')';
+(async()=>{const c=await api.init();window.__ttl=c.title+'  (v'+c.ver+')';$('t').textContent=window.__ttl;
  ADM=c.admin;XA=c.xa;
  c.xa.forEach(x=>{const w=document.createElement('span');w.className='g';if(ADM){const k=document.createElement('input');k.type='checkbox';k.dataset.id=x.id;k.title='Chọn để lấy hàng loạt';w.appendChild(k)}
   const b=document.createElement('button');b.className='xa';b.textContent=x.label;b.onclick=()=>run(x.id);w.appendChild(b);$('xs').appendChild(w)});
@@ -49,7 +49,7 @@ $('ok').onclick=()=>{const v=$('code').value.trim();if(!v)return;mode==='api'?ru
 $('no').onclick=()=>{$('ask').style.display='none';st('Đã hủy')};
 $('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);new ResizeObserver(()=>api.bar(document.body.getBoundingClientRect().height)).observe(document.body);
 let upBtn=null;
-api.onUpdate(u=>{if(upBtn)upBtn.remove();upBtn=document.createElement('button');upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;upBtn.style.cssText='background:#2ecc71;color:#062';
+api.onUpdate(u=>{try{const t=$('t');t.textContent=(window.__ttl||t.textContent)+'  —  ';const b=document.createElement('span');b.textContent='Phiên bản mới: '+u.ver;b.style.cssText='background:#ffd23f;color:#3b2a00;border-radius:6px;padding:1px 8px;font-size:.85em';t.appendChild(b)}catch(e){}if(upBtn)upBtn.remove();upBtn=document.createElement('button');upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;upBtn.style.cssText='background:#2ecc71;color:#062';
  upBtn.onclick=async()=>{if(!confirm('Cập nhật lên bản '+u.ver+'? Ứng dụng sẽ tự đóng và mở lại. Cài đặt và mã đồng bộ được giữ nguyên.'))return;upBtn.disabled=true;const r=await api.updInstall();if(r&&r.err){st('⚠ '+r.err);upBtn.disabled=false;if(confirm('Không cập nhật tự động được. Mở trang tải về trên GitHub?'))api.open(u.url)}};$('upd').before(upBtn)});
 $('upd').onclick=async()=>{st('Đang kiểm tra bản mới trên GitHub…');const r=await api.updCheck();st(r.r==='new'?'Có bản mới — bấm nút xanh "Cập nhật"':r.r==='same'?'Bạn đang dùng bản mới nhất (v'+r.cur+')':'Không kiểm tra được (mạng hoặc GitHub chưa có release)')};
 </script>
