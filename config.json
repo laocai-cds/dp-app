@@ -36,6 +36,7 @@
       "key": "xh_apipw",
       "arg": {
         "pid": 2122408,
+        "cid": 2124942,
         "name": "Đảng bộ xã Xuân Hòa",
         "max": 0,
         "k": "xh_apipw",
@@ -52,6 +53,7 @@
       "key": "pl_apipw",
       "arg": {
         "pid": 2122408,
+        "cid": 2124890,
         "name": "Đảng bộ xã Púng Luông",
         "max": 0,
         "k": "pl_apipw",
@@ -98,6 +100,7 @@
       "key": "nd_apipw",
       "arg": {
         "pid": 2122408,
+        "cid": 2124794,
         "name": "Đảng bộ xã Nghĩa Đô",
         "max": 33,
         "k": "nd_apipw",
@@ -129,6 +132,7 @@
       "key": "pk_apipw",
       "arg": {
         "pid": 2122408,
+        "cid": 2124965,
         "name": "Đảng bộ xã Phúc Khánh",
         "max": 0,
         "k": "pk_apipw",
@@ -145,6 +149,7 @@
       "key": "sm_apipw",
       "arg": {
         "pid": 2122408,
+        "cid": 2124911,
         "name": "Đảng bộ xã Si Ma Cai",
         "max": 0,
         "skip0": true,
