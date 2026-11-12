@@ -35,6 +35,10 @@ jobs:
         continue-on-error: true
         shell: bash
         run: npx electron-builder --win nsis --x64 --publish never
+      - name: Bản cài có số phiên bản trong tên
+        continue-on-error: true
+        shell: bash
+        run: cp release/DP-DangPhi-Setup.exe "release/DP-DangPhi-Setup-v${{ steps.ver.outputs.v }}.exe"
       - name: Phát hành (tự tạo tag theo số phiên bản trong package.json)
         uses: softprops/action-gh-release@v2
         with:
@@ -46,4 +50,5 @@ jobs:
             app-electron-*.asar.bin
             dp-config.json
             release/DP-DangPhi-Setup.exe
+            release/DP-DangPhi-Setup-v*.exe
           generate_release_notes: true
