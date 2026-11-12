@@ -27,6 +27,7 @@ const XA = {
   'website-si-ma-cai-api': 'https://script.google.com/macros/s/AKfycbyb0fvQHdmdDwKMOnF4qM-K5CniGORlNzRKjKaxKe6Whc19PLj8myU3yQ7aiYXPYlcylQ/exec', // ĐP Si Ma Cai
   'website-tram-tau-api': 'https://script.google.com/macros/s/AKfycbyDJxQWv3T9ESqRZAPYhyP-HyKEIgJa3oxiYmG4qcs-RR-ha9gZb1374VxhAm3iWq_W/exec', // ĐP Trạm Tấu
   'website-vo-lao-api': 'https://script.google.com/macros/s/AKfycbyZuNu5E1HxfD7kAL195eZ2JpTaElgViDjGDHTauIhXpC7lnqjPixHd49VpuhsIbXmh/exec', // ĐP Võ Lao
+  'website-den-sang-api': 'https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec', // ĐP Dền Sáng
 };
 
 function datMa() {
@@ -43,6 +44,7 @@ function datMa() {
     'website-si-ma-cai-api': '', // ĐP Si Ma Cai
     'website-tram-tau-api': '', // ĐP Trạm Tấu
     'website-vo-lao-api': '', // ĐP Võ Lao
+    'website-den-sang-api': '', // ĐP Dền Sáng
   };
   const P = PropertiesService.getScriptProperties();
   if (CHUNG) P.setProperty('CHUNG_HASH', sha_(CHUNG));

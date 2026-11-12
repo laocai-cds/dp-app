@@ -188,6 +188,23 @@
         "m": true,
         "ep": "https://script.google.com/macros/s/AKfycbyZuNu5E1HxfD7kAL195eZ2JpTaElgViDjGDHTauIhXpC7lnqjPixHd49VpuhsIbXmh/exec"
       }
+    },
+    {
+      "id": "densang",
+      "label": "ĐP Dền Sáng",
+      "fn": "apiBookmarklet",
+      "file": "bm/densang.js",
+      "key": "ds_apipw",
+      "arg": {
+        "pid": 2122408,
+        "cid": 2124919,
+        "name": "Đảng bộ xã Dền Sáng",
+        "max": 0,
+        "k": "ds_apipw",
+        "src": "website-den-sang-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec"
+      }
     }
   ],
   "chung": "https://script.google.com/macros/s/AKfycbz_v6ANKDhIBofzmmCkG3WProojbstCCKk-zBUAEQP_B-ge-JVezdeQsevj_mQ-b8FO/exec"
