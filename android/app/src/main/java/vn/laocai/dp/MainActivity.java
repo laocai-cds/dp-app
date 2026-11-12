@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     JSONObject cfg;
     TextView status;
 
-    static final String BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{const B=window.__dpBatch;if(B){for(const ov of document.body.querySelectorAll(':scope>div')){if(/inset:\\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}}let y=14;const R=window.__dpRes=window.__dpRes||{};for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;const l=b.dataset.dplbl,bg=b.style.background||'';if(l){if(/15,\\s*138,\\s*60|0f8a3c/i.test(bg))R[l]='ok';else if(/165,\\s*13,\\s*38|a50d26/i.test(bg))R[l]='bad'}if(B){b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}}},250)})();";
+    static final String BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{const B=window.__dpBatch;if(B){for(const ov of document.body.querySelectorAll(':scope>div')){if(/inset:\\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}}let y=14;const R=window.__dpRes=window.__dpRes||{};for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;const l=b.dataset.dplbl,bg=b.style.background||'';const tx=(b.textContent||'').trim();if(l){if(/^✓/.test(tx))R[l]='ok';else if(/^[✕⚠]/.test(tx))R[l]='bad';else if(/15,\\s*138,\\s*60|0f8a3c/i.test(bg))R[l]='ok';else if(/165,\\s*13,\\s*38|a50d26/i.test(bg))R[l]='bad'}if(B){b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}}},250)})();";
     static final String PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();";
 
     @Override
@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
         root.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         row.addView(btn("⟳ Tải lại", 0xFF2E6BB0, Color.WHITE, v -> web.reload()), eq());
-        row.addView(btn("🔑 Mã chung", 0xFF2E6BB0, Color.WHITE, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
+        row.addView(btn("🔑 Mã", 0xFF2E6BB0, Color.WHITE, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
             sp.edit().putString("__all", c.trim()).apply();
             say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
         })), eq());
