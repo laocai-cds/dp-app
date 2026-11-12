@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     JSONObject cfg;
     TextView status;
 
-    static final String BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{if(!window.__dpBatch)return;for(const ov of document.body.querySelectorAll(':scope>div')){if(ov.style.inset==='0px'||/inset:\\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}let y=14;for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}},250)})();";
+    static final String BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{const B=window.__dpBatch;if(B){for(const ov of document.body.querySelectorAll(':scope>div')){if(/inset:\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}}let y=14;const R=window.__dpRes=window.__dpRes||{};for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;const l=b.dataset.dplbl,bg=b.style.background||'';if(l){if(/15,\s*138,\s*60|0f8a3c/i.test(bg))R[l]='ok';else if(/165,\s*13,\s*38|a50d26/i.test(bg))R[l]='bad'}if(B){b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}}},250)})();";
     static final String PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();";
 
     @Override
@@ -84,12 +84,15 @@ public class MainActivity extends Activity {
         row.setPadding(dp(4), 0, dp(4), dp(2));
         root.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        row.addView(btn("⟳  Tải lại", 0xFF2E6BB0, Color.WHITE, v -> web.reload()), eq());
-        row.addView(btn("🔑  Mã chung", 0xFF2E6BB0, Color.WHITE, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
+        row.addView(btn("⟳ Tải lại", 0xFF2E6BB0, Color.WHITE, v -> web.reload()), eq());
+        row.addView(btn("🔑 Mã chung", 0xFF2E6BB0, Color.WHITE, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
             sp.edit().putString("__all", c.trim()).apply();
             say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
         })), eq());
-        row.addView(btn("▼  Chọn ĐP xã", 0xFFE8831A, Color.WHITE, v -> pick()), eq());
+        pickBtn = btn("▼ Chọn ĐP", 0xFFE8831A, Color.WHITE, v -> pick());
+        row.addView(pickBtn, eq());
+        goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
+        row.addView(goBtn, eq());
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
             for (int i = 0; i < xa.length(); i++) {
@@ -195,21 +198,56 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this)
                 .setTitle("Chọn đơn vị để đồng bộ")
                 .setView(sv)
-                .setPositiveButton("▶ Chạy", (d, w) -> {
+                .setPositiveButton("Xong", null)
+                .setOnDismissListener(d -> {
                     chosen.clear();
-                    java.util.ArrayList<String> ids = new java.util.ArrayList<>();
-                    for (CheckBox c : cbs) if (c.isChecked()) { ids.add((String) c.getTag()); chosen.add((String) c.getTag()); }
-                    runSelected(ids);
+                    for (CheckBox c : cbs) if (c.isChecked()) chosen.add((String) c.getTag());
+                    pickBtn.setText(chosen.isEmpty() ? "▼ Chọn ĐP" : "▼ Đã chọn " + chosen.size());
                 })
-                .setNegativeButton("Đóng", null)
                 .show();
+    }
+
+    Button pickBtn, goBtn;
+    int runGen = 0;
+
+    void track(final java.util.ArrayList<String> ids) {
+        final int gen = ++runGen;
+        final int total = ids.size();
+        final long t0 = System.currentTimeMillis();
+        goBtn.setText("⏳ 0/" + total);
+        final android.os.Handler hh = new android.os.Handler();
+        hh.postDelayed(new Runnable() {
+            public void run() {
+                if (gen != runGen) return;
+                web.evaluateJavascript("JSON.stringify(window.__dpRes||{})", v -> {
+                    if (gen != runGen) return;
+                    int done = 0, bad = 0;
+                    try {
+                        JSONObject r = new JSONObject(new org.json.JSONTokener(v).nextValue().toString());
+                        for (String id : ids) {
+                            String st = r.optString(items.get(id).optString("label"), "");
+                            if (!st.isEmpty()) { done++; if (st.equals("bad")) bad++; }
+                        }
+                    } catch (Exception e) { }
+                    boolean fin = done >= total;
+                    boolean timeout = System.currentTimeMillis() - t0 > 240000;
+                    goBtn.setText((fin ? "✓ " : "⏳ ") + done + "/" + total + (fin ? " xong" : "") + (bad > 0 ? " (" + bad + " lỗi)" : ""));
+                    if (!fin && !timeout) hh.postDelayed(this, 1000);
+                });
+            }
+        }, 1500);
     }
 
     void runSelected(final java.util.ArrayList<String> ids) {
         if (ids.isEmpty()) { say("Chưa chọn đơn vị nào"); return; }
-        if (ids.size() == 1) { run(items.get(ids.get(0))); return; }
+        String u = web.getUrl();
+        if (u != null && u.startsWith("https://gqtthc.dcs.vn/")) {
+            web.evaluateJavascript(BATCH + "window.__dpRes={};window.__dpCur='';void 0", null);
+            track(ids);
+        }
+        if (ids.size() == 1) { web.evaluateJavascript("window.__dpBatch=false;window.__dpCur=" + JSONObject.quote(items.get(ids.get(0)).optString("label")) + ";void 0", null); run(items.get(ids.get(0))); return; }
         android.os.Handler h = new android.os.Handler();
-        web.evaluateJavascript(BATCH + "window.__dpBatch=true;void 0", null);
+        web.evaluateJavascript("window.__dpBatch=true;void 0", null);
         for (int i = 0; i < ids.size(); i++) {
             final String id = ids.get(i);
             h.postDelayed(() -> {

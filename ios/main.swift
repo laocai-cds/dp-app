@@ -14,6 +14,35 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
     var web: WKWebView!
     let status = UILabel()
     var ids: [String] = []
+    var pickBtn: UIButton!
+    var goBtn: UIButton!
+    var runGen = 0
+    let greenC = UIColor(red: 0.118, green: 0.557, blue: 0.243, alpha: 1)
+
+    func track(_ sel: [String]) {
+        runGen += 1
+        let gen = runGen
+        let total = sel.count
+        let t0 = Date()
+        goBtn.setTitle("⏳ 0/\(total)", for: .normal)
+        func tick() {
+            if gen != runGen { return }
+            web.evaluateJavaScript("JSON.stringify(window.__dpRes||{})") { [weak self] v, _ in
+                guard let s = self, gen == s.runGen else { return }
+                var done = 0, bad = 0
+                if let t = v as? String, let d = t.data(using: .utf8), let r = (try? JSONSerialization.jsonObject(with: d)) as? [String: String] {
+                    for id in sel {
+                        let l = (s.xitems[id]?["label"] as? String) ?? ""
+                        if let st = r[l] { done += 1; if st == "bad" { bad += 1 } }
+                    }
+                }
+                let fin = done >= total
+                s.goBtn.setTitle((fin ? "✓ " : "⏳ ") + "\(done)/\(total)" + (fin ? " xong" : "") + (bad > 0 ? " (\(bad) lỗi)" : ""), for: .normal)
+                if !fin && Date().timeIntervalSince(t0) < 240 { DispatchQueue.main.asyncAfter(deadline: .now() + 1) { tick() } }
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { tick() }
+    }
     var chosen = Set<String>()
     var xitems: [String: [String: Any]] = [:]
 
@@ -21,15 +50,20 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let t = PickVC(ids: ids, labels: ids.map { (xitems[$0]?["label"] as? String) ?? $0 }, chosen: chosen) { [weak self] sel in
             guard let s = self else { return }
             s.chosen = Set(sel)
-            s.runSelected(sel)
+            s.pickBtn.setTitle(sel.isEmpty ? "▼ Chọn ĐP" : "▼ Đã chọn \(sel.count)", for: .normal)
         }
         present(UINavigationController(rootViewController: t), animated: true)
     }
 
     func runSelected(_ sel: [String]) {
         if sel.isEmpty { return }
-        if sel.count == 1, let x = xitems[sel[0]] { run(x); return }
-        web.evaluateJavaScript(BATCH + "window.__dpBatch=true;void 0", completionHandler: nil)
+        web.evaluateJavaScript(BATCH + "window.__dpRes={};window.__dpCur='';void 0", completionHandler: nil)
+        track(sel)
+        if sel.count == 1, let x = xitems[sel[0]] {
+            web.evaluateJavaScript("window.__dpBatch=false;window.__dpCur=" + jsq((x["label"] as? String) ?? "") + ";void 0", completionHandler: nil)
+            run(x); return
+        }
+        web.evaluateJavaScript("window.__dpBatch=true;void 0", completionHandler: nil)
         for (n, id) in sel.enumerated() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 * Double(n)) { [weak self] in
                 guard let s = self, let x = s.xitems[id] else { return }
@@ -43,7 +77,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
     }
     var cfg: [String: Any] = [:]
     let ud = UserDefaults.standard
-    let BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{if(!window.__dpBatch)return;for(const ov of document.body.querySelectorAll(':scope>div')){if(ov.style.inset==='0px'||/inset:\\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}let y=14;for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}},250)})();"
+    let BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{const B=window.__dpBatch;if(B){for(const ov of document.body.querySelectorAll(':scope>div')){if(/inset:\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}}let y=14;const R=window.__dpRes=window.__dpRes||{};for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;const l=b.dataset.dplbl,bg=b.style.background||'';if(l){if(/15,\s*138,\s*60|0f8a3c/i.test(bg))R[l]='ok';else if(/165,\s*13,\s*38|a50d26/i.test(bg))R[l]='bad'}if(B){b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}}},250)})();"
     let PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();"
 
     func readAsset(_ rel: String) -> String? {
@@ -94,6 +128,8 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 12)
         let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 9); author.adjustsFontSizeToFitWidth = true
 
+        pickBtn = btn("▼ Chọn ĐP", orange, .white, 11) { [weak self] in self?.pick() }
+        goBtn = btn("▶ Chạy", greenC, .white, 11) { [weak self] in guard let s = self else { return }; s.runSelected(s.ids.filter { s.chosen.contains($0) }) }
         let ctl = hrow([
             btn("⟳  Tải lại", blue, .white, 11) { [weak self] in self?.web.reload() },
             btn("🔑  Mã chung", blue, .white, 11) { [weak self] in
@@ -101,7 +137,8 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
                 s.ask("Nhập Mã chung (lưu trên máy này)", true, s.ud.string(forKey: "__all") ?? "") { v in
                     s.ud.set(v, forKey: "__all"); s.say(v.isEmpty ? "Đã xóa mã chung" : "Đã lưu mã chung") }
             },
-            btn("▼  Chọn ĐP xã", orange, .white, 11) { [weak self] in self?.pick() }
+            pickBtn,
+            goBtn
         ])
 
         var rows: [UIView] = [title, author, ctl]
@@ -245,7 +282,7 @@ final class PickVC: UITableViewController {
         super.viewDidLoad()
         title = "Chọn đơn vị"
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Đóng", style: .plain, target: self, action: #selector(close))
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "▶ Chạy", style: .done, target: self, action: #selector(run))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Xong", style: .done, target: self, action: #selector(run))
     }
     @objc func close() { dismiss(animated: true) }
     @objc func run() {
