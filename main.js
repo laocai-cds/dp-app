@@ -121,12 +121,12 @@ ipcMain.handle('runWait',(e,{id,month})=>runWaitCore(id,month));
 
 /* ===== Hẹn giờ tự chạy hằng ngày ===== */
 const schedFile=()=>path.join(app.getPath('userData'),'schedule.json');
-const readSched=()=>{try{return Object.assign({enabled:false,time:'06:00',ids:[],openAtLogin:false,last:''},JSON.parse(fs.readFileSync(schedFile(),'utf8')))}catch(e){return{enabled:false,time:'06:00',ids:[],openAtLogin:false,last:''}}};
+const readSched=()=>{try{return Object.assign({enabled:false,time:'06:00',ids:[],openAtLogin:false,last:'',everyOn:false,everyMins:60,lastEvery:0},JSON.parse(fs.readFileSync(schedFile(),'utf8')))}catch(e){return{enabled:false,time:'06:00',ids:[],openAtLogin:false,last:'',everyOn:false,everyMins:60,lastEvery:0}}};
 const writeSched=o=>fs.writeFileSync(schedFile(),JSON.stringify(o));
 let blockId=null,schedBusy=false;
 function applySched(){const s=readSched();
-  if(s.enabled&&blockId===null)blockId=powerSaveBlocker.start('prevent-app-suspension');
-  if(!s.enabled&&blockId!==null){powerSaveBlocker.stop(blockId);blockId=null}
+  if((s.enabled||s.everyOn)&&blockId===null)blockId=powerSaveBlocker.start('prevent-app-suspension');
+  if(!s.enabled&&!s.everyOn&&blockId!==null){powerSaveBlocker.stop(blockId);blockId=null}
   try{app.setLoginItemSettings({openAtLogin:!!s.openAtLogin})}catch(e){}}
 const say=t=>{try{win.webContents.send('status',t)}catch(e){}};
 const logFile=()=>path.join(app.getPath('userData'),'lich-chay.log');
@@ -149,7 +149,11 @@ async function runBatchMain(ids,label){
   const t=label+' xong: '+res.join(' · ');say(t);log(t);return true;
 }
 function tickSched(){
-  const s=readSched();if(!s.enabled||schedBusy||!s.ids.length)return;
+  const s=readSched();
+  /* tự động lấy dữ liệu định kỳ: cứ mỗi N phút chạy các xã đã tích */
+  if(s.everyOn&&!schedBusy&&s.ids.length&&Date.now()-lastActive>180000&&Date.now()-(s.lastEvery||0)>=Math.max(15,+s.everyMins||60)*60000){
+    s.lastEvery=Date.now();writeSched(s);schedBusy=true;
+    runBatchMain(s.ids,'🔁 Tự động').finally(()=>{schedBusy=false});return}if(!s.enabled||schedBusy||!s.ids.length)return;
   const now=new Date(),today=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
   const [h,mi]=s.time.split(':').map(Number);const due=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,mi);
   if(s.last===today||now<due||now-due>3*3600*1000)return; /* chỉ chạy trong 3 giờ sau giờ hẹn */
@@ -157,7 +161,7 @@ function tickSched(){
   runBatchMain(s.ids,'⏰ Tự chạy').finally(()=>{schedBusy=false});
 }
 ipcMain.handle('sched:get',()=>readSched());
-ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin});if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
+ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin,everyOn:!!o.everyOn,everyMins:Math.min(1440,Math.max(15,parseInt(o.everyMins)||60))});if(!old.everyOn&&s.everyOn)s.lastEvery=Date.now();if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
 ipcMain.handle('sched:runnow',async()=>{const s=readSched();if(schedBusy||!s.ids.length)return false;schedBusy=true;try{await runBatchMain(s.ids,'⏰ Chạy thử')}finally{schedBusy=false}return true});
 ipcMain.handle('log:add',(e,t)=>{log(String(t).slice(0,600));return true});
 ipcMain.handle('sched:openlog',async()=>{const f=logFile();try{if(!fs.existsSync(f))fs.writeFileSync(f,'Nhật ký chạy ĐP (chưa có lần chạy nào)\n')}catch(err){}return await shell.openPath(f)||f});
