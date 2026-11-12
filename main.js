@@ -147,7 +147,7 @@ async function checkUpdate(){
     const j=await r.json();const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();
     const cmp=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1}return 0};
     const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
-    const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar$/.exec(a.name);return k&&k[1]===process.versions.electron});
+    const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar\.bin$/.exec(a.name);return k&&k[1]===process.versions.electron});
     const cf=(j.assets||[]).find(a=>a.name==='dp-config.json');
     if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);return 'new'}
     return 'same'}catch(e){return 'err'}
@@ -155,9 +155,9 @@ async function checkUpdate(){
 ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cur:app.getVersion()}});
 async function dl(url,file,label){
   const r=await net.fetch(url,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)throw new Error('Không tải được ('+r.status+')');
-  const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(file);
+  const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(file);let werr=null;out.on('error',e=>{werr=e});
   const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(total&&Date.now()-last>800){last=Date.now();say(label+': '+Math.round(got*100/total)+'% ('+(got/1048576).toFixed(1)+'/'+(total/1048576).toFixed(1)+' MB)')}}
-  await new Promise(z=>out.end(z));return got;
+  await new Promise(z=>out.end(z));if(werr)throw werr;return got;
 }
 ipcMain.handle('update:install',async()=>{
   if(!latest||(!latest.asset&&!latest.light))return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
@@ -167,7 +167,7 @@ ipcMain.handle('update:install',async()=>{
     let args,mode;
     if(latest.light){
       mode='nhẹ';
-      const asar=path.join(os.tmpdir(),'dp-app-new.asar');
+      const asar=path.join(os.tmpdir(),'dp-app-new.bin');
       const n=await dl(latest.light,asar,'Đang tải bản '+latest.ver+' (cập nhật nhẹ)');
       if(n<20000)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
       if(latest.cfg){try{await dl(latest.cfg,path.join(exeDir,'config.new.json'),'Đang tải cấu hình')}catch(e){}}

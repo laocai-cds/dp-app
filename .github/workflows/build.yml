@@ -28,7 +28,7 @@ jobs:
           cp config.json $D/config.json
           cp HUONG-DAN.txt $D/HUONG-DAN.txt
           EV=$(node -p "require('electron/package.json').version")
-          cp $D/resources/app.asar "app-electron-$EV.asar"
+          cp $D/resources/app.asar "app-electron-$EV.asar.bin"
           cp config.json dp-config.json
           cd dist && 7z a -tzip -mx=9 ../DP-DangPhi-win32-x64.zip DP-DangPhi-win32-x64
       - name: Bộ cài một file (Setup.exe)
@@ -43,7 +43,7 @@ jobs:
           target_commitish: ${{ github.sha }}
           files: |
             DP-DangPhi-win32-x64.zip
-            app-electron-*.asar
+            app-electron-*.asar.bin
             dp-config.json
             release/DP-DangPhi-Setup.exe
           generate_release_notes: true
