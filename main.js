@@ -184,7 +184,7 @@ async function checkUpdate(){
     const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
     const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar\.bin$/.exec(a.name);return k&&k[1]===process.versions.electron});
     const cf=(j.assets||[]).find(a=>a.name==='dp-config.json');
-    if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);maybeAuto();return 'new'}
+    if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);prefetch();maybeAuto();return 'new'}
     lastWhy='';return 'same'}catch(e){lastWhy=String(e&&e.message||e).slice(0,50);try{win.webContents.send('latestver','')}catch(_){}return 'err'}
 }
 const updFile=()=>path.join(app.getPath('userData'),'update.json');
@@ -197,11 +197,26 @@ async function maybeAuto(){const u=readUpd();if(!u.auto||!latest)return;
 ipcMain.handle('upd:get',()=>readUpd());
 ipcMain.handle('upd:set',(e,o)=>{const u={auto:!!o.auto,mins:Math.min(1440,Math.max(5,parseInt(o.mins)||30))};fs.writeFileSync(updFile(),JSON.stringify(u));armUpd();if(u.auto)checkUpdate();return u});
 ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cur:app.getVersion(),why:lastWhy}});
-async function dl(url,file,label){
+async function dl(url,file,label,silent){
   const r=await net.fetch(url,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)throw new Error('Không tải được ('+r.status+')');
   const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(file);let werr=null;out.on('error',e=>{werr=e});
-  const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(total&&Date.now()-last>800){last=Date.now();say(label+': '+Math.round(got*100/total)+'% ('+(got/1048576).toFixed(1)+'/'+(total/1048576).toFixed(1)+' MB)')}}
+  const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(!silent&&total&&Date.now()-last>800){last=Date.now();say(label+': '+Math.round(got*100/total)+'% ('+(got/1048576).toFixed(1)+'/'+(total/1048576).toFixed(1)+' MB)')}}
   await new Promise(z=>out.end(z));if(werr)throw werr;return got;
+}
+let pre={ver:'',file:'',cfg:'',done:false,busy:null};
+const PRE_CFG=()=>path.join(os.tmpdir(),'dp-config-new.json');
+async function prefetch(){
+  if(!latest||!app.isPackaged||process.platform!=='win32'||(!latest.asset&&!latest.light))return;
+  if(pre.ver===latest.ver&&(pre.busy||pre.done))return;
+  const L=latest,light=!!L.light;pre={ver:L.ver,file:'',cfg:'',done:false,busy:null};const mine=pre;
+  mine.busy=(async()=>{try{
+    const f=path.join(os.tmpdir(),light?'dp-app-new.bin':'dp-update.zip');
+    const n=await dl(light?L.light:L.asset,f,'',true);
+    if(n<(light?20000:5e6))throw new Error('file tải về quá nhỏ ('+n+' byte)');
+    if(light&&L.cfg){try{await dl(L.cfg,PRE_CFG(),'',true);mine.cfg=PRE_CFG()}catch(e){}}
+    mine.file=f;mine.done=true;log('Đã tải sẵn bản '+L.ver+' (chạy ngầm), sẵn sàng cài');try{win.webContents.send('predl',L.ver)}catch(_){}
+  }catch(e){log('Tải ngầm bản '+L.ver+' lỗi: '+String(e&&e.message||e).slice(0,80));mine.ver=''}finally{mine.busy=null}})();
+  return mine.busy;
 }
 async function installUpdate(){
   if(!latest||(!latest.asset&&!latest.light))return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
@@ -212,9 +227,15 @@ async function installUpdate(){
     if(latest.light){
       mode='nhẹ';
       const asar=path.join(os.tmpdir(),'dp-app-new.bin');
-      const n=await dl(latest.light,asar,'Đang tải bản '+latest.ver+' (cập nhật nhẹ)');
-      if(n<20000)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
-      if(latest.cfg){try{await dl(latest.cfg,path.join(exeDir,'config.new.json'),'Đang tải cấu hình')}catch(e){}}
+      if(pre.ver===latest.ver&&pre.busy){say('Đang hoàn tất tải ngầm bản '+latest.ver+'…');await pre.busy}
+      if(pre.ver===latest.ver&&pre.done&&pre.file&&fs.existsSync(pre.file)){
+        if(pre.file!==asar)fs.copyFileSync(pre.file,asar);
+        if(pre.cfg&&fs.existsSync(pre.cfg)){try{fs.copyFileSync(pre.cfg,path.join(exeDir,'config.new.json'))}catch(e){}}
+      }else{
+        const n=await dl(latest.light,asar,'Đang tải bản '+latest.ver+' (cập nhật nhẹ)');
+        if(n<20000)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
+        if(latest.cfg){try{await dl(latest.cfg,path.join(exeDir,'config.new.json'),'Đang tải cấu hình')}catch(e){}}
+      }
       fs.writeFileSync(ps,[
         'param($pid1,$asar,$dest,$exe)',
         'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
@@ -226,8 +247,13 @@ async function installUpdate(){
     }else{
       mode='đầy đủ';
       const zip=path.join(os.tmpdir(),'dp-update.zip');
-      const n=await dl(latest.asset,zip,'Đang tải bản '+latest.ver);
-      if(n<5e6)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
+      if(pre.ver===latest.ver&&pre.busy){say('Đang hoàn tất tải ngầm bản '+latest.ver+'…');await pre.busy}
+      if(pre.ver===latest.ver&&pre.done&&pre.file&&fs.existsSync(pre.file)){
+        if(pre.file!==zip)fs.copyFileSync(pre.file,zip);
+      }else{
+        const n=await dl(latest.asset,zip,'Đang tải bản '+latest.ver);
+        if(n<5e6)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
+      }
       fs.writeFileSync(ps,[
         'param($pid1,$zip,$dest,$exe)',
         'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
