@@ -67,6 +67,7 @@ function apiBookmarklet(C){
           try{
             r=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{signal:ac.signal,method:'POST',headers:HD,body:JSON.stringify({kyNopStart:kS,kyNopEnd:kE,parentId:pid,hasChildren:true,page:1,size:1000})});
             clearTimeout(to);
+            if(r.status>=500&&a<3){say('Máy chủ gqtthc đang bận (lỗi '+r.status+'), tự thử lại lần '+(a+1)+' sau 5 giây…',false,true);await new Promise(z=>setTimeout(z,5000));continue}
             if(r.status===401&&!capTried){
               capTried=true;
               say('API từ chối mã đăng nhập (401).\nHãy bấm nút TÌM KIẾM trên trang gqtthc MỘT LẦN, nút sẽ tự lấy phiên đang dùng và chạy tiếp (chờ tối đa 90 giây).',false,true);

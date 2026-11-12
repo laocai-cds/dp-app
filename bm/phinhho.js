@@ -49,15 +49,15 @@ function apiBookmarklet(C){
       const p2=n=>String(n).padStart(2,'0'),mm=p2(SM),yy=cy;
       const body={kyNopStart:'01/'+mm+'/'+yy,kyNopEnd:new Date(yy,SM,0).getDate()+'/'+mm+'/'+yy,parentId:C.pid,hasChildren:true,page:1,size:1000};
       let r=null;
-      for(let at=1;at<=2&&!r;at++){/* chờ tối đa 90 giây mỗi lần; chậm hoặc lỗi máy chủ thì tự thử lại 1 lần */
+      for(let at=1;at<=3&&!r;at++){/* chờ tối đa 90 giây mỗi lần; chậm hoặc lỗi máy chủ thì tự thử lại tối đa 3 lần */
         if(dead)throw new Error('Đã hủy');const ac=new AbortController();acs.add(ac);const to=setTimeout(()=>ac.abort(),90000);
         try{
           if(at>1)say('API phản hồi chậm, đang thử lại lần '+at+'…',false,true);
           const rr=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{signal:ac.signal,method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body)});
           clearTimeout(to);
-          if(rr.status>=500&&at<2)continue;
+          if(rr.status>=500&&at<3){say('Máy chủ gqtthc đang bận (lỗi '+rr.status+'), tự thử lại lần '+(at+1)+' sau 5 giây…',false,true);await new Promise(z=>setTimeout(z,5000));continue}
           r=rr;
-        }catch(e){clearTimeout(to);if(at>=2)throw e}
+        }catch(e){clearTimeout(to);if(at>=3)throw e}
       }
       const tB=performance.now();
       if(!r.ok)throw new Error('API trả lỗi '+r.status+(r.status===401?' — hãy đăng nhập lại.':''));
