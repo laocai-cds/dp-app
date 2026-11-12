@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        if (getActionBar() != null) getActionBar().hide();
         sp = getSharedPreferences("dp", 0);
         try { cfg = new JSONObject(read("config.json")); } catch (Exception e) { cfg = new JSONObject(); }
 
