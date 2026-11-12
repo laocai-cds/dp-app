@@ -3,6 +3,7 @@ const {spawn}=require('child_process');
 const os=require('os');
 const path=require('path'),fs=require('fs');
 let win,view;
+const WIN_TITLE='Đồng bộ đảng phí 2026 - Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai';
 const exeDir=app.isPackaged?path.dirname(process.execPath):__dirname;
 function loadCfg(){
   for(const p of [path.join(exeDir,'config.json'),path.join(__dirname,'config.json')]){try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch(e){}}
@@ -36,7 +37,8 @@ new MutationObserver(()=>{if(!window.__dpMonth)return;const ov=[...document.quer
 window.__dpCancelled=false;})();\n`;
 function layout(){const [w,h]=win.getContentSize();view.setBounds({x:0,y:BAR,width:w,height:Math.max(100,h-BAR)})}
 function createWindow(){
-  win=new BrowserWindow({width:1320,height:860,title:cfg.title,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js')}});
+  win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js')}});
+  win.setTitle(WIN_TITLE);win.on('page-title-updated',e=>e.preventDefault());
   win.loadFile('toolbar.html');
   view=new WebContentsView({webPreferences:{partition:'persist:gqtthc',contextIsolation:true}});
   win.contentView.addChildView(view);layout();win.on('resize',layout);
