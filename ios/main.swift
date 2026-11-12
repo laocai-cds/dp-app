@@ -35,7 +35,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         b.layer.borderWidth = 1
         b.layer.borderColor = UIColor(white: 1, alpha: 0.2).cgColor
         b.addAction(UIAction { _ in act() }, for: .touchUpInside)
-        b.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 28).isActive = true
         return b
     }
 
@@ -43,7 +43,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let s = UIStackView(arrangedSubviews: views)
         s.axis = .horizontal
         s.distribution = .fillEqually
-        s.spacing = 6
+        s.spacing = 4
         return s
     }
 
@@ -62,7 +62,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let dark = UIColor(red: 0.059, green: 0.227, blue: 0.431, alpha: 1)
         let orange = UIColor(red: 0.91, green: 0.514, blue: 0.102, alpha: 1)
         let blue = UIColor(red: 0.18, green: 0.42, blue: 0.69, alpha: 1)
-        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 13)
+        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 12)
         let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 9); author.adjustsFontSizeToFitWidth = true
 
         let ctl = hrow([
@@ -79,13 +79,13 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         var i = 0
         while i < xa.count {
             var bs: [UIView] = []
-            for j in i..<min(i + 3, xa.count) {
+            for j in i..<min(i + 4, xa.count) {
                 let x = xa[j]
-                bs.append(btn((x["label"] as? String) ?? "", orange, .white, 10) { [weak self] in self?.run(x) })
+                bs.append(btn((x["label"] as? String) ?? "", orange, .white, 9) { [weak self] in self?.run(x) })
             }
-            while bs.count < 3 { bs.append(UIView()) }
+            while bs.count < 4 { bs.append(UIView()) }
             rows.append(hrow(bs))
-            i += 3
+            i += 4
         }
 
         let conf = WKWebViewConfiguration()
@@ -100,7 +100,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
 
         let stack = UIStackView(arrangedSubviews: rows + [web])
         stack.axis = .vertical
-        stack.spacing = 5
+        stack.spacing = 3
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
         let g = view.safeAreaLayoutGuide
