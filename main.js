@@ -44,6 +44,8 @@ function createWindow(){
   win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),backgroundThrottling:false}});
   win.setTitle(WIN_TITLE);win.on('page-title-updated',e=>e.preventDefault());
   win.loadFile('toolbar.html');
+  /* mở lên phía trước và hiện giao diện (kể cả khi vừa tự khởi động lại sau cập nhật) */
+  win.once('ready-to-show',()=>{try{if(win.isMinimized())win.restore();win.show();win.setAlwaysOnTop(true);win.focus();setTimeout(()=>{try{win.setAlwaysOnTop(false)}catch(_){}},1500)}catch(e){}});
   view=new WebContentsView({webPreferences:{partition:'persist:gqtthc',contextIsolation:true,backgroundThrottling:false}});
   win.contentView.addChildView(view);layout();win.on('resize',layout);
   view.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/[^/]*dcs\.vn\//.test(url))view.webContents.loadURL(url);else shell.openExternal(url);return{action:'deny'}});
@@ -220,5 +222,8 @@ ipcMain.handle('update:install',async()=>{
   }catch(e){return{err:String(e&&e.message||e)}}
 });
 ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))shell.openExternal(u)});
-app.whenReady().then(()=>{createWindow();applySched();setInterval(tickSched,30000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
+function announceUpdated(){try{const f=path.join(app.getPath('userData'),'lastver.txt');let old='';try{old=fs.readFileSync(f,'utf8').trim()}catch(_){}
+  const cur=app.getVersion();if(old&&old!==cur){setTimeout(()=>{say('✅ Đã cập nhật xong: bản '+old+' → bản '+cur+'. Ứng dụng đã khởi động lại bằng phiên bản mới.');log('Đã cập nhật '+old+' → '+cur)},2500)}
+  if(old!==cur)fs.writeFileSync(f,cur)}catch(e){}}
+app.whenReady().then(()=>{createWindow();announceUpdated();applySched();setInterval(tickSched,30000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
