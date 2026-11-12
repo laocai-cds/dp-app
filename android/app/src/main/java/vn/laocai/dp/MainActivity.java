@@ -16,6 +16,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -49,7 +50,7 @@ public class MainActivity extends Activity {
 
         status = new TextView(this);
         status.setTextColor(Color.WHITE);
-        status.setTextSize(12);
+        status.setTextSize(11);
         status.setPadding(dp(8), dp(4), dp(8), dp(2));
         status.setText("1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu");
         root.addView(status);
@@ -76,11 +77,23 @@ public class MainActivity extends Activity {
 
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
+            GridLayout grid = new GridLayout(this);
+            grid.setColumnCount(3);
+            grid.setPadding(dp(4), 0, dp(4), dp(4));
             for (int i = 0; i < xa.length(); i++) {
                 final JSONObject x = xa.optJSONObject(i);
                 if (x == null) continue;
-                row.addView(btn(x.optString("label"), 0xFFE07B00, Color.WHITE, v -> run(x)));
+                Button bt = btn(x.optString("label"), 0xFFE07B00, Color.WHITE, v -> run(x));
+                bt.setTextSize(12);
+                bt.setPadding(dp(2), 0, dp(2), 0);
+                GridLayout.LayoutParams lp = new GridLayout.LayoutParams(GridLayout.spec(GridLayout.UNDEFINED), GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f));
+                lp.width = 0;
+                lp.height = dp(40);
+                lp.setMargins(dp(3), dp(3), dp(3), dp(3));
+                bt.setLayoutParams(lp);
+                grid.addView(bt);
             }
+            root.addView(grid, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
         web = new WebView(this);
