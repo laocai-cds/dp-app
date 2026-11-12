@@ -13,40 +13,31 @@ func jsonStr(_ o: [String: Any]) -> String {
 final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
     var web: WKWebView!
     let status = UILabel()
-    var sel: [String] = []
-    var xbtns: [String: UIButton] = [:]
+    var ids: [String] = []
+    var chosen = Set<String>()
     var xitems: [String: [String: Any]] = [:]
-    var runSel: UIButton!
-    let orangeC = UIColor(red: 0.91, green: 0.514, blue: 0.102, alpha: 1)
-    let greenC = UIColor(red: 0.118, green: 0.557, blue: 0.243, alpha: 1)
 
-    func paint(_ id: String) {
-        guard let b = xbtns[id] else { return }
-        let on = sel.contains(id)
-        b.backgroundColor = on ? greenC : orangeC
-        let t = (xitems[id]?["label"] as? String) ?? ""
-        b.setTitle(on ? "✓ " + t : t, for: .normal)
+    func pick() {
+        let t = PickVC(ids: ids, labels: ids.map { (xitems[$0]?["label"] as? String) ?? $0 }, chosen: chosen) { [weak self] sel in
+            guard let s = self else { return }
+            s.chosen = Set(sel)
+            s.runSelected(sel)
+        }
+        present(UINavigationController(rootViewController: t), animated: true)
     }
-    func toggle(_ id: String) {
-        if let k = sel.firstIndex(of: id) { sel.remove(at: k) } else { sel.append(id) }
-        paint(id)
-        runSel.setTitle("▶ Chạy (\(sel.count))", for: .normal)
-        runSel.isHidden = sel.isEmpty
-    }
-    func runSelected() {
-        let ids = sel
-        sel = []
-        runSel.isHidden = true
+
+    func runSelected(_ sel: [String]) {
+        if sel.isEmpty { return }
+        if sel.count == 1, let x = xitems[sel[0]] { run(x); return }
         web.evaluateJavaScript(BATCH + "window.__dpBatch=true;void 0", completionHandler: nil)
-        for (n, id) in ids.enumerated() {
-            paint(id)
+        for (n, id) in sel.enumerated() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 * Double(n)) { [weak self] in
                 guard let s = self, let x = s.xitems[id] else { return }
                 s.web.evaluateJavaScript("window.__dpCur=" + jsq((x["label"] as? String) ?? "") + ";void 0", completionHandler: nil)
                 s.run(x)
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 * Double(ids.count) + 8) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 * Double(sel.count) + 8) { [weak self] in
             self?.web.evaluateJavaScript("window.__dpBatch=false;void 0", completionHandler: nil)
         }
     }
@@ -103,8 +94,6 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 12)
         let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 9); author.adjustsFontSizeToFitWidth = true
 
-        runSel = btn("▶ Chạy (0)", greenC, .white, 11) { [weak self] in self?.runSelected() }
-        runSel.isHidden = true
         let ctl = hrow([
             btn("⟳  Tải lại", blue, .white, 11) { [weak self] in self?.web.reload() },
             btn("🔑  Mã chung", blue, .white, 11) { [weak self] in
@@ -112,33 +101,12 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
                 s.ask("Nhập Mã chung (lưu trên máy này)", true, s.ud.string(forKey: "__all") ?? "") { v in
                     s.ud.set(v, forKey: "__all"); s.say(v.isEmpty ? "Đã xóa mã chung" : "Đã lưu mã chung") }
             },
-            runSel
+            btn("▼  Chọn ĐP xã", orange, .white, 11) { [weak self] in self?.pick() }
         ])
 
         var rows: [UIView] = [title, author, ctl]
         let xa = (cfg["xa"] as? [[String: Any]]) ?? []
-        var i = 0
-        while i < xa.count {
-            var bs: [UIView] = []
-            for j in i..<min(i + 4, xa.count) {
-                let x = xa[j]
-                let xid = (x["id"] as? String) ?? ""
-                let b = btn((x["label"] as? String) ?? "", orange, .white, 9) { [weak self] in
-                    guard let s = self else { return }
-                    if s.sel.isEmpty { s.run(x) } else { s.toggle(xid) }
-                }
-                let lp = UILongPressGestureRecognizer(target: nil, action: nil)
-                lp.addTarget(self, action: #selector(longPressed(_:)))
-                b.addGestureRecognizer(lp)
-                b.accessibilityIdentifier = xid
-                xbtns[xid] = b
-                xitems[xid] = x
-                bs.append(b)
-            }
-            while bs.count < 4 { bs.append(UIView()) }
-            rows.append(hrow(bs))
-            i += 4
-        }
+        for x in xa { if let id = x["id"] as? String { ids.append(id); xitems[id] = x } }
 
         let conf = WKWebViewConfiguration()
         conf.websiteDataStore = WKWebsiteDataStore.default()
@@ -264,3 +232,43 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 UIApplicationMain(CommandLine.argc, CommandLine.unsafeArgv, nil, NSStringFromClass(AppDelegate.self))
+
+
+final class PickVC: UITableViewController {
+    let ids: [String]; let labels: [String]; var sel: Set<String>; let go: ([String]) -> Void
+    init(ids: [String], labels: [String], chosen: Set<String>, go: @escaping ([String]) -> Void) {
+        self.ids = ids; self.labels = labels; self.sel = chosen; self.go = go
+        super.init(style: .plain)
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Chọn đơn vị"
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Đóng", style: .plain, target: self, action: #selector(close))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "▶ Chạy", style: .done, target: self, action: #selector(run))
+    }
+    @objc func close() { dismiss(animated: true) }
+    @objc func run() {
+        let out = ids.filter { sel.contains($0) }
+        dismiss(animated: true) { self.go(out) }
+    }
+    override func numberOfSections(in tableView: UITableView) -> Int { 1 }
+    override func tableView(_ tv: UITableView, numberOfRowsInSection s: Int) -> Int { ids.count + 1 }
+    override func tableView(_ tv: UITableView, cellForRowAt ip: IndexPath) -> UITableViewCell {
+        let c = UITableViewCell(style: .default, reuseIdentifier: nil)
+        if ip.row == 0 {
+            c.textLabel?.text = "Chọn tất cả"
+            c.textLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+            c.accessoryType = sel.count == ids.count ? .checkmark : .none
+        } else {
+            c.textLabel?.text = labels[ip.row - 1]
+            c.accessoryType = sel.contains(ids[ip.row - 1]) ? .checkmark : .none
+        }
+        return c
+    }
+    override func tableView(_ tv: UITableView, didSelectRowAt ip: IndexPath) {
+        if ip.row == 0 { sel = sel.count == ids.count ? [] : Set(ids) }
+        else { let id = ids[ip.row - 1]; if sel.contains(id) { sel.remove(id) } else { sel.insert(id) } }
+        tv.reloadData()
+    }
+}

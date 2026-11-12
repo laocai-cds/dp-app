@@ -18,6 +18,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.ScrollView;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
@@ -87,33 +89,13 @@ public class MainActivity extends Activity {
             sp.edit().putString("__all", c.trim()).apply();
             say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
         })), eq());
-        runSel = btn("▶ Chạy (0)", 0xFF1E8E3E, Color.WHITE, v -> runSelected());
-        runSel.setVisibility(View.GONE);
-        row.addView(runSel, eq());
+        row.addView(btn("▼  Chọn ĐP xã", 0xFFE8831A, Color.WHITE, v -> pick()), eq());
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
-            GridLayout grid = new GridLayout(this);
-            grid.setColumnCount(4);
-            grid.setPadding(dp(2), 0, dp(2), dp(2));
             for (int i = 0; i < xa.length(); i++) {
-                final JSONObject x = xa.optJSONObject(i);
-                if (x == null) continue;
-                final String xid = x.optString("id");
-                final Button bt = btn(x.optString("label"), 0xFFE8831A, Color.WHITE, null);
-                bt.setOnClickListener(v -> { if (sel.isEmpty()) run(x); else toggle(xid, bt); });
-                bt.setOnLongClickListener(v -> { toggle(xid, bt); return true; });
-                btns.put(xid, bt);
-                items.put(xid, x);
-                bt.setTextSize(9);
-                bt.setPadding(dp(2), 0, dp(2), 0);
-                GridLayout.LayoutParams lp = new GridLayout.LayoutParams(GridLayout.spec(GridLayout.UNDEFINED), GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f));
-                lp.width = 0;
-                lp.height = dp(28);
-                lp.setMargins(dp(2), dp(2), dp(2), dp(2));
-                bt.setLayoutParams(lp);
-                grid.addView(bt);
+                JSONObject x = xa.optJSONObject(i);
+                if (x != null) items.put(x.optString("id"), x);
             }
-            root.addView(grid, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
         web = new WebView(this);
@@ -173,38 +155,63 @@ public class MainActivity extends Activity {
         return x;
     }
 
-    Button runSel;
-    final java.util.LinkedHashSet<String> sel = new java.util.LinkedHashSet<>();
-    final java.util.HashMap<String, Button> btns = new java.util.HashMap<>();
-    final java.util.HashMap<String, JSONObject> items = new java.util.HashMap<>();
+    final java.util.LinkedHashMap<String, JSONObject> items = new java.util.LinkedHashMap<>();
+    final java.util.HashSet<String> chosen = new java.util.HashSet<>();
 
-    void paint(String id) {
-        Button b = btns.get(id);
-        if (b == null) return;
-        boolean on = sel.contains(id);
-        int bg = on ? 0xFF1E8E3E : 0xFFE8831A;
-        int dark = Color.rgb(Math.max(0, Color.red(bg) - 40), Math.max(0, Color.green(bg) - 40), Math.max(0, Color.blue(bg) - 40));
-        b.setBackground(shape(bg, dark));
-        String t = items.get(id).optString("label");
-        b.setText(on ? "✓ " + t : t);
+    void pick() {
+        final ScrollView sv = new ScrollView(this);
+        final LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(16), dp(8), dp(16), dp(8));
+        sv.addView(box);
+        final java.util.ArrayList<CheckBox> cbs = new java.util.ArrayList<>();
+        final CheckBox all = new CheckBox(this);
+        all.setText("Chọn tất cả");
+        all.setTypeface(Typeface.DEFAULT_BOLD);
+        all.setTextSize(15);
+        box.addView(all);
+        for (final String id : items.keySet()) {
+            final CheckBox c = new CheckBox(this);
+            c.setText(items.get(id).optString("label"));
+            c.setTextSize(15);
+            c.setTag(id);
+            c.setChecked(chosen.contains(id));
+            cbs.add(c);
+            box.addView(c);
+        }
+        final boolean[] busy = {false};
+        all.setOnCheckedChangeListener((v, on) -> { if (busy[0]) return; busy[0] = true; for (CheckBox c : cbs) c.setChecked(on); busy[0] = false; });
+        for (CheckBox c : cbs) c.setOnCheckedChangeListener((v, on) -> {
+            if (busy[0]) return;
+            busy[0] = true;
+            boolean a = true;
+            for (CheckBox k : cbs) if (!k.isChecked()) a = false;
+            all.setChecked(a);
+            busy[0] = false;
+        });
+        boolean a0 = !cbs.isEmpty();
+        for (CheckBox k : cbs) if (!k.isChecked()) a0 = false;
+        all.setChecked(a0);
+        new AlertDialog.Builder(this)
+                .setTitle("Chọn đơn vị để đồng bộ")
+                .setView(sv)
+                .setPositiveButton("▶ Chạy", (d, w) -> {
+                    chosen.clear();
+                    java.util.ArrayList<String> ids = new java.util.ArrayList<>();
+                    for (CheckBox c : cbs) if (c.isChecked()) { ids.add((String) c.getTag()); chosen.add((String) c.getTag()); }
+                    runSelected(ids);
+                })
+                .setNegativeButton("Đóng", null)
+                .show();
     }
 
-    void toggle(String id, Button b) {
-        if (!sel.remove(id)) sel.add(id);
-        paint(id);
-        runSel.setText("▶ Chạy (" + sel.size() + ")");
-        runSel.setVisibility(sel.isEmpty() ? View.GONE : View.VISIBLE);
-    }
-
-    void runSelected() {
-        final java.util.ArrayList<String> ids = new java.util.ArrayList<>(sel);
-        sel.clear();
-        runSel.setVisibility(View.GONE);
+    void runSelected(final java.util.ArrayList<String> ids) {
+        if (ids.isEmpty()) { say("Chưa chọn đơn vị nào"); return; }
+        if (ids.size() == 1) { run(items.get(ids.get(0))); return; }
         android.os.Handler h = new android.os.Handler();
         web.evaluateJavascript(BATCH + "window.__dpBatch=true;void 0", null);
         for (int i = 0; i < ids.size(); i++) {
             final String id = ids.get(i);
-            paint(id);
             h.postDelayed(() -> {
                 web.evaluateJavascript("window.__dpCur=" + JSONObject.quote(items.get(id).optString("label")) + ";void 0", null);
                 run(items.get(id));
