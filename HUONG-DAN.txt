@@ -7,3 +7,4 @@ CHẾ ĐỘ QUẢN TRỊ (bản có đủ nút): tích chọn các xã (hoặc "
 Chỉ hiện 1 xã (không có ô tích): mở config.json, đặt  "only": "vanban"  (id: tthc, vanban, xuanhoa, pungluong, baothang, luongthinh, nghiado, phinhho, phuckhanh, simacai, tramtau, volao).
 Nhập sai mã: xóa thư mục %APPDATA%\DP-DangPhi rồi nhập lại.
 HẸN GIỜ TỰ CHẠY (chế độ quản trị): tích chọn các xã -> tích "Tự chạy hằng ngày lúc" -> chọn giờ (ví dụ 06:00). Để máy luôn bật, ứng dụng mở và đã đăng nhập gqtthc. Có thể tích "Tự mở cùng Windows". "Chạy thử ngay" để kiểm tra, "Xem nhật ký" xem kết quả các lần chạy. Ứng dụng chỉ chạy trong vòng 3 giờ sau giờ hẹn mỗi ngày; nếu gqtthc hết phiên đăng nhập thì cần đăng nhập lại.
+MÃ CHUNG: nếu các xã dùng cùng một mã đồng bộ, nhập vào ô "Mã chung" ở hàng Quản trị rồi bấm "Lưu mã chung". Xã nào chưa có mã riêng sẽ dùng mã chung. Nếu mã chung sai với xã nào thì xã đó báo không cập nhật được Google Sheet; bấm riêng nút xã đó để nhập mã đúng.

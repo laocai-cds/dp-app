@@ -55,6 +55,7 @@ async function doRun(id,code,api,month){
   const needApi=x.fn==='dpBookmarklet';
   const apiUrl=needApi?(codes[id+'_api']||(typeof x.arg==='string'?x.arg:'')):'';
   if(needApi&&!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(apiUrl))return{need:'api'};
+  if(!codes[id]&&codes.__all)codes[id]=codes.__all;
   if(!codes[id])return{need:'code'};
   const url=view.webContents.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
@@ -66,6 +67,8 @@ async function doRun(id,code,api,month){
 const BOXJS="(()=>{const b=[...document.querySelectorAll('div')].find(d=>d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px');return b?b.textContent.trim().slice(0,160):null})()";
 let batchStop=false;
 ipcMain.handle('run',(e,{id,code,api})=>doRun(id,code,api,''));
+ipcMain.handle('code:all',(e,c)=>{const o=readCodes();if(c){o.__all=String(c).trim()}else delete o.__all;writeCodes(o);return !!o.__all});
+ipcMain.handle('code:hasAll',()=>!!readCodes().__all);
 ipcMain.handle('stop',()=>{batchStop=true;return true});
 /* chạy một xã ở chế độ lô: chờ tới khi có kết quả (✅ xong / ✕ lỗi / bị hủy) */
 async function runWaitCore(id,month){
