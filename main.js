@@ -1,4 +1,4 @@
-const {app,BrowserWindow,WebContentsView,ipcMain,shell,net}=require('electron');
+const {app,BrowserWindow,WebContentsView,ipcMain,shell,net,powerSaveBlocker}=require('electron');
 const path=require('path'),fs=require('fs');
 let win,view;
 const exeDir=app.isPackaged?path.dirname(process.execPath):__dirname;
@@ -6,7 +6,7 @@ function loadCfg(){
   for(const p of [path.join(exeDir,'config.json'),path.join(__dirname,'config.json')]){try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch(e){}}
   return {title:'ĐP',home:'https://gqtthc.dcs.vn/',only:'',xa:[]};
 }
-const cfg=loadCfg();const BAR=cfg.only?150:205;
+const cfg=loadCfg();const BAR=cfg.only?150:250;
 const xaList=()=>cfg.xa.filter(x=>!cfg.only||x.id===cfg.only);
 const codesFile=()=>path.join(app.getPath('userData'),'codes.json');
 const readCodes=()=>{try{return JSON.parse(fs.readFileSync(codesFile(),'utf8'))}catch(e){return{}}};
@@ -59,7 +59,7 @@ let batchStop=false;
 ipcMain.handle('run',(e,{id,code,api})=>doRun(id,code,api,''));
 ipcMain.handle('stop',()=>{batchStop=true;return true});
 /* chạy một xã ở chế độ lô: chờ tới khi có kết quả (✅ xong / ✕ lỗi / bị hủy) */
-ipcMain.handle('runWait',async(e,{id,month})=>{
+async function runWaitCore(id,month){
   batchStop=false;
   try{await view.webContents.executeJavaScript("document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px')d.remove()});void 0")}catch(_){}
   const r=await doRun(id,null,null,month);
@@ -75,7 +75,50 @@ ipcMain.handle('runWait',async(e,{id,month})=>{
     }else{miss++;if(seen&&miss>=2)return{result:'cancel'};if(!seen&&Date.now()-t0>25000)return{result:'fail',msg:'Không thấy tiến độ (chưa đăng nhập hoặc bị chặn?)'}}
   }
   return{result:'fail',msg:'Quá thời gian chờ (8 phút)'};
-});
+}
+ipcMain.handle('runWait',(e,{id,month})=>runWaitCore(id,month));
+
+/* ===== Hẹn giờ tự chạy hằng ngày ===== */
+const schedFile=()=>path.join(app.getPath('userData'),'schedule.json');
+const readSched=()=>{try{return Object.assign({enabled:false,time:'06:00',ids:[],openAtLogin:false,last:''},JSON.parse(fs.readFileSync(schedFile(),'utf8')))}catch(e){return{enabled:false,time:'06:00',ids:[],openAtLogin:false,last:''}}};
+const writeSched=o=>fs.writeFileSync(schedFile(),JSON.stringify(o));
+let blockId=null,schedBusy=false;
+function applySched(){const s=readSched();
+  if(s.enabled&&blockId===null)blockId=powerSaveBlocker.start('prevent-app-suspension');
+  if(!s.enabled&&blockId!==null){powerSaveBlocker.stop(blockId);blockId=null}
+  try{app.setLoginItemSettings({openAtLogin:!!s.openAtLogin})}catch(e){}}
+const say=t=>{try{win.webContents.send('status',t)}catch(e){}};
+const logFile=()=>path.join(app.getPath('userData'),'lich-chay.log');
+const log=t=>{try{fs.appendFileSync(logFile(),new Date().toLocaleString('vi-VN')+'  '+t+'\n')}catch(e){}};
+async function runBatchMain(ids,label){
+  const now=new Date(),month=now.getFullYear()+'-'+(now.getMonth()+1);const res=[];
+  /* tải lại trang để làm mới phiên, kiểm tra còn đăng nhập */
+  try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.loadURL(cfg.home);setTimeout(r,20000)});await new Promise(r=>setTimeout(r,2500))}catch(e){}
+  let tok=false;try{tok=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(e){}
+  if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc — hãy đăng nhập lại trong ứng dụng';say(t);log(t);return false}
+  batchStop=false;
+  for(let i=0;i<ids.length;i++){
+    const id=ids[i],x=cfg.xa.find(v=>v.id===id);if(!x)continue;
+    say(label+' ('+(i+1)+'/'+ids.length+') '+x.label+'…');
+    const r=await runWaitCore(id,month);
+    if(r.need){res.push('⚠ '+x.label+' (chưa có mã)');continue}
+    if(r.err){res.push('✕ '+x.label+': '+r.err);continue}
+    if(r.result==='done')res.push('✅ '+x.label);else if(r.result==='stop'||r.result==='cancel'){res.push('■ '+x.label+' hủy');break}else res.push('✕ '+x.label+': '+String(r.msg||'lỗi').slice(0,60));
+  }
+  const t=label+' xong: '+res.join(' · ');say(t);log(t);return true;
+}
+function tickSched(){
+  const s=readSched();if(!s.enabled||schedBusy||!s.ids.length)return;
+  const now=new Date(),today=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+  const [h,mi]=s.time.split(':').map(Number);const due=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,mi);
+  if(s.last===today||now<due||now-due>3*3600*1000)return; /* chỉ chạy trong 3 giờ sau giờ hẹn */
+  schedBusy=true;s.last=today;writeSched(s);
+  runBatchMain(s.ids,'⏰ Tự chạy').finally(()=>{schedBusy=false});
+}
+ipcMain.handle('sched:get',()=>readSched());
+ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin});if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
+ipcMain.handle('sched:runnow',async()=>{const s=readSched();if(schedBusy||!s.ids.length)return false;schedBusy=true;try{await runBatchMain(s.ids,'⏰ Chạy thử')}finally{schedBusy=false}return true});
+ipcMain.handle('sched:log',()=>{try{return fs.readFileSync(logFile(),'utf8').split('\n').slice(-12).join('\n')}catch(e){return''}});
 const REPO='laocai-cds/dp-app';
 async function checkUpdate(){
   try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return;
@@ -84,5 +127,5 @@ async function checkUpdate(){
     if(nv&&cmp(nv,cv)>0)win.webContents.send('update',{ver:nv,url:j.html_url})}catch(e){}
 }
 ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))shell.openExternal(u)});
-app.whenReady().then(()=>{createWindow();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
+app.whenReady().then(()=>{createWindow();applySched();setInterval(tickSched,30000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
