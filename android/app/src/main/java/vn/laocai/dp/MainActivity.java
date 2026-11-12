@@ -74,7 +74,6 @@ public class MainActivity extends Activity {
         status.setEllipsize(android.text.TextUtils.TruncateAt.END);
         status.setPadding(dp(6), dp(1), dp(6), dp(1));
         status.setText("1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu");
-        root.addView(status);
 
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -164,7 +163,7 @@ public class MainActivity extends Activity {
         return x;
     }
 
-    void say(final String m) { runOnUiThread(() -> status.setText(m)); }
+    void say(final String m) { runOnUiThread(() -> android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()); }
 
     String read(String name) throws Exception {
         InputStream in = getAssets().open(name);
@@ -245,7 +244,6 @@ public class MainActivity extends Activity {
             String js = PRE + "(()=>{try{localStorage.setItem(" + JSONObject.quote(key) + "," + JSONObject.quote(code) + ")}catch(e){}\n"
                     + bm + "\n(" + fn + ")(" + argJs + ")})();void 0";
             web.evaluateJavascript(js, null);
-            say("Đang chạy " + x.optString("label") + "… xem tiến độ ở góc phải trang (có thể mất 1–2 phút).");
         } catch (Exception e) {
             say("⚠ Lỗi: " + e.getMessage());
         }

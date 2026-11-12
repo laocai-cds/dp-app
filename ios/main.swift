@@ -74,7 +74,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
             }
         ])
 
-        var rows: [UIView] = [title, author, status, ctl]
+        var rows: [UIView] = [title, author, ctl]
         let xa = (cfg["xa"] as? [[String: Any]]) ?? []
         var i = 0
         while i < xa.count {
@@ -176,7 +176,6 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         web.evaluateJavaScript(js) { _, err in
             if let e = err { self.say("⚠ Lỗi: " + e.localizedDescription) }
         }
-        say("Đang chạy " + ((x["label"] as? String) ?? id) + "… xem tiến độ ở góc phải trang (có thể mất 1–2 phút).")
     }
 
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
