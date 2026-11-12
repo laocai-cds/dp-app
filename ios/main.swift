@@ -31,9 +31,11 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         b.titleLabel?.font = UIFont.boldSystemFont(ofSize: size)
         b.titleLabel?.adjustsFontSizeToFitWidth = true
         b.titleLabel?.minimumScaleFactor = 0.7
-        b.layer.cornerRadius = 7
+        b.layer.cornerRadius = 12
+        b.layer.borderWidth = 1
+        b.layer.borderColor = UIColor(white: 1, alpha: 0.2).cgColor
         b.addAction(UIAction { _ in act() }, for: .touchUpInside)
-        b.heightAnchor.constraint(equalToConstant: 38).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 42).isActive = true
         return b
     }
 
@@ -58,23 +60,21 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
 
         let light = UIColor(red: 0.91, green: 0.945, blue: 1, alpha: 1)
         let dark = UIColor(red: 0.059, green: 0.227, blue: 0.431, alpha: 1)
-        let orange = UIColor(red: 0.878, green: 0.482, blue: 0, alpha: 1)
+        let orange = UIColor(red: 0.91, green: 0.514, blue: 0.102, alpha: 1)
+        let blue = UIColor(red: 0.18, green: 0.42, blue: 0.69, alpha: 1)
+        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 16)
+        let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 11); author.adjustsFontSizeToFitWidth = true
 
         let ctl = hrow([
-            btn("⟳ Tải lại", light, dark, 13) { [weak self] in self?.web.reload() },
-            btn("🔑 Mã chung", light, dark, 13) { [weak self] in
+            btn("⟳  Tải lại", blue, .white, 13) { [weak self] in self?.web.reload() },
+            btn("🔑  Mã chung", blue, .white, 13) { [weak self] in
                 guard let s = self else { return }
                 s.ask("Nhập Mã chung (lưu trên máy này)", true, s.ud.string(forKey: "__all") ?? "") { v in
                     s.ud.set(v, forKey: "__all"); s.say(v.isEmpty ? "Đã xóa mã chung" : "Đã lưu mã chung") }
-            },
-            btn("🗑 Xóa mã xã", light, dark, 13) { [weak self] in
-                guard let s = self else { return }
-                for k in s.ud.dictionaryRepresentation().keys where k.hasPrefix("code_") || k.hasPrefix("api_") { s.ud.removeObject(forKey: k) }
-                s.say("Đã xóa các mã riêng từng xã đã lưu")
             }
         ])
 
-        var rows: [UIView] = [status, ctl]
+        var rows: [UIView] = [title, author, status, ctl]
         let xa = (cfg["xa"] as? [[String: Any]]) ?? []
         var i = 0
         while i < xa.count {
