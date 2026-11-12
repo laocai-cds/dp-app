@@ -37,15 +37,22 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let ids = sel
         sel = []
         runSel.isHidden = true
+        web.evaluateJavaScript(BATCH + "window.__dpBatch=true;void 0", completionHandler: nil)
         for (n, id) in ids.enumerated() {
             paint(id)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 * Double(n)) { [weak self] in
-                if let x = self?.xitems[id] { self?.run(x) }
+                guard let s = self, let x = s.xitems[id] else { return }
+                s.web.evaluateJavaScript("window.__dpCur=" + jsq((x["label"] as? String) ?? "") + ";void 0", completionHandler: nil)
+                s.run(x)
             }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 * Double(ids.count) + 8) { [weak self] in
+            self?.web.evaluateJavaScript("window.__dpBatch=false;void 0", completionHandler: nil)
         }
     }
     var cfg: [String: Any] = [:]
     let ud = UserDefaults.standard
+    let BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{if(!window.__dpBatch)return;for(const ov of document.body.querySelectorAll(':scope>div')){if(ov.style.inset==='0px'||/inset:\\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}let y=14;for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}},250)})();"
     let PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();"
 
     func readAsset(_ rel: String) -> String? {

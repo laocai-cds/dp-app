@@ -37,6 +37,7 @@ public class MainActivity extends Activity {
     JSONObject cfg;
     TextView status;
 
+    static final String BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{if(!window.__dpBatch)return;for(const ov of document.body.querySelectorAll(':scope>div')){if(ov.style.inset==='0px'||/inset:\\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}let y=14;for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}},250)})();";
     static final String PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();";
 
     @Override
@@ -199,11 +200,16 @@ public class MainActivity extends Activity {
         sel.clear();
         runSel.setVisibility(View.GONE);
         android.os.Handler h = new android.os.Handler();
+        web.evaluateJavascript(BATCH + "window.__dpBatch=true;void 0", null);
         for (int i = 0; i < ids.size(); i++) {
             final String id = ids.get(i);
             paint(id);
-            h.postDelayed(() -> run(items.get(id)), 1500L * i);
+            h.postDelayed(() -> {
+                web.evaluateJavascript("window.__dpCur=" + JSONObject.quote(items.get(id).optString("label")) + ";void 0", null);
+                run(items.get(id));
+            }, 1500L * i);
         }
+        h.postDelayed(() -> web.evaluateJavascript("window.__dpBatch=false;void 0", null), 1500L * ids.size() + 8000);
     }
 
     void say(final String m) { runOnUiThread(() -> android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()); }
