@@ -6,8 +6,8 @@ android {
         applicationId 'vn.laocai.dp'
         minSdk 24
         targetSdk 34
-        versionCode (project.findProperty('vcode') ?: '1').toInteger()
-        versionName (project.findProperty('vname') ?: '1.0')
+        versionCode = Integer.parseInt((project.findProperty('vcode') ?: '1').toString())
+        versionName = (project.findProperty('vname') ?: '1.0').toString()
     }
     signingConfigs {
         dp {
