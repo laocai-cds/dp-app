@@ -92,14 +92,16 @@ ipcMain.handle('code:get',()=>readCodes().__all||'');
 ipcMain.handle('code:hasAll',()=>!!readCodes().__all);
 ipcMain.handle('stop',()=>{batchStop=true;return true});
 /* chạy một xã ở chế độ lô: chờ tới khi có kết quả (✅ xong / ✕ lỗi / bị hủy) */
+let lastActive=0;
 async function runWaitCore(id,month){
+  lastActive=Date.now();
   batchStop=false;
   try{await view.webContents.executeJavaScript("document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px')d.remove()});void 0")}catch(_){}
   const r=await doRun(id,null,null,month);
   if(!r.ok)return r;
   const t0=Date.now();let seen=false,lostAt=0;
   while(Date.now()-t0<8*60*1000){
-    await new Promise(z=>setTimeout(z,2000));
+    await new Promise(z=>setTimeout(z,2000));lastActive=Date.now();
     if(batchStop){try{log('Dừng lô ('+id+'): người dùng bấm Dừng; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'stop'}}
     let st=null;try{st=await view.webContents.executeJavaScript(BOXJS)}catch(_){}
     if(!st)continue;
@@ -168,9 +170,18 @@ async function checkUpdate(){
     const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
     const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar\.bin$/.exec(a.name);return k&&k[1]===process.versions.electron});
     const cf=(j.assets||[]).find(a=>a.name==='dp-config.json');
-    if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);return 'new'}
+    if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);maybeAuto();return 'new'}
     return 'same'}catch(e){return 'err'}
 }
+const updFile=()=>path.join(app.getPath('userData'),'update.json');
+const readUpd=()=>{try{return Object.assign({auto:false,mins:30},JSON.parse(fs.readFileSync(updFile(),'utf8')))}catch(e){return{auto:false,mins:30}}};
+let updTimer=null;
+function armUpd(){if(updTimer)clearInterval(updTimer);const u=readUpd();const mins=Math.min(1440,Math.max(5,+u.mins||30));updTimer=setInterval(checkUpdate,mins*60*1000)}
+async function maybeAuto(){const u=readUpd();if(!u.auto||!latest)return;
+  if(schedBusy||Date.now()-lastActive<180000){log('Có bản '+latest.ver+' nhưng đang chạy lấy số liệu — hoãn cập nhật tự động');return}
+  log('Tự động cập nhật lên bản '+latest.ver);say('🔄 Tự động cập nhật lên bản '+latest.ver+'…');const r=await installUpdate();if(r&&r.err){log('Tự cập nhật lỗi: '+r.err);say('✕ Tự cập nhật lỗi: '+r.err)}}
+ipcMain.handle('upd:get',()=>readUpd());
+ipcMain.handle('upd:set',(e,o)=>{const u={auto:!!o.auto,mins:Math.min(1440,Math.max(5,parseInt(o.mins)||30))};fs.writeFileSync(updFile(),JSON.stringify(u));armUpd();if(u.auto)checkUpdate();return u});
 ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cur:app.getVersion()}});
 async function dl(url,file,label){
   const r=await net.fetch(url,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)throw new Error('Không tải được ('+r.status+')');
@@ -178,7 +189,7 @@ async function dl(url,file,label){
   const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(total&&Date.now()-last>800){last=Date.now();say(label+': '+Math.round(got*100/total)+'% ('+(got/1048576).toFixed(1)+'/'+(total/1048576).toFixed(1)+' MB)')}}
   await new Promise(z=>out.end(z));if(werr)throw werr;return got;
 }
-ipcMain.handle('update:install',async()=>{
+async function installUpdate(){
   if(!latest||(!latest.asset&&!latest.light))return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
   if(!app.isPackaged||process.platform!=='win32')return{err:'Chỉ cập nhật tự động khi chạy bản .exe trên Windows.'};
   try{
@@ -221,10 +232,11 @@ ipcMain.handle('update:install',async()=>{
     spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',ps,...args],{detached:true,stdio:'ignore',windowsHide:true}).unref();
     say('Đã tải xong (cập nhật '+mode+'), ứng dụng sẽ tự khởi động lại bản mới…');setTimeout(()=>app.quit(),800);return{ok:true};
   }catch(e){return{err:String(e&&e.message||e)}}
-});
+}
+ipcMain.handle('update:install',()=>installUpdate());
 ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))shell.openExternal(u)});
 function announceUpdated(){try{const f=path.join(app.getPath('userData'),'lastver.txt');let old='';try{old=fs.readFileSync(f,'utf8').trim()}catch(_){}
   const cur=app.getVersion();if(old&&old!==cur){setTimeout(()=>{say('✅ Đã cập nhật xong: bản '+old+' → bản '+cur+'. Ứng dụng đã khởi động lại bằng phiên bản mới.');log('Đã cập nhật '+old+' → '+cur)},2500)}
   if(old!==cur)fs.writeFileSync(f,cur)}catch(e){}}
-app.whenReady().then(()=>{createWindow();announceUpdated();applySched();setInterval(tickSched,30000);setInterval(checkUpdate,30*60*1000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
+app.whenReady().then(()=>{createWindow();announceUpdated();applySched();setInterval(tickSched,30000);armUpd();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
