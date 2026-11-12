@@ -3,6 +3,9 @@ const {spawn}=require('child_process');
 const os=require('os');
 const path=require('path'),fs=require('fs');
 let win,view;
+/* không cho Windows/Chromium làm chậm hoặc dừng trang khi cửa sổ bị thu nhỏ xuống thanh tác vụ */
+for(const s of ['disable-renderer-backgrounding','disable-background-timer-throttling','disable-backgrounding-occluded-windows'])app.commandLine.appendSwitch(s);
+app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
 const WIN_TITLE='Đồng bộ đảng phí 2026 - Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai';
 const exeDir=app.isPackaged?path.dirname(process.execPath):__dirname;
 function loadCfg(){
@@ -94,10 +97,10 @@ async function runWaitCore(id,month){
   const t0=Date.now();let seen=false,lostAt=0;
   while(Date.now()-t0<8*60*1000){
     await new Promise(z=>setTimeout(z,2000));
-    if(batchStop)return{result:'stop'};
+    if(batchStop){try{log('Dừng lô ('+id+'): người dùng bấm Dừng; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'stop'}}
     let st=null;try{st=await view.webContents.executeJavaScript(BOXJS)}catch(_){}
     if(!st)continue;
-    if(st.c)return{result:'cancel'};          /* chỉ coi là hủy khi người dùng bấm ✕ */
+    if(st.c){try{log('Hủy ('+id+'): khung tiến độ bị bấm ✕ hoặc trang gqtthc tải lại; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'cancel'}}          /* chỉ coi là hủy khi người dùng bấm ✕ */
     const t=st.t;
     if(t){seen=true;lostAt=0;
       if(t.startsWith('✅'))return{result:'done',msg:t};
