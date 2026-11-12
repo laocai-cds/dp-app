@@ -63,9 +63,13 @@ function apiBookmarklet(C){
         if(!r.ok)throw new Error('API trả lỗi '+r.status+(r.status===401?' — hãy đăng nhập lại.':''));
         const raw=await r.text();let J=null;try{J=JSON.parse(raw)}catch(e){}return{raw,st:r.status,list:(J&&J.data)||[]};
       };
-      let R=await getL(C.pid);
+      /* đã từng lấy được mã của chính đơn vị: gọi thẳng danh sách con, bỏ qua truy vấn cấp tỉnh (rất chậm) */
+      let R=null;const ck=(C.k||'dp')+'_cid';
+      try{const sv=localStorage.getItem(ck)||C.cid;if(sv){say('Đang lấy số liệu tháng '+SM+'/'+cy+' (đường nhanh)…',false,true);const X0=await getL(sv);
+        if(X0.list.length&&!X0.list.some(x=>/tỉnh Lào Cai/i.test(String(x.tenDonVi||''))||String(x.tenDonVi||'').trim()===C.name))R=X0}}catch(e){}
+      if(!R){R=await getL(C.pid);
       if(!R.list.length){/* trả rỗng: chờ 2 giây thử lại 1 lần (có thể do máy chủ vừa làm mới phiên) */
-        await new Promise(r2=>setTimeout(r2,2000));R=await getL(C.pid)}
+        await new Promise(r2=>setTimeout(r2,2000));R=await getL(C.pid)}}
       const tB=performance.now();
       if(!R.list.length)throw new Error('API không trả đơn vị nào cho '+C.name+' (HTTP '+R.st+', kỳ '+kS+' – '+kE+', parentId '+C.pid+').\nPhản hồi: '+String(R.raw).slice(0,180)+'\nNếu tài khoản đang đăng nhập không quản lý đơn vị này, hãy đăng nhập đúng tài khoản.');
       /* C.pid là mã cấp tỉnh: tìm đúng dòng đơn vị cần lấy rồi đọc mã của nó, lấy danh sách con của chính nó */
@@ -78,7 +82,7 @@ function apiBookmarklet(C){
         walk(me,0);
         let found=null;
         for(const c of cand.slice(0,8)){if(String(c)===String(C.pid))continue;let X;try{X=await getL(c)}catch(e){continue}
-          if(X.list.length&&!X.list.some(x=>/tỉnh Lào Cai/i.test(String(x.tenDonVi||''))||String(x.tenDonVi||'').trim()===C.name)){found=X;break}}
+          if(X.list.length&&!X.list.some(x=>/tỉnh Lào Cai/i.test(String(x.tenDonVi||''))||String(x.tenDonVi||'').trim()===C.name)){found=X;try{localStorage.setItem(ck,String(c))}catch(e){}break}}
         if(!found)throw new Error('Không lấy được danh sách con của '+C.name+'. donVi='+JSON.stringify(me.donVi)+'; đã thử: '+cand.join(', '));
         R=found;
       }
