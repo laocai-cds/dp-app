@@ -52,7 +52,26 @@ function addXaCore(raw){
 ipcMain.handle('xa:add',(e,raw)=>addXaCore(raw));
 ipcMain.on('xa:add:internal',(e,raw)=>{const r=addXaCore(raw);try{win.webContents.send('xaadded',r)}catch(_){}});
 ipcMain.handle('xa:remove',(e,id)=>{const a=readExtra();if(!a.some(x=>x.id===id))return{err:'Chỉ gỡ được nút do bạn tự thêm.'};writeExtra(a.filter(x=>x.id!==id));const c=readCodes();delete c[id];writeCodes(c);return{ok:true}});
+const hiddenFile=()=>path.join(app.getPath('userData'),'hidden-xa.json');
+const readHidden=()=>{try{const a=JSON.parse(fs.readFileSync(hiddenFile(),'utf8'));return Array.isArray(a)?a:[]}catch(e){return[]}};
+const writeHidden=a=>fs.writeFileSync(hiddenFile(),JSON.stringify(a));
 loadExtra();
+{const hd=new Set(readHidden());if(hd.size)cfg.xa=cfg.xa.filter(x=>!hd.has(x.id))}
+/* Xóa nút xã: phải nhập đúng mã chung đã lưu. Nút tự thêm bị xóa hẳn; nút có sẵn chỉ bị ẩn trên máy này (khôi phục được) */
+const passOk=p=>{const a=readCodes().__all;return !!a&&String(p||'').trim()===a};
+ipcMain.handle('xa:delete',(e,{ids,pass})=>{
+  if(!readCodes().__all)return{err:'Chưa lưu mã chung trong app nên chưa xóa được. Hãy nhập và lưu "Mã chung" trước.'};
+  if(!passOk(pass))return{err:'Mật khẩu (mã chung) không đúng.'};
+  ids=(ids||[]).filter(i=>typeof i==='string');if(!ids.length)return{err:'Chưa chọn nút nào.'};
+  const ex=readExtra();writeExtra(ex.filter(x=>!ids.includes(x.id)));
+  const exIds=new Set(ex.map(x=>x.id));const hid=new Set(readHidden());ids.forEach(i=>{if(!exIds.has(i))hid.add(i)});writeHidden([...hid]);
+  const c=readCodes();ids.forEach(i=>{if(exIds.has(i)){delete c[i];delete c[i+'_api']}});writeCodes(c);
+  cfg.xa=cfg.xa.filter(x=>!ids.includes(x.id));log('Đã xóa nút: '+ids.join(', '));
+  return{ok:true,n:ids.length}});
+ipcMain.handle('xa:restore',(e,pass)=>{
+  if(!passOk(pass))return{err:'Mật khẩu (mã chung) không đúng.'};
+  if(!readHidden().length)return{err:'Không có nút nào đang bị ẩn.'};
+  writeHidden([]);log('Khôi phục các nút đã ẩn');setTimeout(()=>{app.relaunch();app.exit(0)},600);return{ok:true}});
 const xaList=()=>cfg.xa.filter(x=>!cfg.only||x.id===cfg.only);
 const codesFile=()=>path.join(app.getPath('userData'),'codes.json');
 const readCodes=()=>{try{return JSON.parse(fs.readFileSync(codesFile(),'utf8'))}catch(e){return{}}};

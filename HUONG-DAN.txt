@@ -12,3 +12,5 @@ CẬP NHẬT NHẸ: từ bản 1.1.7, khi chỉ đổi mã ứng dụng, nút "C
 CÀI BẰNG MỘT FILE: tải DP-DangPhi-Setup.exe từ trang Releases, bấm đôi để cài (cài cho riêng người dùng, không cần quyền admin). Mở bằng biểu tượng "DP-DangPhi" ngoài Desktop hoặc trong Start.
 
 THÊM XÃ MỚI NHANH (từ bản 1.1.42): mở website của xã trong trình duyệt, KÉO nút "ĐP" thả vào thanh nút của app (hoặc bấm "➕ Thêm xã" rồi dán mã dấu trang). App tự tạo nút "ĐP <tên xã>"; lần đầu bấm sẽ hỏi mã đồng bộ riêng của xã. Chuột phải vào nút để gỡ.
+
+XÓA NÚT XÃ (từ bản 1.1.44): ở dòng "Quản trị", tích ô vuông cạnh các nút cần xóa → bấm "🗑 Xóa nút đã tích" → nhập mật khẩu (chính là Mã chung đã lưu trong app). Nút có sẵn chỉ bị ẩn trên máy này, bấm "↩ Khôi phục nút" (nhập lại mật khẩu) để hiện lại.
