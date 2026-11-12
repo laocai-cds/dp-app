@@ -20,7 +20,7 @@
       const T0 = performance.now();
       let curMsg = '', curBad = false, curOk = false, tick = null, dead = false; const acs = new Set();
       const f1 = ms => (ms / 1000).toFixed(1).replace('.', ',') + 's';
-      const paint = () => { if (dead) return; box.textContent = curMsg + (tick ? '   ⏱ ' + f1(performance.now() - T0) : ''); box.style.background = curBad ? '#a50d26' : curOk ? '#0f8a3c' : '#12315f'; const xb=document.createElement('span');xb.textContent='✕';xb.title='Tắt / hủy lấy số liệu';xb.style.cssText='position:absolute;top:3px;right:9px;cursor:pointer;font-size:17px;line-height:1;opacity:.85';xb.onclick=e=>{e.stopPropagation();dead=true;if(tick){clearInterval(tick);tick=null}acs.forEach(a=>{try{a.abort()}catch(_){}});box.remove()};box.style.paddingRight='34px';box.appendChild(xb); if (!box.parentNode) document.body.appendChild(box); };
+      const paint = () => { if (dead) return; box.textContent = curMsg + (tick ? '   ⏱ ' + f1(performance.now() - T0) : ''); box.style.background = curBad ? '#a50d26' : curOk ? '#0f8a3c' : '#12315f'; if (!box.parentNode) document.body.appendChild(box); };
       /* run=true: đồng hồ giây chạy liên tục; run=false: dừng đồng hồ và hiện kết quả */
       const say = (m, bad, run, good) => { curMsg = m; curBad = !!bad; curOk = !!good; if (run) { if (!tick) tick = setInterval(paint, 100); } else if (tick) { clearInterval(tick); tick = null; } paint(); };
       try {
