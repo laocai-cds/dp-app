@@ -27,6 +27,9 @@ jobs:
           rm -f $D/LICENSES.chromium.html
           cp config.json $D/config.json
           cp HUONG-DAN.txt $D/HUONG-DAN.txt
+          EV=$(node -p "require('electron/package.json').version")
+          cp $D/resources/app.asar "app-electron-$EV.asar"
+          cp config.json dp-config.json
           cd dist && 7z a -tzip -mx=9 ../DP-DangPhi-win32-x64.zip DP-DangPhi-win32-x64
       - name: Phát hành (tự tạo tag theo số phiên bản trong package.json)
         uses: softprops/action-gh-release@v2
@@ -34,5 +37,8 @@ jobs:
           tag_name: v${{ steps.ver.outputs.v }}
           name: v${{ steps.ver.outputs.v }}
           target_commitish: ${{ github.sha }}
-          files: DP-DangPhi-win32-x64.zip
+          files: |
+            DP-DangPhi-win32-x64.zip
+            app-electron-*.asar
+            dp-config.json
           generate_release_notes: true

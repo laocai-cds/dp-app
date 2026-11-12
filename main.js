@@ -140,40 +140,62 @@ async function checkUpdate(){
     const j=await r.json();const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();
     const cmp=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1}return 0};
     const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
-    if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||''};win.webContents.send('update',latest);return 'new'}
+    const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar$/.exec(a.name);return k&&k[1]===process.versions.electron});
+    const cf=(j.assets||[]).find(a=>a.name==='dp-config.json');
+    if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);return 'new'}
     return 'same'}catch(e){return 'err'}
 }
 ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cur:app.getVersion()}});
+async function dl(url,file,label){
+  const r=await net.fetch(url,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)throw new Error('Không tải được ('+r.status+')');
+  const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(file);
+  const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(total&&Date.now()-last>800){last=Date.now();say(label+': '+Math.round(got*100/total)+'% ('+(got/1048576).toFixed(1)+'/'+(total/1048576).toFixed(1)+' MB)')}}
+  await new Promise(z=>out.end(z));return got;
+}
 ipcMain.handle('update:install',async()=>{
-  if(!latest||!latest.asset)return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
+  if(!latest||(!latest.asset&&!latest.light))return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
   if(!app.isPackaged||process.platform!=='win32')return{err:'Chỉ cập nhật tự động khi chạy bản .exe trên Windows.'};
   try{
-    say('Đang tải bản '+latest.ver+'…');
-    const zip=path.join(os.tmpdir(),'dp-update.zip');
-    const r=await net.fetch(latest.asset,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return{err:'Không tải được ('+r.status+')'};
-    const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(zip);
-    const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(total&&Date.now()-last>800){last=Date.now();say('Đang tải bản '+latest.ver+': '+Math.round(got*100/total)+'%')}}
-    await new Promise(z=>out.end(z));
-    if(got<5e6)return{err:'File tải về quá nhỏ ('+got+' byte), có thể bị lỗi.'};
     const ps=path.join(os.tmpdir(),'dp-update.ps1');
-    fs.writeFileSync(ps,[
-      'param($pid1,$zip,$dest,$exe)',
-      'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
-      'Start-Sleep -Seconds 2',
-      '$tmp=Join-Path $env:TEMP "dp-update-x"',
-      'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
-      'Expand-Archive -Path $zip -DestinationPath $tmp -Force',
-      '$src=Join-Path $tmp "DP-DangPhi-win32-x64"',
-      'Copy-Item (Join-Path $src "config.json") (Join-Path $dest "config.new.json") -Force -ErrorAction SilentlyContinue',
-      'robocopy $src $dest /E /XF config.json /NFL /NDL /NJH /NJS /NP | Out-Null',
-      'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
-      'Start-Process -FilePath $exe'
-    ].join('\r\n'),'utf8');
-    spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',ps,String(process.pid),zip,exeDir,process.execPath],{detached:true,stdio:'ignore',windowsHide:true}).unref();
-    say('Đã tải xong, ứng dụng sẽ tự khởi động lại bản mới…');setTimeout(()=>app.quit(),800);return{ok:true};
+    let args,mode;
+    if(latest.light){
+      mode='nhẹ';
+      const asar=path.join(os.tmpdir(),'dp-app-new.asar');
+      const n=await dl(latest.light,asar,'Đang tải bản '+latest.ver+' (cập nhật nhẹ)');
+      if(n<20000)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
+      if(latest.cfg){try{await dl(latest.cfg,path.join(exeDir,'config.new.json'),'Đang tải cấu hình')}catch(e){}}
+      fs.writeFileSync(ps,[
+        'param($pid1,$asar,$dest,$exe)',
+        'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
+        'Start-Sleep -Seconds 2',
+        'Copy-Item $asar (Join-Path $dest "resources\\app.asar") -Force',
+        'Start-Process -FilePath $exe'
+      ].join('\r\n'),'utf8');
+      args=[String(process.pid),asar,exeDir,process.execPath];
+    }else{
+      mode='đầy đủ';
+      const zip=path.join(os.tmpdir(),'dp-update.zip');
+      const n=await dl(latest.asset,zip,'Đang tải bản '+latest.ver);
+      if(n<5e6)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
+      fs.writeFileSync(ps,[
+        'param($pid1,$zip,$dest,$exe)',
+        'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
+        'Start-Sleep -Seconds 2',
+        '$tmp=Join-Path $env:TEMP "dp-update-x"',
+        'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
+        'Expand-Archive -Path $zip -DestinationPath $tmp -Force',
+        '$src=Join-Path $tmp "DP-DangPhi-win32-x64"',
+        'Copy-Item (Join-Path $src "config.json") (Join-Path $dest "config.new.json") -Force -ErrorAction SilentlyContinue',
+        'robocopy $src $dest /E /XF config.json /NFL /NDL /NJH /NJS /NP | Out-Null',
+        'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
+        'Start-Process -FilePath $exe'
+      ].join('\r\n'),'utf8');
+      args=[String(process.pid),zip,exeDir,process.execPath];
+    }
+    spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',ps,...args],{detached:true,stdio:'ignore',windowsHide:true}).unref();
+    say('Đã tải xong (cập nhật '+mode+'), ứng dụng sẽ tự khởi động lại bản mới…');setTimeout(()=>app.quit(),800);return{ok:true};
   }catch(e){return{err:String(e&&e.message||e)}}
 });
-ipcMain.handle('bar',(e,h)=>{h=Math.max(80,Math.min(320,Math.ceil(+h||0)+2));if(h!==BAR){BAR=h;layout()}});
 ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))shell.openExternal(u)});
 app.whenReady().then(()=>{createWindow();applySched();setInterval(tickSched,30000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
