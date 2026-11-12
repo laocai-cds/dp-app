@@ -1,21 +1,64 @@
 {
   "name": "dp-gqtthc",
-  "version": "1.1.7",
-  "description": "\u0110\u1ed3ng b\u1ed9 \u0111\u1ea3ng ph\u00ed gqtthc",
+  "version": "1.1.8",
+  "description": "Đồng bộ đảng phí gqtthc",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
   "keywords": [],
-  "author": "",
+  "author": "laocai-cds",
   "license": "ISC",
   "devDependencies": {
     "@electron/packager": "^20.3.0",
-    "electron": "^33.4.11"
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
   },
   "productName": "DP-DangPhi",
   "repository": {
     "type": "git",
     "url": "https://github.com/laocai-cds/dp-app.git"
+  },
+  "build": {
+    "appId": "vn.laocai.dpdangphi",
+    "productName": "DP-DangPhi",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "toolbar.html",
+      "bm/**",
+      "config.json",
+      "package.json"
+    ],
+    "extraFiles": [
+      {
+        "from": "config.json",
+        "to": "config.json"
+      },
+      {
+        "from": "HUONG-DAN.txt",
+        "to": "HUONG-DAN.txt"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "DP-DangPhi-Setup.exe"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
   }
 }

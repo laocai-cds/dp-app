@@ -21,7 +21,7 @@ jobs:
       - name: Đóng gói
         shell: bash
         run: |
-          npx @electron/packager . DP-DangPhi --platform=win32 --arch=x64 --out=dist --overwrite --ignore="^/dist" --ignore="\.zip$" --ignore="^/\.github"
+          npx @electron/packager . DP-DangPhi --platform=win32 --arch=x64 --out=dist --overwrite --ignore="^/dist" --ignore="\.zip$" --ignore="^/\.github" --ignore="^/release"
           D=dist/DP-DangPhi-win32-x64
           for f in $D/locales/*.pak; do case $(basename $f) in en-US.pak|vi.pak) ;; *) rm "$f";; esac; done
           rm -f $D/LICENSES.chromium.html
@@ -31,6 +31,10 @@ jobs:
           cp $D/resources/app.asar "app-electron-$EV.asar"
           cp config.json dp-config.json
           cd dist && 7z a -tzip -mx=9 ../DP-DangPhi-win32-x64.zip DP-DangPhi-win32-x64
+      - name: Bộ cài một file (Setup.exe)
+        continue-on-error: true
+        shell: bash
+        run: npx electron-builder --win nsis --x64 --publish never
       - name: Phát hành (tự tạo tag theo số phiên bản trong package.json)
         uses: softprops/action-gh-release@v2
         with:
@@ -41,4 +45,5 @@ jobs:
             DP-DangPhi-win32-x64.zip
             app-electron-*.asar
             dp-config.json
+            release/DP-DangPhi-Setup.exe
           generate_release_notes: true

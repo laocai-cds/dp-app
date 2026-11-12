@@ -3,7 +3,7 @@
 Ứng dụng Windows nhúng trang gqtthc.dcs.vn, có sẵn nút ĐP của các xã. Đăng nhập gqtthc, bấm nút (hoặc tích chọn nhiều xã) để lấy số liệu đảng phí và gửi lên Google Sheet của từng xã.
 
 ## Tải về
-Vào mục **Releases** của repo này, tải file `DP-DangPhi-win32-x64.zip`, giải nén và chạy `DP-DangPhi.exe`. Xem `HUONG-DAN.txt`.
+Vào mục **Releases**, tải file **`DP-DangPhi-Setup.exe`** (một file duy nhất), bấm đôi để cài (không cần quyền admin), mở bằng biểu tượng ngoài Desktop. Bản zip `DP-DangPhi-win32-x64.zip` dùng cho cập nhật đầy đủ. Xem `HUONG-DAN.txt`.
 
 ## Phát hành bản mới (người quản trị)
 Mỗi lần push lên `main`, GitHub Actions tự đóng gói và tạo/cập nhật Release có tag `v<version>` (lấy từ `package.json`). Muốn ra bản mới cho người dùng: tăng `version` trong `package.json` rồi push. Ứng dụng tự báo "Cập nhật lên bản …" khi Releases có phiên bản cao hơn bản đang chạy.
