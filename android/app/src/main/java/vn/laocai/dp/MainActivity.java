@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Gravity;
@@ -17,7 +20,6 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -48,33 +50,39 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(0xFF0F3A6E);
         root.setFitsSystemWindows(true);
 
+        TextView title = new TextView(this);
+        title.setText("ĐỒNG BỘ ĐẢNG PHÍ 2026");
+        title.setTextColor(Color.WHITE);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setTextSize(16);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(dp(8), dp(8), dp(8), 0);
+        root.addView(title);
+        TextView author = new TextView(this);
+        author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai");
+        author.setTextColor(0xFFBFD6F5);
+        author.setTextSize(11);
+        author.setGravity(Gravity.CENTER);
+        author.setPadding(dp(8), dp(1), dp(8), dp(4));
+        root.addView(author);
+
         status = new TextView(this);
-        status.setTextColor(Color.WHITE);
+        status.setTextColor(0xFFE6EEF9);
         status.setTextSize(11);
         status.setPadding(dp(8), dp(4), dp(8), dp(2));
         status.setText("1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu");
         root.addView(status);
 
-        HorizontalScrollView hs = new HorizontalScrollView(this);
-        hs.setHorizontalScrollBarEnabled(false);
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(dp(6), dp(2), dp(6), dp(4));
-        hs.addView(row);
-        root.addView(hs, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        root.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        row.addView(btn("⟳ Tải lại", 0xFFE8F1FF, 0xFF0F3A6E, v -> web.reload()));
-        row.addView(btn("🔑 Mã chung", 0xFFE8F1FF, 0xFF0F3A6E, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
+        row.addView(btn("⟳  Tải lại", 0xFF2E6BB0, Color.WHITE, v -> web.reload()), eq());
+        row.addView(btn("🔑  Mã chung", 0xFF2E6BB0, Color.WHITE, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
             sp.edit().putString("__all", c.trim()).apply();
             say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
-        })));
-        row.addView(btn("🗑 Xóa mã xã", 0xFFE8F1FF, 0xFF0F3A6E, v -> {
-            SharedPreferences.Editor ed = sp.edit();
-            for (String k : sp.getAll().keySet()) if (k.startsWith("code_") || k.startsWith("api_")) ed.remove(k);
-            ed.apply();
-            say("Đã xóa các mã riêng từng xã đã lưu");
-        }));
-
+        })), eq());
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
             GridLayout grid = new GridLayout(this);
@@ -83,12 +91,12 @@ public class MainActivity extends Activity {
             for (int i = 0; i < xa.length(); i++) {
                 final JSONObject x = xa.optJSONObject(i);
                 if (x == null) continue;
-                Button bt = btn(x.optString("label"), 0xFFE07B00, Color.WHITE, v -> run(x));
+                Button bt = btn(x.optString("label"), 0xFFE8831A, Color.WHITE, v -> run(x));
                 bt.setTextSize(12);
                 bt.setPadding(dp(2), 0, dp(2), 0);
                 GridLayout.LayoutParams lp = new GridLayout.LayoutParams(GridLayout.spec(GridLayout.UNDEFINED), GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f));
                 lp.width = 0;
-                lp.height = dp(40);
+                lp.height = dp(44);
                 lp.setMargins(dp(3), dp(3), dp(3), dp(3));
                 bt.setLayoutParams(lp);
                 grid.addView(bt);
@@ -117,19 +125,39 @@ public class MainActivity extends Activity {
 
     int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
+    LinearLayout.LayoutParams eq() {
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(42), 1f);
+        lp.setMargins(dp(3), 0, dp(3), 0);
+        return lp;
+    }
+
+    StateListDrawable shape(int normal, int pressed) {
+        GradientDrawable n = new GradientDrawable();
+        n.setColor(normal);
+        n.setCornerRadius(dp(12));
+        n.setStroke(dp(1), 0x33FFFFFF);
+        GradientDrawable p = new GradientDrawable();
+        p.setColor(pressed);
+        p.setCornerRadius(dp(12));
+        StateListDrawable sl = new StateListDrawable();
+        sl.addState(new int[]{android.R.attr.state_pressed}, p);
+        sl.addState(new int[]{}, n);
+        return sl;
+    }
+
     Button btn(String t, int bg, int fg, View.OnClickListener l) {
         Button x = new Button(this);
         x.setText(t);
         x.setAllCaps(false);
         x.setTextSize(13);
+        x.setTypeface(Typeface.DEFAULT_BOLD);
         x.setTextColor(fg);
-        x.setBackgroundColor(bg);
+        int dark = Color.rgb(Math.max(0, Color.red(bg) - 40), Math.max(0, Color.green(bg) - 40), Math.max(0, Color.blue(bg) - 40));
+        x.setBackground(shape(bg, dark));
+        x.setStateListAnimator(null);
+        x.setElevation(0);
         x.setPadding(dp(10), 0, dp(10), 0);
         x.setOnClickListener(l);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38));
-        lp.setMargins(dp(3), 0, dp(3), 0);
-        lp.gravity = Gravity.CENTER_VERTICAL;
-        x.setLayoutParams(lp);
         return x;
     }
 
