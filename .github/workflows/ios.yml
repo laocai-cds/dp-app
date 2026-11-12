@@ -1,0 +1,42 @@
+name: Build iOS IPA
+on:
+  push:
+    branches: [main]
+    paths: ['ios/**', 'config.json', 'bm/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  ipa:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Đọc số phiên bản
+        id: ver
+        run: echo "v=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Biên dịch và đóng gói IPA (chưa ký)
+        run: |
+          APP=ios/build/Payload/DPDangPhi.app
+          mkdir -p "$APP"
+          swiftc -O -swift-version 5 -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -target arm64-apple-ios15.0 ios/main.swift -o "$APP/DPDangPhi"
+          cp ios/Info.plist "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.ver.outputs.v }}" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" "$APP/Info.plist"
+          cp config.json "$APP/config.json"
+          cp -R bm "$APP/bm"
+          sips -z 120 120 build/icon.png --out "$APP/AppIcon60x60@2x.png"
+          sips -z 180 180 build/icon.png --out "$APP/AppIcon60x60@3x.png"
+          sips -z 152 152 build/icon.png --out "$APP/AppIcon76x76@2x~ipad.png"
+          codesign --force --sign - "$APP" || true
+          cd ios/build && zip -qr ../../DP-DangPhi.ipa Payload
+      - name: Đăng lên Releases (không làm thành bản mới nhất của app Windows)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ios-latest
+          name: Bản iPhone (IPA) mới nhất
+          body: "File DP-DangPhi.ipa chưa ký, cần cài bằng Sideloadly hoặc AltStore. Phiên bản ${{ steps.ver.outputs.v }}."
+          prerelease: true
+          make_latest: false
+          files: DP-DangPhi.ipa

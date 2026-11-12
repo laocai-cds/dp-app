@@ -2,7 +2,7 @@ name: Build Windows app
 on:
   push:
     branches: [main]
-    paths-ignore: ['README.md', 'HUONG-DAN.txt', 'android/**', '.github/workflows/android.yml']
+    paths-ignore: ['README.md', 'HUONG-DAN.txt', 'android/**', 'ios/**', '.github/workflows/android.yml', '.github/workflows/ios.yml']
   workflow_dispatch:
 permissions:
   contents: write
