@@ -1,7 +1,8 @@
 name: Build Windows app
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+    paths-ignore: ['README.md', 'HUONG-DAN.txt']
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,6 +14,10 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci
+      - name: Đọc số phiên bản
+        id: ver
+        shell: bash
+        run: echo "v=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - name: Đóng gói
         shell: bash
         run: |
@@ -23,13 +28,11 @@ jobs:
           cp config.json $D/config.json
           cp HUONG-DAN.txt $D/HUONG-DAN.txt
           cd dist && 7z a -tzip -mx=9 ../DP-DangPhi-win32-x64.zip DP-DangPhi-win32-x64
-      - uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Phát hành (tự tạo tag theo số phiên bản trong package.json)
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.ver.outputs.v }}
+          name: v${{ steps.ver.outputs.v }}
+          target_commitish: ${{ github.sha }}
           files: DP-DangPhi-win32-x64.zip
           generate_release_notes: true
-      - uses: actions/upload-artifact@v4
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        with:
-          name: DP-DangPhi-win32-x64
-          path: DP-DangPhi-win32-x64.zip
