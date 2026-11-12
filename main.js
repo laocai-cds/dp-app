@@ -21,6 +21,36 @@ function mergeNewCfg(){try{const nf=path.join(exeDir,'config.new.json'),cf=path.
   if(ch)fs.writeFileSync(cf,JSON.stringify(c,null,2));fs.unlinkSync(nf)}catch(e){}}
 mergeNewCfg();
 const cfg=loadCfg();let BAR=cfg.only?110:178;
+/* ===== Xã thêm bằng cách kéo nút "ĐP" từ website xã vào app (lưu trên máy này) ===== */
+const extraFile=()=>path.join(app.getPath('userData'),'extra-xa.json');
+const readExtra=()=>{try{const a=JSON.parse(fs.readFileSync(extraFile(),'utf8'));return Array.isArray(a)?a:[]}catch(e){return[]}};
+const writeExtra=a=>fs.writeFileSync(extraFile(),JSON.stringify(a,null,2));
+function loadExtra(){const have=new Set(cfg.xa.map(x=>x.id));readExtra().forEach(x=>{if(x&&x.id&&!have.has(x.id)){cfg.xa.push(x);have.add(x.id)}})}
+function parseDp(raw){
+  let t=String(raw||'').trim();if(!t)throw new Error('Chưa có nội dung.');
+  t=t.split(/\r?\n/).map(l=>l.trim()).find(l=>/^javascript:/i.test(l))||t;
+  if(/^javascript:/i.test(t)){t=t.replace(/^javascript:/i,'');try{t=decodeURIComponent(t)}catch(e){}}
+  const tail=/\)\s*;?\s*void 0\s*;?\s*$/;
+  let end=t.search(tail);if(end<0)end=t.length;
+  const i=t.lastIndexOf(')({',end);if(i<0||t.indexOf('apiBookmarklet')<0)throw new Error('Đây không phải nút ĐP của website xã (không thấy apiBookmarklet).');
+  let C;try{C=JSON.parse(t.slice(i+2,end))}catch(e){throw new Error('Không đọc được thông số trong nút ĐP.')}
+  if(!C||typeof C.name!=='string'||!C.name||!C.k||!C.src||!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(String(C.ep||'')))throw new Error('Nút ĐP thiếu thông số (tên xã, địa chỉ Apps Script). Hãy mở website xã khi đã nối Google Sheet rồi kéo lại nút.');
+  if(!/^[\w.-]+$/.test(String(C.k))||!/^[\w.-]+$/.test(String(C.src)))throw new Error('Thông số nút ĐP không hợp lệ.');
+  return C;
+}
+ipcMain.handle('xa:add',(e,raw)=>{
+  try{const C=parseDp(raw);
+    const dup=cfg.xa.find(x=>x.arg&&typeof x.arg==='object'&&(x.arg.src===C.src||x.arg.ep===C.ep));
+    if(dup)return{err:'Xã này đã có nút "'+dup.label+'" trong app.'};
+    const id='x_'+String(C.src).replace(/^website-/,'').replace(/-api$/,'').replace(/[^\w-]/g,'');
+    const label='ĐP '+C.name.replace(/^(Đảng bộ|Đảng ủy)\s+(xã|phường|thị trấn)\s+/i,'').trim();
+    const arg={pid:+C.pid||0,name:C.name,max:+C.max||0,k:C.k,src:C.src,m:true,ep:C.ep};if(C.cid)arg.cid=+C.cid;
+    const ent={id,label,fn:'apiBookmarklet',file:'bm/xuanhoa.js',key:C.k,arg,extra:true};
+    const a=readExtra().filter(x=>x.id!==id);a.push(ent);writeExtra(a);log('Thêm nút '+label+' (kéo từ website xã)');
+    return{ok:true,label}}catch(err){return{err:String(err&&err.message||err)}}
+});
+ipcMain.handle('xa:remove',(e,id)=>{const a=readExtra();if(!a.some(x=>x.id===id))return{err:'Chỉ gỡ được nút do bạn tự thêm.'};writeExtra(a.filter(x=>x.id!==id));const c=readCodes();delete c[id];writeCodes(c);return{ok:true}});
+loadExtra();
 const xaList=()=>cfg.xa.filter(x=>!cfg.only||x.id===cfg.only);
 const codesFile=()=>path.join(app.getPath('userData'),'codes.json');
 const readCodes=()=>{try{return JSON.parse(fs.readFileSync(codesFile(),'utf8'))}catch(e){return{}}};
@@ -57,11 +87,12 @@ function createWindow(){
   win.once('ready-to-show',()=>{try{if(win.isMinimized())win.restore();win.show();win.setAlwaysOnTop(true);win.focus();setTimeout(()=>{try{win.setAlwaysOnTop(false)}catch(_){}},1500)}catch(e){}});
   view=new WebContentsView({webPreferences:{partition:'persist:gqtthc',contextIsolation:true,backgroundThrottling:false}});
   win.contentView.addChildView(view);layout();win.on('resize',layout);
+  view.webContents.on('will-navigate',(e,u)=>{if(!/^https?:/i.test(u))e.preventDefault()});
   view.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/[^/]*dcs\.vn\//.test(url))view.webContents.loadURL(url);else shell.openExternal(url);return{action:'deny'}});
   view.webContents.loadURL(cfg.home);
   view.webContents.on('did-fail-load',(e,c,d)=>{if(c!==-3)win.webContents.send('status','Không mở được trang: '+d)});
 }
-ipcMain.handle('init',()=>({ver:app.getVersion(),admin:!cfg.only,title:cfg.title,xa:xaList().map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id]}))}));
+ipcMain.handle('init',()=>({ver:app.getVersion(),admin:!cfg.only,title:cfg.title,xa:xaList().map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id],extra:!!x.extra}))}));
 ipcMain.handle('nav',(e,a)=>{if(a==='home')view.webContents.loadURL(cfg.home);else if(a==='reload')view.webContents.reload()});
 ipcMain.handle('reset',(e,id)=>{const c=readCodes();delete c[id];writeCodes(c);return true});
 let _chOk=null,_chAt=0;
@@ -82,12 +113,12 @@ async function doRun(id,code,api,month){
   const needApi=x.fn==='dpBookmarklet';
   const apiUrl=needApi?(codes[id+'_api']||(typeof x.arg==='string'?x.arg:'')):'';
   if(needApi&&!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(apiUrl))return{need:'api'};
-  if(!codes[id]&&codes.__all)codes[id]=codes.__all;
+  if(!x.extra&&!codes[id]&&codes.__all)codes[id]=codes.__all;
   if(!codes[id])return{need:'code'};
   const url=view.webContents.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
   let BM;try{BM=fs.readFileSync(path.join(__dirname,x.file),'utf8')}catch(err){return{err:'Thiếu file '+x.file}}
-  const useChung=!!(cfg.chung&&codes.__all&&!needApi&&await chungOk());
+  const useChung=!!(!x.extra&&cfg.chung&&codes.__all&&!needApi&&await chungOk());
   if(useChung)codes[id]=codes.__all;
   const arg=needApi?apiUrl:(useChung?Object.assign({},x.arg,{chung:cfg.chung}):x.arg);
   const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
