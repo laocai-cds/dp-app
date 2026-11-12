@@ -33,7 +33,7 @@ async function initSched(){const s=await api.schedGet();$('schOn').checked=s.ena
  document.querySelectorAll('#xs input[type=checkbox]').forEach(k=>{k.checked=s.ids.includes(k.dataset.id);k.addEventListener('change',()=>{if($('schOn').checked)saveSched()})});
  ['schOn','schT','schLg'].forEach(i=>$(i).addEventListener('change',async()=>{if($('schOn').checked&&!checkedIds().length){$('schOn').checked=false;st('Hãy tích chọn các xã cần tự chạy trước');return}await saveSched();st($('schOn').checked?'Đã hẹn: mỗi ngày '+$('schT').value+' tự lấy dữ liệu '+checkedIds().length+' xã (giữ ứng dụng mở và đã đăng nhập gqtthc)':'Đã tắt hẹn giờ')}));
  $('schNow').onclick=async()=>{if(!checkedIds().length){st('Hãy tích chọn các xã trước');return}await saveSched();st('Chạy thử theo lịch…');await api.schedNow()};
- $('schLog').onclick=async()=>{st('Nhật ký: '+((await api.schedLog())||'(trống)').replace(/\n/g,' ⏐ '))}}
+ $('schLog').onclick=async()=>{const r=await api.openLog();st('Đã mở file nhật ký (Notepad). Nếu không thấy: '+r)}}
 async function batch(){const ids=[...document.querySelectorAll('#xs input[type=checkbox]:checked')].map(k=>k.dataset.id);if(!ids.length){st('Hãy tích chọn ít nhất một xã');return}
  stopped=false;$('go').disabled=true;$('stop').style.display='';const res=[];const label=id=>(XA.find(x=>x.id===id)||{}).label||id;
  for(let i=0;i<ids.length;i++){if(stopped)break;const id=ids[i];$('prog').textContent='('+(i+1)+'/'+ids.length+') '+label(id)+'…';st('Đang lấy '+label(id)+' — chờ gqtthc (có thể 1–2 phút/xã)');
@@ -41,7 +41,7 @@ async function batch(){const ids=[...document.querySelectorAll('#xs input[type=c
   if(r.need){res.push('⚠ '+label(id)+': chưa có mã — bấm riêng nút xã này một lần để nhập mã');continue}
   if(r.err){res.push('✕ '+label(id)+': '+r.err);if(/đăng nhập/.test(r.err))break;continue}
   if(r.result==='done')res.push('✅ '+label(id));else if(r.result==='stop'||r.result==='cancel'){res.push('■ '+label(id)+': đã hủy');break}else res.push('✕ '+label(id)+': '+(r.msg||'lỗi').slice(0,70))}
- $('go').disabled=false;$('stop').style.display='none';$('prog').textContent='';st('Xong lô: '+res.join(' · '))}
+ $('go').disabled=false;$('stop').style.display='none';$('prog').textContent='';st('Xong lô: '+res.join(' · '));api.addLog('Chạy tay — '+res.join(' · '))}
 $('ok').onclick=()=>{const v=$('code').value.trim();if(!v)return;mode==='api'?run(cur,null,v):run(cur,v)};$('code').onkeydown=e=>{if(e.key==='Enter')$('ok').click()};
 $('no').onclick=()=>{$('ask').style.display='none';st('Đã hủy')};
 $('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);api.onUpdate(u=>{const b=document.createElement('button');b.textContent='⬇ Có bản mới '+u.ver+' – bấm để tải';b.style.cssText='background:#ffd23f;color:#3b2a00';b.onclick=()=>api.open(u.url);$('home').before(b)});
