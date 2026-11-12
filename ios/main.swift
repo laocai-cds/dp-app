@@ -31,11 +31,11 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         b.titleLabel?.font = UIFont.boldSystemFont(ofSize: size)
         b.titleLabel?.adjustsFontSizeToFitWidth = true
         b.titleLabel?.minimumScaleFactor = 0.7
-        b.layer.cornerRadius = 12
+        b.layer.cornerRadius = 9
         b.layer.borderWidth = 1
         b.layer.borderColor = UIColor(white: 1, alpha: 0.2).cgColor
         b.addAction(UIAction { _ in act() }, for: .touchUpInside)
-        b.heightAnchor.constraint(equalToConstant: 42).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 32).isActive = true
         return b
     }
 
@@ -54,7 +54,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
            let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any] { cfg = o }
 
         status.textColor = .white
-        status.font = UIFont.systemFont(ofSize: 11)
+        status.font = UIFont.systemFont(ofSize: 9)
         status.numberOfLines = 2
         status.text = "1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu"
 
@@ -62,12 +62,12 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let dark = UIColor(red: 0.059, green: 0.227, blue: 0.431, alpha: 1)
         let orange = UIColor(red: 0.91, green: 0.514, blue: 0.102, alpha: 1)
         let blue = UIColor(red: 0.18, green: 0.42, blue: 0.69, alpha: 1)
-        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 16)
-        let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 11); author.adjustsFontSizeToFitWidth = true
+        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 13)
+        let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 9); author.adjustsFontSizeToFitWidth = true
 
         let ctl = hrow([
-            btn("⟳  Tải lại", blue, .white, 13) { [weak self] in self?.web.reload() },
-            btn("🔑  Mã chung", blue, .white, 13) { [weak self] in
+            btn("⟳  Tải lại", blue, .white, 11) { [weak self] in self?.web.reload() },
+            btn("🔑  Mã chung", blue, .white, 11) { [weak self] in
                 guard let s = self else { return }
                 s.ask("Nhập Mã chung (lưu trên máy này)", true, s.ud.string(forKey: "__all") ?? "") { v in
                     s.ud.set(v, forKey: "__all"); s.say(v.isEmpty ? "Đã xóa mã chung" : "Đã lưu mã chung") }
@@ -81,7 +81,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
             var bs: [UIView] = []
             for j in i..<min(i + 3, xa.count) {
                 let x = xa[j]
-                bs.append(btn((x["label"] as? String) ?? "", orange, .white, 12) { [weak self] in self?.run(x) })
+                bs.append(btn((x["label"] as? String) ?? "", orange, .white, 10) { [weak self] in self?.run(x) })
             }
             while bs.count < 3 { bs.append(UIView()) }
             rows.append(hrow(bs))

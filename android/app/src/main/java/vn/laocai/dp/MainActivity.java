@@ -54,21 +54,21 @@ public class MainActivity extends Activity {
         title.setText("ĐỒNG BỘ ĐẢNG PHÍ 2026");
         title.setTextColor(Color.WHITE);
         title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setTextSize(16);
+        title.setTextSize(13);
         title.setGravity(Gravity.CENTER);
         title.setPadding(dp(8), dp(8), dp(8), 0);
         root.addView(title);
         TextView author = new TextView(this);
         author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai");
         author.setTextColor(0xFFBFD6F5);
-        author.setTextSize(11);
+        author.setTextSize(9);
         author.setGravity(Gravity.CENTER);
         author.setPadding(dp(8), dp(1), dp(8), dp(4));
         root.addView(author);
 
         status = new TextView(this);
         status.setTextColor(0xFFE6EEF9);
-        status.setTextSize(11);
+        status.setTextSize(9);
         status.setPadding(dp(8), dp(4), dp(8), dp(2));
         status.setText("1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu");
         root.addView(status);
@@ -92,11 +92,11 @@ public class MainActivity extends Activity {
                 final JSONObject x = xa.optJSONObject(i);
                 if (x == null) continue;
                 Button bt = btn(x.optString("label"), 0xFFE8831A, Color.WHITE, v -> run(x));
-                bt.setTextSize(12);
+                bt.setTextSize(10);
                 bt.setPadding(dp(2), 0, dp(2), 0);
                 GridLayout.LayoutParams lp = new GridLayout.LayoutParams(GridLayout.spec(GridLayout.UNDEFINED), GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f));
                 lp.width = 0;
-                lp.height = dp(44);
+                lp.height = dp(32);
                 lp.setMargins(dp(3), dp(3), dp(3), dp(3));
                 bt.setLayoutParams(lp);
                 grid.addView(bt);
@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
     int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
     LinearLayout.LayoutParams eq() {
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(42), 1f);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(34), 1f);
         lp.setMargins(dp(3), 0, dp(3), 0);
         return lp;
     }
@@ -134,11 +134,11 @@ public class MainActivity extends Activity {
     StateListDrawable shape(int normal, int pressed) {
         GradientDrawable n = new GradientDrawable();
         n.setColor(normal);
-        n.setCornerRadius(dp(12));
+        n.setCornerRadius(dp(9));
         n.setStroke(dp(1), 0x33FFFFFF);
         GradientDrawable p = new GradientDrawable();
         p.setColor(pressed);
-        p.setCornerRadius(dp(12));
+        p.setCornerRadius(dp(9));
         StateListDrawable sl = new StateListDrawable();
         sl.addState(new int[]{android.R.attr.state_pressed}, p);
         sl.addState(new int[]{}, n);
@@ -149,14 +149,14 @@ public class MainActivity extends Activity {
         Button x = new Button(this);
         x.setText(t);
         x.setAllCaps(false);
-        x.setTextSize(13);
+        x.setTextSize(11);
         x.setTypeface(Typeface.DEFAULT_BOLD);
         x.setTextColor(fg);
         int dark = Color.rgb(Math.max(0, Color.red(bg) - 40), Math.max(0, Color.green(bg) - 40), Math.max(0, Color.blue(bg) - 40));
         x.setBackground(shape(bg, dark));
         x.setStateListAnimator(null);
         x.setElevation(0);
-        x.setPadding(dp(10), 0, dp(10), 0);
+        x.setPadding(dp(4), 0, dp(4), 0);
         x.setOnClickListener(l);
         return x;
     }
