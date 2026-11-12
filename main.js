@@ -225,5 +225,5 @@ ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))
 function announceUpdated(){try{const f=path.join(app.getPath('userData'),'lastver.txt');let old='';try{old=fs.readFileSync(f,'utf8').trim()}catch(_){}
   const cur=app.getVersion();if(old&&old!==cur){setTimeout(()=>{say('✅ Đã cập nhật xong: bản '+old+' → bản '+cur+'. Ứng dụng đã khởi động lại bằng phiên bản mới.');log('Đã cập nhật '+old+' → '+cur)},2500)}
   if(old!==cur)fs.writeFileSync(f,cur)}catch(e){}}
-app.whenReady().then(()=>{createWindow();announceUpdated();applySched();setInterval(tickSched,30000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
+app.whenReady().then(()=>{createWindow();announceUpdated();applySched();setInterval(tickSched,30000);setInterval(checkUpdate,30*60*1000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
