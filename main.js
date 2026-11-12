@@ -14,6 +14,7 @@ function mergeNewCfg(){try{const nf=path.join(exeDir,'config.new.json'),cf=path.
   const ids=new Set((c.xa||[]).map(x=>x.id));let ch=false;(n.xa||[]).forEach(x=>{if(!ids.has(x.id)){c.xa.push(x);ch=true}});
   /* cập nhật thông số các xã đã có (giữ nguyên "only") */
   (n.xa||[]).forEach(x=>{const i=c.xa.findIndex(y=>y.id===x.id);if(i>=0&&JSON.stringify(c.xa[i])!==JSON.stringify(x)){c.xa[i]=x;ch=true}});
+  if(n.chung!==undefined&&c.chung!==n.chung){c.chung=n.chung;ch=true}
   if(ch)fs.writeFileSync(cf,JSON.stringify(c,null,2));fs.unlinkSync(nf)}catch(e){}}
 mergeNewCfg();
 const cfg=loadCfg();let BAR=cfg.only?110:178;
@@ -62,7 +63,9 @@ async function doRun(id,code,api,month){
   const url=view.webContents.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
   let BM;try{BM=fs.readFileSync(path.join(__dirname,x.file),'utf8')}catch(err){return{err:'Thiếu file '+x.file}}
-  const arg=needApi?apiUrl:x.arg;
+  const useChung=!!(cfg.chung&&codes.__all&&!needApi);
+  if(useChung)codes[id]=codes.__all;
+  const arg=needApi?apiUrl:(useChung?Object.assign({},x.arg,{chung:cfg.chung}):x.arg);
   const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
   try{await view.webContents.executeJavaScript(js);return{ok:true}}catch(err){return{err:String(err&&err.message||err)}}
 }

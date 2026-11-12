@@ -79,7 +79,7 @@ function apiBookmarklet(C){
       say('Đang gửi '+list.length+' đơn vị và chờ Google Sheet xác nhận…',false,true);
       let ok=null,postErr=null,tE=null;
       /* Gửi không chờ phản hồi và hỏi lại mỗi 1 giây (tối đa 3 lần cùng lúc) để biết dữ liệu đã lên ngay khi Apps Script ghi xong */
-      fetch(C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign(T?{tab:T}:{},{headers:h1,rows:rows,token:pw,source:C.src,sentAt:new Date().toISOString()}))}).then(()=>{tE=performance.now()},er=>{postErr=er});
+      fetch(C.chung||C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign(T?{tab:T}:{},{headers:h1,rows:rows,token:pw,source:C.src,sentAt:new Date().toISOString()}))}).then(()=>{tE=performance.now()},er=>{postErr=er});
       await new Promise(res=>{let done=false,fly=0;const t1=performance.now(),end=()=>{if(done)return;done=true;clearInterval(iv);res()},iv=setInterval(()=>{if(done)return;if(postErr||performance.now()-t1>60000){end();return}if(fly<3){fly++;const ts=performance.now();jp(rd,20000).then(x=>{if(!x||!x.ok){nFail++;return}nRead++;tMin=Math.min(tMin,performance.now()-ts);if(done)return;if(same(x)||(before!==null&&(x.lastSync||'')!==before)){ok=x;end()}}).finally(()=>{fly--})}},1000)});
       if(postErr&&!ok)throw postErr;
       const tF=performance.now();
@@ -88,7 +88,7 @@ function apiBookmarklet(C){
         const x=await jp(C.ep+'?action=read&tab='+encodeURIComponent('Thu theo tháng'),9000);
         if(x&&x.ok){const map={};(x.rows||[]).forEach(r=>{const k=String(r&&r[0]||'').trim();if(/^\d{4}-\d{2}$/.test(k))map[k]=[k,Number(String(r[1]).replace(/[^\d]/g,''))||0,r[2]||'']});
           map[MK]=[MK,paid,'Nút API lúc '+new Date().toLocaleString('vi-VN',{hour12:false})];
-          await fetch(C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Thu theo tháng',headers:['Tháng','Đã nộp trong kỳ (₫)','Ghi nhận'],rows:Object.keys(map).sort().map(k=>map[k]),token:pw,source:C.src+'-monthly',sentAt:new Date().toISOString()})})}}
+          await fetch(C.chung||C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Thu theo tháng',headers:['Tháng','Đã nộp trong kỳ (₫)','Ghi nhận'],rows:Object.keys(map).sort().map(k=>map[k]),token:pw,source:C.src+'-monthly',sentAt:new Date().toISOString()})})}}
       if(ok){try{localStorage.setItem(C.k,pw)}catch(e){}}else if(nRead>0){try{localStorage.removeItem(C.k)}catch(e){}}
       const apiT=tC-tA,nc=navigator.connection||{};
       const speed=apiT<2500?'🟢 Nhanh':apiT<6000?'🟡 Bình thường':'🔴 Chậm';
