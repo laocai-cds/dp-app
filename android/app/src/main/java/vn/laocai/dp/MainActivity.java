@@ -1,0 +1,214 @@
+package vn.laocai.dp;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.text.InputType;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.CookieManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
+public class MainActivity extends Activity {
+    interface Done { void ok(String v); }
+
+    WebView web;
+    SharedPreferences sp;
+    JSONObject cfg;
+    TextView status;
+
+    static final String PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();";
+
+    @Override
+    protected void onCreate(Bundle b) {
+        super.onCreate(b);
+        sp = getSharedPreferences("dp", 0);
+        try { cfg = new JSONObject(read("config.json")); } catch (Exception e) { cfg = new JSONObject(); }
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(0xFF0F3A6E);
+        root.setFitsSystemWindows(true);
+
+        status = new TextView(this);
+        status.setTextColor(Color.WHITE);
+        status.setTextSize(12);
+        status.setPadding(dp(8), dp(4), dp(8), dp(2));
+        status.setText("1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu");
+        root.addView(status);
+
+        HorizontalScrollView hs = new HorizontalScrollView(this);
+        hs.setHorizontalScrollBarEnabled(false);
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setPadding(dp(6), dp(2), dp(6), dp(4));
+        hs.addView(row);
+        root.addView(hs, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        row.addView(btn("⟳ Tải lại", 0xFFE8F1FF, 0xFF0F3A6E, v -> web.reload()));
+        row.addView(btn("🔑 Mã chung", 0xFFE8F1FF, 0xFF0F3A6E, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
+            sp.edit().putString("__all", c.trim()).apply();
+            say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
+        })));
+        row.addView(btn("🗑 Xóa mã xã", 0xFFE8F1FF, 0xFF0F3A6E, v -> {
+            SharedPreferences.Editor ed = sp.edit();
+            for (String k : sp.getAll().keySet()) if (k.startsWith("code_") || k.startsWith("api_")) ed.remove(k);
+            ed.apply();
+            say("Đã xóa các mã riêng từng xã đã lưu");
+        }));
+
+        JSONArray xa = cfg.optJSONArray("xa");
+        if (xa != null) {
+            for (int i = 0; i < xa.length(); i++) {
+                final JSONObject x = xa.optJSONObject(i);
+                if (x == null) continue;
+                row.addView(btn(x.optString("label"), 0xFFE07B00, Color.WHITE, v -> run(x)));
+            }
+        }
+
+        web = new WebView(this);
+        root.addView(web, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        setContentView(root);
+
+        WebSettings s = web.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setSupportMultipleWindows(false);
+        s.setLoadWithOverviewMode(true);
+        s.setUseWideViewPort(true);
+        s.setBuiltInZoomControls(true);
+        s.setDisplayZoomControls(false);
+        CookieManager.getInstance().setAcceptCookie(true);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
+        web.setWebViewClient(new WebViewClient());
+        web.setWebChromeClient(new WebChromeClient());
+        web.loadUrl(cfg.optString("home", "https://gqtthc.dcs.vn/"));
+    }
+
+    int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
+
+    Button btn(String t, int bg, int fg, View.OnClickListener l) {
+        Button x = new Button(this);
+        x.setText(t);
+        x.setAllCaps(false);
+        x.setTextSize(13);
+        x.setTextColor(fg);
+        x.setBackgroundColor(bg);
+        x.setPadding(dp(10), 0, dp(10), 0);
+        x.setOnClickListener(l);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(38));
+        lp.setMargins(dp(3), 0, dp(3), 0);
+        lp.gravity = Gravity.CENTER_VERTICAL;
+        x.setLayoutParams(lp);
+        return x;
+    }
+
+    void say(final String m) { runOnUiThread(() -> status.setText(m)); }
+
+    String read(String name) throws Exception {
+        InputStream in = getAssets().open(name);
+        ByteArrayOutputStream o = new ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = in.read(buf)) > 0) o.write(buf, 0, n);
+        in.close();
+        return new String(o.toByteArray(), "UTF-8");
+    }
+
+    void ask(String hint, boolean secret, String initial, final Done d) {
+        final EditText et = new EditText(this);
+        et.setHint(hint);
+        et.setText(initial == null ? "" : initial);
+        et.setInputType(secret ? (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD) : InputType.TYPE_CLASS_TEXT);
+        new AlertDialog.Builder(this)
+                .setTitle(hint)
+                .setView(et)
+                .setPositiveButton("Lưu và chạy", (dlg, w) -> d.ok(et.getText().toString().trim()))
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    void run(final JSONObject x) {
+        try {
+            final String id = x.getString("id");
+            final String fn = x.getString("fn");
+            final String key = x.getString("key");
+            Object arg = x.opt("arg");
+            boolean needApi = fn.equals("dpBookmarklet");
+
+            String url = web.getUrl();
+            if (url == null || !url.startsWith("https://gqtthc.dcs.vn/")) {
+                say("Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.");
+                return;
+            }
+            String all = sp.getString("__all", "");
+
+            String apiUrl = "";
+            if (needApi) {
+                apiUrl = sp.getString("api_" + id, arg instanceof String ? (String) arg : "");
+                if (!apiUrl.matches("^https://script\\.google\\.com/macros/s/[^/]+/exec$")) {
+                    ask("Dán địa chỉ Apps Script (…/exec) của trang tthc", false, "", v -> {
+                        sp.edit().putString("api_" + id, v).apply();
+                        run(x);
+                    });
+                    return;
+                }
+            }
+
+            String code = sp.getString("code_" + id, "");
+            if (code.isEmpty() && !all.isEmpty()) code = all;
+            if (code.isEmpty()) {
+                ask("Nhập mã đồng bộ của " + x.optString("label") + " (chỉ 1 lần)", true, "", v -> {
+                    sp.edit().putString("code_" + id, v).apply();
+                    run(x);
+                });
+                return;
+            }
+
+            String chung = cfg.optString("chung", "");
+            boolean useChung = !needApi && !all.isEmpty() && !chung.isEmpty();
+            if (useChung) code = all;
+
+            String argJs;
+            if (needApi) {
+                argJs = JSONObject.quote(apiUrl);
+            } else if (arg instanceof JSONObject) {
+                JSONObject a = new JSONObject(arg.toString());
+                if (useChung) a.put("chung", chung);
+                argJs = a.toString();
+            } else {
+                argJs = JSONObject.quote(String.valueOf(arg));
+            }
+
+            String bm = read(x.getString("file"));
+            String js = PRE + "(()=>{try{localStorage.setItem(" + JSONObject.quote(key) + "," + JSONObject.quote(code) + ")}catch(e){}\n"
+                    + bm + "\n(" + fn + ")(" + argJs + ")})();void 0";
+            web.evaluateJavascript(js, null);
+            say("Đang chạy " + x.optString("label") + "… xem tiến độ ở góc phải trang (có thể mất 1–2 phút).");
+        } catch (Exception e) {
+            say("⚠ Lỗi: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (web != null && web.canGoBack()) web.goBack(); else super.onBackPressed();
+    }
+}

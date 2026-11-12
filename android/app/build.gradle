@@ -1,0 +1,24 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'vn.laocai.dp'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'vn.laocai.dp'
+        minSdk 24
+        targetSdk 34
+        versionCode (project.findProperty('vcode') ?: '1').toInteger()
+        versionName (project.findProperty('vname') ?: '1.0')
+    }
+    signingConfigs {
+        dp {
+            storeFile file('../dp.keystore')
+            storePassword 'dpdangphi'
+            keyAlias 'dp'
+            keyPassword 'dpdangphi'
+        }
+    }
+    buildTypes {
+        release { signingConfig signingConfigs.dp; minifyEnabled false }
+        debug { signingConfig signingConfigs.dp }
+    }
+}

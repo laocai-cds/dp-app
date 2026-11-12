@@ -1,0 +1,41 @@
+name: Build Android APK
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', 'config.json', 'bm/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: 8.9 }
+      - name: Đọc số phiên bản
+        id: ver
+        run: echo "v=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Chép cấu hình và bộ lấy số liệu vào app
+        run: |
+          mkdir -p android/app/src/main/assets/bm
+          cp config.json android/app/src/main/assets/config.json
+          cp bm/*.js android/app/src/main/assets/bm/
+      - name: Đóng gói APK
+        working-directory: android
+        run: gradle --no-daemon assembleRelease -Pvname=${{ steps.ver.outputs.v }} -Pvcode=${{ github.run_number }}
+      - name: Đổi tên APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk DP-DangPhi.apk
+      - name: Đăng lên Releases (không làm thành bản mới nhất của app Windows)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Bản Android (APK) mới nhất
+          body: "Tải file DP-DangPhi.apk về điện thoại Android và cài đặt. Phiên bản ${{ steps.ver.outputs.v }}."
+          prerelease: true
+          make_latest: false
+          files: DP-DangPhi.apk
