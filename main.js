@@ -165,13 +165,13 @@ const REPO='laocai-cds/dp-app';
 let latest=null;
 async function checkUpdate(){
   try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return;
-    const j=await r.json();const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();
+    const j=await r.json();const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();try{win.webContents.send('latestver',nv)}catch(_){}
     const cmp=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1}return 0};
     const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
     const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar\.bin$/.exec(a.name);return k&&k[1]===process.versions.electron});
     const cf=(j.assets||[]).find(a=>a.name==='dp-config.json');
     if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);maybeAuto();return 'new'}
-    return 'same'}catch(e){return 'err'}
+    return 'same'}catch(e){try{win.webContents.send('latestver','')}catch(_){}return 'err'}
 }
 const updFile=()=>path.join(app.getPath('userData'),'update.json');
 const readUpd=()=>{try{return Object.assign({auto:false,mins:30},JSON.parse(fs.readFileSync(updFile(),'utf8')))}catch(e){return{auto:false,mins:30}}};
