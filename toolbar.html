@@ -52,5 +52,6 @@ $('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.
 let upBtn=null;
 api.onUpdate(u=>{if(upBtn)upBtn.remove();upBtn=document.createElement('button');upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;upBtn.style.cssText='background:#169a4a;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);';
  upBtn.onclick=async()=>{if(!confirm('Cập nhật lên bản '+u.ver+'? Ứng dụng sẽ tự đóng và mở lại. Cài đặt và mã đồng bộ được giữ nguyên.'))return;upBtn.disabled=true;const r=await api.updInstall();if(r&&r.err){st('⚠ '+r.err);upBtn.disabled=false;if(confirm('Không cập nhật tự động được. Mở trang tải về trên GitHub?'))api.open(u.url)}};$('upd').before(upBtn)});
-$('upd').onclick=async()=>{st('Đang kiểm tra bản mới trên GitHub…');const r=await api.updCheck();st(r.r==='new'?'Có bản mới — bấm nút xanh "Cập nhật"':r.r==='same'?'Bạn đang dùng bản mới nhất (v'+r.cur+')':'Không kiểm tra được (mạng hoặc GitHub chưa có release)')};
+$('upd').onclick=async()=>{const b=$('upd'),o='Kiểm tra cập nhật';b.disabled=true;b.textContent='⏳ Đang kiểm tra…';st('Đang kiểm tra bản mới trên GitHub…');let r;try{r=await api.updCheck()}catch(e){r={r:'err',why:String(e&&e.message||e).slice(0,40)}}
+ const msg=r.r==='new'?'⬇ Có bản mới — bấm nút xanh':r.r==='same'?'✓ Đã là bản mới nhất':'✕ Không kiểm tra được'+(r.why?' ('+r.why+')':'');b.textContent=msg;st(msg);setTimeout(()=>{b.textContent=o;b.disabled=false},4000)};
 </script>

@@ -163,15 +163,16 @@ ipcMain.handle('sched:openlog',async()=>{const f=logFile();try{if(!fs.existsSync
 ipcMain.handle('sched:log',()=>{try{return fs.readFileSync(logFile(),'utf8').split('\n').slice(-12).join('\n')}catch(e){return''}});
 const REPO='laocai-cds/dp-app';
 let latest=null;
+let lastWhy='';
 async function checkUpdate(){
-  try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return;
+  try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok){lastWhy='GitHub trả mã '+r.status;try{win.webContents.send('latestver','')}catch(_){}return 'err'}
     const j=await r.json();const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();try{win.webContents.send('latestver',nv)}catch(_){}
     const cmp=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1}return 0};
     const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
     const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar\.bin$/.exec(a.name);return k&&k[1]===process.versions.electron});
     const cf=(j.assets||[]).find(a=>a.name==='dp-config.json');
     if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);maybeAuto();return 'new'}
-    return 'same'}catch(e){try{win.webContents.send('latestver','')}catch(_){}return 'err'}
+    lastWhy='';return 'same'}catch(e){lastWhy=String(e&&e.message||e).slice(0,50);try{win.webContents.send('latestver','')}catch(_){}return 'err'}
 }
 const updFile=()=>path.join(app.getPath('userData'),'update.json');
 const readUpd=()=>{try{return Object.assign({auto:false,mins:30},JSON.parse(fs.readFileSync(updFile(),'utf8')))}catch(e){return{auto:false,mins:30}}};
@@ -182,7 +183,7 @@ async function maybeAuto(){const u=readUpd();if(!u.auto||!latest)return;
   log('Tự động cập nhật lên bản '+latest.ver);say('🔄 Tự động cập nhật lên bản '+latest.ver+'…');const r=await installUpdate();if(r&&r.err){log('Tự cập nhật lỗi: '+r.err);say('✕ Tự cập nhật lỗi: '+r.err)}}
 ipcMain.handle('upd:get',()=>readUpd());
 ipcMain.handle('upd:set',(e,o)=>{const u={auto:!!o.auto,mins:Math.min(1440,Math.max(5,parseInt(o.mins)||30))};fs.writeFileSync(updFile(),JSON.stringify(u));armUpd();if(u.auto)checkUpdate();return u});
-ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cur:app.getVersion()}});
+ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cur:app.getVersion(),why:lastWhy}});
 async function dl(url,file,label){
   const r=await net.fetch(url,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)throw new Error('Không tải được ('+r.status+')');
   const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(file);let werr=null;out.on('error',e=>{werr=e});
