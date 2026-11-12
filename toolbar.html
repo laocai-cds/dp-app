@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>ĐP</title>
+<style>
+html{background:#0f3a6e}*{box-sizing:border-box}body{margin:0;height:auto;background:#0f3a6e;color:#fff;font:14px system-ui,sans-serif;display:flex;flex-direction:column;justify-content:flex-start;gap:8px;padding:8px 14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#xs{gap:6px}h1{font-size:15px;margin:0 10px 0 0}
+button{border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;background:#e8f1ff;color:#0f3a6e}
+button.xa{background:#ffd23f;color:#3b2a00}button:hover{filter:brightness(.93)}button:disabled{opacity:.5}
+span.g{display:inline-flex;align-items:center;gap:3px}span.g input{margin:0}input[type=text],input[type=password]{padding:7px 10px;border-radius:8px;border:0;min-width:240px}select{padding:6px;border-radius:8px;border:0}label{display:flex;gap:4px;align-items:center}#st{opacity:.9;font-size:13px}.sp{flex:1}
+</style>
+<div class="row"><h1 id="t">Đồng bộ đảng phí</h1><span class="sp"></span><button id="home">Trang gqtthc</button><button id="rl">Tải lại</button></div>
+<div id="xs" class="row"></div>
+<div id="adm" class="row" style="display:none;background:#0a2a52;border-radius:8px;padding:6px 10px"><b>Quản trị:</b><label><input type="checkbox" id="all"> Chọn tất cả</label><select id="mon"></select><button id="go" style="background:#2ecc71;color:#062">▶ Lấy dữ liệu các xã đã chọn</button><button id="stop" style="background:#ff6b6b;color:#fff;display:none">■ Dừng</button><span id="prog"></span></div>
+<div class="row"><span id="st">1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu</span>
+<span id="ask" class="row" style="display:none"><input id="code" type="password" placeholder="Nhập mã đồng bộ của xã (chỉ nhập 1 lần)"><button id="ok">Lưu và chạy</button><button id="no">Hủy</button></span></div>
+<script>
+const $=id=>document.getElementById(id);let cur=null;
+const st=m=>$('st').textContent=m;
+let mode='code';
+async function run(id,code,apiUrl){st('Đang chạy… xem tiến độ ở góc phải khung gqtthc');const r=await api.run(id,code,apiUrl);
+ if(r.need){cur=id;mode=r.need;$('ask').style.display='flex';$('code').value='';$('code').type=mode==='api'?'text':'password';$('code').placeholder=mode==='api'?'Dán địa chỉ Apps Script (…/exec) của trang tthc':'Nhập mã đồng bộ (chỉ nhập 1 lần)';$('code').focus();st(mode==='api'?'Cần địa chỉ Apps Script đảng phí (lưu 1 lần)':'Nhập mã đồng bộ của xã này');return}
+ $('ask').style.display='none';if(r.err)st('⚠ '+r.err);else st('Đã chạy. Chờ thông báo HOÀN THÀNH ở góc phải trang (máy chủ gqtthc có thể mất 1–2 phút).')}
+(async()=>{const c=await api.init();$('t').textContent=c.title;
+ ADM=c.admin;XA=c.xa;
+ c.xa.forEach(x=>{const w=document.createElement('span');w.className='g';if(ADM){const k=document.createElement('input');k.type='checkbox';k.dataset.id=x.id;k.title='Chọn để lấy hàng loạt';w.appendChild(k)}
+  const b=document.createElement('button');b.className='xa';b.textContent=x.label;b.onclick=()=>run(x.id);w.appendChild(b);$('xs').appendChild(w)});
+ if(ADM){$('adm').style.display='flex';const n=new Date();for(let i=0;i<12;i++){const d=new Date(n.getFullYear(),n.getMonth()-i,1),v=d.getFullYear()+'-'+(d.getMonth()+1);const o=document.createElement('option');o.value=v;o.textContent='Tháng '+(d.getMonth()+1)+'/'+d.getFullYear()+(i?'':' (hiện tại)');$('mon').appendChild(o)}
+  $('all').onchange=()=>document.querySelectorAll('#xs input[type=checkbox]').forEach(k=>k.checked=$('all').checked);
+  $('go').onclick=batch;$('stop').onclick=()=>{stopped=true;api.stop();st('Đang dừng…')}}})();
+let ADM=false,XA=[],stopped=false;
+async function batch(){const ids=[...document.querySelectorAll('#xs input[type=checkbox]:checked')].map(k=>k.dataset.id);if(!ids.length){st('Hãy tích chọn ít nhất một xã');return}
+ stopped=false;$('go').disabled=true;$('stop').style.display='';const res=[];const label=id=>(XA.find(x=>x.id===id)||{}).label||id;
+ for(let i=0;i<ids.length;i++){if(stopped)break;const id=ids[i];$('prog').textContent='('+(i+1)+'/'+ids.length+') '+label(id)+'…';st('Đang lấy '+label(id)+' — chờ gqtthc (có thể 1–2 phút/xã)');
+  const r=await api.runWait(id,$('mon').value);
+  if(r.need){res.push('⚠ '+label(id)+': chưa có mã — bấm riêng nút xã này một lần để nhập mã');continue}
+  if(r.err){res.push('✕ '+label(id)+': '+r.err);if(/đăng nhập/.test(r.err))break;continue}
+  if(r.result==='done')res.push('✅ '+label(id));else if(r.result==='stop'||r.result==='cancel'){res.push('■ '+label(id)+': đã hủy');break}else res.push('✕ '+label(id)+': '+(r.msg||'lỗi').slice(0,70))}
+ $('go').disabled=false;$('stop').style.display='none';$('prog').textContent='';st('Xong lô: '+res.join(' · '))}
+$('ok').onclick=()=>{const v=$('code').value.trim();if(!v)return;mode==='api'?run(cur,null,v):run(cur,v)};$('code').onkeydown=e=>{if(e.key==='Enter')$('ok').click()};
+$('no').onclick=()=>{$('ask').style.display='none';st('Đã hủy')};
+$('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);api.onUpdate(u=>{const b=document.createElement('button');b.textContent='⬇ Có bản mới '+u.ver+' – bấm để tải';b.style.cssText='background:#ffd23f;color:#3b2a00';b.onclick=()=>api.open(u.url);$('home').before(b)});
+</script>

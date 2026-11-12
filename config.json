@@ -1,0 +1,188 @@
+{
+  "title": "Đồng bộ đảng phí gqtthc → Google Sheet",
+  "home": "https://gqtthc.dcs.vn/",
+  "only": "",
+  "xa": [
+    {
+      "id": "tthc",
+      "label": "ĐP Tỉnh Lào Cai",
+      "fn": "dpBookmarklet",
+      "file": "bm/tthc.js",
+      "key": "dangphi.token",
+      "arg": ""
+    },
+    {
+      "id": "vanban",
+      "label": "ĐP Văn Bàn",
+      "fn": "apiBookmarklet",
+      "file": "bm/vanban.js",
+      "key": "vb_apipw",
+      "arg": {
+        "pid": 2122408,
+        "cid": 2124980,
+        "name": "Đảng bộ xã Văn Bàn",
+        "max": 0,
+        "k": "vb_apipw",
+        "src": "website-van-ban-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbwA6gO_3VpRmqjs1qIPprnFzo-Ala4uBqsYK3620rzqv3bl_27N623RFnf9V9wXxV12/exec"
+      }
+    },
+    {
+      "id": "xuanhoa",
+      "label": "ĐP Xuân Hòa",
+      "fn": "apiBookmarklet",
+      "file": "bm/xuanhoa.js",
+      "key": "xh_apipw",
+      "arg": {
+        "pid": 2122408,
+        "name": "Đảng bộ xã Xuân Hòa",
+        "max": 0,
+        "k": "xh_apipw",
+        "src": "website-xuan-hoa-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbxNpIwIdSufuR51f3iLL1eKILxo9Km3BjvhGiyeXVZ7d1_3SBXWexRBaSBbTY9LEbYu/exec"
+      }
+    },
+    {
+      "id": "pungluong",
+      "label": "ĐP Púng Luông",
+      "fn": "apiBookmarklet",
+      "file": "bm/pungluong.js",
+      "key": "pl_apipw",
+      "arg": {
+        "pid": 2122408,
+        "name": "Đảng bộ xã Púng Luông",
+        "max": 0,
+        "k": "pl_apipw",
+        "src": "website-pung-luong-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbzb0GE2RWwHftri7SGaW8uh4l8bt58e01bzWW1xgZiwVHBVUNkoAnd1mOePbSny16nh7Q/exec"
+      }
+    },
+    {
+      "id": "baothang",
+      "label": "ĐP Bảo Thắng",
+      "fn": "apiBookmarklet",
+      "file": "bm/baothang.js",
+      "key": "bt_apipw",
+      "arg": {
+        "pid": 2124775,
+        "name": "Đảng bộ xã Bảo Thắng",
+        "k": "bt_apipw",
+        "src": "website-bao-thang-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbxAaE46jDGIDki4cYGffdymtqMqJDfnutoP7QsVgLM8kyMu-3gpBxfdEZGn8HMsWrR1/exec"
+      }
+    },
+    {
+      "id": "luongthinh",
+      "label": "ĐP Lương Thịnh",
+      "fn": "apiBookmarklet",
+      "file": "bm/luongthinh.js",
+      "key": "lt_apipw",
+      "arg": {
+        "pid": 2124816,
+        "name": "Đảng bộ xã Lương Thịnh",
+        "k": "lt_apipw",
+        "src": "website-luong-thinh-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbw8NhU4T_iEjgoQebNAGVbjTs9rcaTIzkeDTtztpdFEkMwgNc1gRqk7jsmsBMgNxI6MKA/exec"
+      }
+    },
+    {
+      "id": "nghiado",
+      "label": "ĐP Nghĩa Đô",
+      "fn": "apiBookmarklet",
+      "file": "bm/nghiado.js",
+      "key": "nd_apipw",
+      "arg": {
+        "pid": 2122408,
+        "name": "Đảng bộ xã Nghĩa Đô",
+        "max": 33,
+        "k": "nd_apipw",
+        "src": "website-nghia-do-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbyA58Z6sF1diN5q_xLTRW8Eb7z6RHBB6sODiluiw3dqWDDIORLV84BD4VMm07c2YHs6gg/exec"
+      }
+    },
+    {
+      "id": "phinhho",
+      "label": "ĐP Phình Hồ",
+      "fn": "apiBookmarklet",
+      "file": "bm/phinhho.js",
+      "key": "ph_apipw",
+      "arg": {
+        "pid": 2124976,
+        "name": "Đảng bộ xã Phình Hồ",
+        "k": "ph_apipw",
+        "src": "website-phinh-ho-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbxVbYRtH1aYVo3gkA7lMPpfu7gCShvAvozkh71d7kJTkjXHltAvfVp8O2yW1CS31pc1UQ/exec"
+      }
+    },
+    {
+      "id": "phuckhanh",
+      "label": "ĐP Phúc Khánh",
+      "fn": "apiBookmarklet",
+      "file": "bm/phuckhanh.js",
+      "key": "pk_apipw",
+      "arg": {
+        "pid": 2122408,
+        "name": "Đảng bộ xã Phúc Khánh",
+        "max": 0,
+        "k": "pk_apipw",
+        "src": "website-phuc-khanh-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbzmZKP2MNQ8Hgeh4Qc1QjZp98ddQLyjqrIohVUrbaRaHO0sJg4_KMxJLF9Znhem876dmQ/exec"
+      }
+    },
+    {
+      "id": "simacai",
+      "label": "ĐP Si Ma Cai",
+      "fn": "apiBookmarklet",
+      "file": "bm/simacai.js",
+      "key": "sm_apipw",
+      "arg": {
+        "pid": 2122408,
+        "name": "Đảng bộ xã Si Ma Cai",
+        "max": 0,
+        "skip0": true,
+        "k": "sm_apipw",
+        "src": "website-si-ma-cai-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbyb0fvQHdmdDwKMOnF4qM-K5CniGORlNzRKjKaxKe6Whc19PLj8myU3yQ7aiYXPYlcylQ/exec"
+      }
+    },
+    {
+      "id": "tramtau",
+      "label": "ĐP Trạm Tấu",
+      "fn": "apiBookmarklet",
+      "file": "bm/tramtau.js",
+      "key": "tmt_apipw",
+      "arg": {
+        "pid": 2124966,
+        "name": "Đảng bộ xã Trạm Tấu",
+        "k": "tmt_apipw",
+        "src": "website-tram-tau-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbyDJxQWv3T9ESqRZAPYhyP-HyKEIgJa3oxiYmG4qcs-RR-ha9gZb1374VxhAm3iWq_W/exec"
+      }
+    },
+    {
+      "id": "volao",
+      "label": "ĐP Võ Lao",
+      "fn": "apiBookmarklet",
+      "file": "bm/volao.js",
+      "key": "volao_apipw",
+      "arg": {
+        "pid": 2124950,
+        "name": "Đảng bộ xã Võ Lao",
+        "k": "volao_apipw",
+        "src": "website-vo-lao-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbyZuNu5E1HxfD7kAL195eZ2JpTaElgViDjGDHTauIhXpC7lnqjPixHd49VpuhsIbXmh/exec"
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+name: Build Windows app
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Đóng gói
+        shell: bash
+        run: |
+          npx @electron/packager . DP-DangPhi --platform=win32 --arch=x64 --out=dist --overwrite --ignore="^/dist" --ignore="\.zip$" --ignore="^/\.github"
+          D=dist/DP-DangPhi-win32-x64
+          for f in $D/locales/*.pak; do case $(basename $f) in en-US.pak|vi.pak) ;; *) rm "$f";; esac; done
+          rm -f $D/LICENSES.chromium.html
+          cp config.json $D/config.json
+          cp HUONG-DAN.txt $D/HUONG-DAN.txt
+          cd dist && 7z a -tzip -mx=9 ../DP-DangPhi-win32-x64.zip DP-DangPhi-win32-x64
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: DP-DangPhi-win32-x64.zip
+          generate_release_notes: true
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: DP-DangPhi-win32-x64
+          path: DP-DangPhi-win32-x64.zip

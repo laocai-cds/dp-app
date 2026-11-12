@@ -1,0 +1,2 @@
+const {contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('api',{init:()=>ipcRenderer.invoke('init'),run:(id,code,api)=>ipcRenderer.invoke('run',{id,code,api}),runWait:(id,month)=>ipcRenderer.invoke('runWait',{id,month}),stop:()=>ipcRenderer.invoke('stop'),onUpdate:f=>ipcRenderer.on('update',(e,u)=>f(u)),open:u=>ipcRenderer.invoke('open',u),nav:a=>ipcRenderer.invoke('nav',a),reset:id=>ipcRenderer.invoke('reset',id),onStatus:f=>ipcRenderer.on('status',(e,m)=>f(m))});
