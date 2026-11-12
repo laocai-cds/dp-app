@@ -1,15 +1,18 @@
 <!doctype html><meta charset="utf-8"><title>ĐP</title>
 <style>
-html{background:#0f3a6e}*{box-sizing:border-box}body{margin:0;height:auto;background:#0f3a6e;color:#fff;font:14px system-ui,sans-serif;display:flex;flex-direction:column;justify-content:flex-start;gap:8px;padding:8px 14px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#xs{gap:6px}h1{font-size:15px;margin:0 10px 0 0}
-button{border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;background:#e8f1ff;color:#0f3a6e}
-button.xa{background:#ffd23f;color:#3b2a00}button:hover{filter:brightness(.93)}button:disabled{opacity:.5}
-span.g{display:inline-flex;align-items:center;gap:3px}span.g input{margin:0}input[type=text],input[type=password]{padding:7px 10px;border-radius:8px;border:0;min-width:240px}select{padding:6px;border-radius:8px;border:0}label{display:flex;gap:4px;align-items:center}#st{opacity:.9;font-size:13px}.sp{flex:1}
+html{background:#0f3a6e}*{box-sizing:border-box}body{margin:0;height:auto;background:#0f3a6e;color:#fff;font:12.5px system-ui,sans-serif;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;padding:5px 12px}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}h1{font-size:14px;margin:0 8px 0 0}
+button{border:0;border-radius:6px;padding:4px 9px;font:700 12px system-ui,sans-serif;cursor:pointer;background:#e8f1ff;color:#0f3a6e}
+button.xa{background:#ffd23f;color:#3b2a00;padding:4px 8px}button:hover{filter:brightness(.93)}button:disabled{opacity:.5}
+#xs{gap:3px 4px}span.g{display:inline-flex;align-items:center;gap:2px}span.g input{margin:0;width:13px;height:13px}
+input[type=text],input[type=password]{padding:5px 8px;border-radius:6px;border:0;min-width:240px}select{padding:3px;border-radius:6px;border:0;font-size:12px}input[type=time]{padding:2px 4px;border-radius:6px;border:0;font-size:12px}
+label{display:flex;gap:3px;align-items:center}#st{opacity:.95;font-size:12px;line-height:1.35;max-height:34px;overflow:hidden}.sp{flex:1}
+#adm,#sch{background:#0a2a52;border-radius:6px;padding:3px 8px!important;gap:6px!important}
 </style>
 <div class="row"><h1 id="t">Đồng bộ đảng phí</h1><span class="sp"></span><button id="upd">Kiểm tra cập nhật</button><button id="home">Trang gqtthc</button><button id="rl">Tải lại</button></div>
 <div id="xs" class="row"></div>
-<div id="adm" class="row" style="display:none;background:#0a2a52;border-radius:8px;padding:6px 10px"><b>Quản trị:</b><label><input type="checkbox" id="all"> Chọn tất cả</label><select id="mon"></select><button id="go" style="background:#2ecc71;color:#062">▶ Lấy dữ liệu các xã đã chọn</button><button id="stop" style="background:#ff6b6b;color:#fff;display:none">■ Dừng</button><span id="prog"></span></div>
-<div id="sch" class="row" style="display:none;background:#0a2a52;border-radius:8px;padding:6px 10px"><label><input type="checkbox" id="schOn"> ⏰ Tự chạy hằng ngày lúc</label><input type="time" id="schT" value="06:00" style="padding:5px;border-radius:6px;border:0"><span style="opacity:.85">cho các xã đã tích</span><label><input type="checkbox" id="schLg"> Tự mở cùng Windows</label><button id="schNow">Chạy thử ngay</button><button id="schLog">Xem nhật ký</button></div>
+<div id="adm" class="row" style="display:none"><b>Quản trị:</b><label><input type="checkbox" id="all"> Chọn tất cả</label><select id="mon"></select><button id="go" style="background:#2ecc71;color:#062">▶ Lấy dữ liệu các xã đã chọn</button><button id="stop" style="background:#ff6b6b;color:#fff;display:none">■ Dừng</button><span id="prog"></span></div>
+<div id="sch" class="row" style="display:none"><label><input type="checkbox" id="schOn"> ⏰ Tự chạy hằng ngày lúc</label><input type="time" id="schT" value="06:00" style="padding:5px;border-radius:6px;border:0"><span style="opacity:.85">cho các xã đã tích</span><label><input type="checkbox" id="schLg"> Tự mở cùng Windows</label><button id="schNow">Chạy thử ngay</button><button id="schLog">Xem nhật ký</button></div>
 <div class="row"><span id="st">1) Đăng nhập gqtthc ở khung bên dưới  2) Bấm nút xã để lấy số liệu</span>
 <span id="ask" class="row" style="display:none"><input id="code" type="password" placeholder="Nhập mã đồng bộ của xã (chỉ nhập 1 lần)"><button id="ok">Lưu và chạy</button><button id="no">Hủy</button></span></div>
 <script>
@@ -44,7 +47,8 @@ async function batch(){const ids=[...document.querySelectorAll('#xs input[type=c
  $('go').disabled=false;$('stop').style.display='none';$('prog').textContent='';st('Xong lô: '+res.join(' · '));api.addLog('Chạy tay — '+res.join(' · '))}
 $('ok').onclick=()=>{const v=$('code').value.trim();if(!v)return;mode==='api'?run(cur,null,v):run(cur,v)};$('code').onkeydown=e=>{if(e.key==='Enter')$('ok').click()};
 $('no').onclick=()=>{$('ask').style.display='none';st('Đã hủy')};
-$('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);let upBtn=null;
+$('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);new ResizeObserver(()=>api.bar(document.body.getBoundingClientRect().height)).observe(document.body);
+let upBtn=null;
 api.onUpdate(u=>{if(upBtn)upBtn.remove();upBtn=document.createElement('button');upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;upBtn.style.cssText='background:#2ecc71;color:#062';
  upBtn.onclick=async()=>{if(!confirm('Cập nhật lên bản '+u.ver+'? Ứng dụng sẽ tự đóng và mở lại. Cài đặt và mã đồng bộ được giữ nguyên.'))return;upBtn.disabled=true;const r=await api.updInstall();if(r&&r.err){st('⚠ '+r.err);upBtn.disabled=false;if(confirm('Không cập nhật tự động được. Mở trang tải về trên GitHub?'))api.open(u.url)}};$('upd').before(upBtn)});
 $('upd').onclick=async()=>{st('Đang kiểm tra bản mới trên GitHub…');const r=await api.updCheck();st(r.r==='new'?'Có bản mới — bấm nút xanh "Cập nhật"':r.r==='same'?'Bạn đang dùng bản mới nhất (v'+r.cur+')':'Không kiểm tra được (mạng hoặc GitHub chưa có release)')};

@@ -15,7 +15,7 @@ function mergeNewCfg(){try{const nf=path.join(exeDir,'config.new.json'),cf=path.
   (n.xa||[]).forEach(x=>{const i=c.xa.findIndex(y=>y.id===x.id);if(i>=0&&JSON.stringify(c.xa[i])!==JSON.stringify(x)){c.xa[i]=x;ch=true}});
   if(ch)fs.writeFileSync(cf,JSON.stringify(c,null,2));fs.unlinkSync(nf)}catch(e){}}
 mergeNewCfg();
-const cfg=loadCfg();const BAR=cfg.only?150:250;
+const cfg=loadCfg();let BAR=cfg.only?110:178;
 const xaList=()=>cfg.xa.filter(x=>!cfg.only||x.id===cfg.only);
 const codesFile=()=>path.join(app.getPath('userData'),'codes.json');
 const readCodes=()=>{try{return JSON.parse(fs.readFileSync(codesFile(),'utf8'))}catch(e){return{}}};
@@ -170,6 +170,7 @@ ipcMain.handle('update:install',async()=>{
     say('Đã tải xong, ứng dụng sẽ tự khởi động lại bản mới…');setTimeout(()=>app.quit(),800);return{ok:true};
   }catch(e){return{err:String(e&&e.message||e)}}
 });
+ipcMain.handle('bar',(e,h)=>{h=Math.max(80,Math.min(320,Math.ceil(+h||0)+2));if(h!==BAR){BAR=h;layout()}});
 ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))shell.openExternal(u)});
 app.whenReady().then(()=>{createWindow();applySched();setInterval(tickSched,30000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
