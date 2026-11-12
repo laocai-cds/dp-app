@@ -1,4 +1,6 @@
 const {app,BrowserWindow,WebContentsView,ipcMain,shell,net,powerSaveBlocker}=require('electron');
+const {spawn}=require('child_process');
+const os=require('os');
 const path=require('path'),fs=require('fs');
 let win,view;
 const exeDir=app.isPackaged?path.dirname(process.execPath):__dirname;
@@ -6,6 +8,13 @@ function loadCfg(){
   for(const p of [path.join(exeDir,'config.json'),path.join(__dirname,'config.json')]){try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch(e){}}
   return {title:'ĐP',home:'https://gqtthc.dcs.vn/',only:'',xa:[]};
 }
+function mergeNewCfg(){try{const nf=path.join(exeDir,'config.new.json'),cf=path.join(exeDir,'config.json');if(!fs.existsSync(nf)||!fs.existsSync(cf))return;
+  const n=JSON.parse(fs.readFileSync(nf,'utf8')),c=JSON.parse(fs.readFileSync(cf,'utf8'));
+  const ids=new Set((c.xa||[]).map(x=>x.id));let ch=false;(n.xa||[]).forEach(x=>{if(!ids.has(x.id)){c.xa.push(x);ch=true}});
+  /* cập nhật thông số các xã đã có (giữ nguyên "only") */
+  (n.xa||[]).forEach(x=>{const i=c.xa.findIndex(y=>y.id===x.id);if(i>=0&&JSON.stringify(c.xa[i])!==JSON.stringify(x)){c.xa[i]=x;ch=true}});
+  if(ch)fs.writeFileSync(cf,JSON.stringify(c,null,2));fs.unlinkSync(nf)}catch(e){}}
+mergeNewCfg();
 const cfg=loadCfg();const BAR=cfg.only?150:250;
 const xaList=()=>cfg.xa.filter(x=>!cfg.only||x.id===cfg.only);
 const codesFile=()=>path.join(app.getPath('userData'),'codes.json');
@@ -35,7 +44,7 @@ function createWindow(){
   view.webContents.loadURL(cfg.home);
   view.webContents.on('did-fail-load',(e,c,d)=>{if(c!==-3)win.webContents.send('status','Không mở được trang: '+d)});
 }
-ipcMain.handle('init',()=>({admin:!cfg.only,title:cfg.title,xa:xaList().map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id]}))}));
+ipcMain.handle('init',()=>({ver:app.getVersion(),admin:!cfg.only,title:cfg.title,xa:xaList().map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id]}))}));
 ipcMain.handle('nav',(e,a)=>{if(a==='home')view.webContents.loadURL(cfg.home);else if(a==='reload')view.webContents.reload()});
 ipcMain.handle('reset',(e,id)=>{const c=readCodes();delete c[id];writeCodes(c);return true});
 async function doRun(id,code,api,month){
@@ -122,12 +131,45 @@ ipcMain.handle('log:add',(e,t)=>{log(String(t).slice(0,600));return true});
 ipcMain.handle('sched:openlog',async()=>{const f=logFile();try{if(!fs.existsSync(f))fs.writeFileSync(f,'Nhật ký chạy ĐP (chưa có lần chạy nào)\n')}catch(err){}return await shell.openPath(f)||f});
 ipcMain.handle('sched:log',()=>{try{return fs.readFileSync(logFile(),'utf8').split('\n').slice(-12).join('\n')}catch(e){return''}});
 const REPO='laocai-cds/dp-app';
+let latest=null;
 async function checkUpdate(){
   try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return;
     const j=await r.json();const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();
     const cmp=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1}return 0};
-    if(nv&&cmp(nv,cv)>0)win.webContents.send('update',{ver:nv,url:j.html_url})}catch(e){}
+    const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
+    if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||''};win.webContents.send('update',latest);return 'new'}
+    return 'same'}catch(e){return 'err'}
 }
+ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cur:app.getVersion()}});
+ipcMain.handle('update:install',async()=>{
+  if(!latest||!latest.asset)return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
+  if(!app.isPackaged||process.platform!=='win32')return{err:'Chỉ cập nhật tự động khi chạy bản .exe trên Windows.'};
+  try{
+    say('Đang tải bản '+latest.ver+'…');
+    const zip=path.join(os.tmpdir(),'dp-update.zip');
+    const r=await net.fetch(latest.asset,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return{err:'Không tải được ('+r.status+')'};
+    const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(zip);
+    const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(total&&Date.now()-last>800){last=Date.now();say('Đang tải bản '+latest.ver+': '+Math.round(got*100/total)+'%')}}
+    await new Promise(z=>out.end(z));
+    if(got<5e6)return{err:'File tải về quá nhỏ ('+got+' byte), có thể bị lỗi.'};
+    const ps=path.join(os.tmpdir(),'dp-update.ps1');
+    fs.writeFileSync(ps,[
+      'param($pid1,$zip,$dest,$exe)',
+      'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
+      'Start-Sleep -Seconds 2',
+      '$tmp=Join-Path $env:TEMP "dp-update-x"',
+      'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
+      'Expand-Archive -Path $zip -DestinationPath $tmp -Force',
+      '$src=Join-Path $tmp "DP-DangPhi-win32-x64"',
+      'Copy-Item (Join-Path $src "config.json") (Join-Path $dest "config.new.json") -Force -ErrorAction SilentlyContinue',
+      'robocopy $src $dest /E /XF config.json /NFL /NDL /NJH /NJS /NP | Out-Null',
+      'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
+      'Start-Process -FilePath $exe'
+    ].join('\r\n'),'utf8');
+    spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',ps,String(process.pid),zip,exeDir,process.execPath],{detached:true,stdio:'ignore',windowsHide:true}).unref();
+    say('Đã tải xong, ứng dụng sẽ tự khởi động lại bản mới…');setTimeout(()=>app.quit(),800);return{ok:true};
+  }catch(e){return{err:String(e&&e.message||e)}}
+});
 ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))shell.openExternal(u)});
 app.whenReady().then(()=>{createWindow();applySched();setInterval(tickSched,30000);win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());

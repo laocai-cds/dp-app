@@ -6,7 +6,7 @@ button{border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointe
 button.xa{background:#ffd23f;color:#3b2a00}button:hover{filter:brightness(.93)}button:disabled{opacity:.5}
 span.g{display:inline-flex;align-items:center;gap:3px}span.g input{margin:0}input[type=text],input[type=password]{padding:7px 10px;border-radius:8px;border:0;min-width:240px}select{padding:6px;border-radius:8px;border:0}label{display:flex;gap:4px;align-items:center}#st{opacity:.9;font-size:13px}.sp{flex:1}
 </style>
-<div class="row"><h1 id="t">Đồng bộ đảng phí</h1><span class="sp"></span><button id="home">Trang gqtthc</button><button id="rl">Tải lại</button></div>
+<div class="row"><h1 id="t">Đồng bộ đảng phí</h1><span class="sp"></span><button id="upd">Kiểm tra cập nhật</button><button id="home">Trang gqtthc</button><button id="rl">Tải lại</button></div>
 <div id="xs" class="row"></div>
 <div id="adm" class="row" style="display:none;background:#0a2a52;border-radius:8px;padding:6px 10px"><b>Quản trị:</b><label><input type="checkbox" id="all"> Chọn tất cả</label><select id="mon"></select><button id="go" style="background:#2ecc71;color:#062">▶ Lấy dữ liệu các xã đã chọn</button><button id="stop" style="background:#ff6b6b;color:#fff;display:none">■ Dừng</button><span id="prog"></span></div>
 <div id="sch" class="row" style="display:none;background:#0a2a52;border-radius:8px;padding:6px 10px"><label><input type="checkbox" id="schOn"> ⏰ Tự chạy hằng ngày lúc</label><input type="time" id="schT" value="06:00" style="padding:5px;border-radius:6px;border:0"><span style="opacity:.85">cho các xã đã tích</span><label><input type="checkbox" id="schLg"> Tự mở cùng Windows</label><button id="schNow">Chạy thử ngay</button><button id="schLog">Xem nhật ký</button></div>
@@ -19,7 +19,7 @@ let mode='code';
 async function run(id,code,apiUrl){st('Đang chạy… xem tiến độ ở góc phải khung gqtthc');const r=await api.run(id,code,apiUrl);
  if(r.need){cur=id;mode=r.need;$('ask').style.display='flex';$('code').value='';$('code').type=mode==='api'?'text':'password';$('code').placeholder=mode==='api'?'Dán địa chỉ Apps Script (…/exec) của trang tthc':'Nhập mã đồng bộ (chỉ nhập 1 lần)';$('code').focus();st(mode==='api'?'Cần địa chỉ Apps Script đảng phí (lưu 1 lần)':'Nhập mã đồng bộ của xã này');return}
  $('ask').style.display='none';if(r.err)st('⚠ '+r.err);else st('Đã chạy. Chờ thông báo HOÀN THÀNH ở góc phải trang (máy chủ gqtthc có thể mất 1–2 phút).')}
-(async()=>{const c=await api.init();$('t').textContent=c.title;
+(async()=>{const c=await api.init();$('t').textContent=c.title+'  (v'+c.ver+')';
  ADM=c.admin;XA=c.xa;
  c.xa.forEach(x=>{const w=document.createElement('span');w.className='g';if(ADM){const k=document.createElement('input');k.type='checkbox';k.dataset.id=x.id;k.title='Chọn để lấy hàng loạt';w.appendChild(k)}
   const b=document.createElement('button');b.className='xa';b.textContent=x.label;b.onclick=()=>run(x.id);w.appendChild(b);$('xs').appendChild(w)});
@@ -44,5 +44,8 @@ async function batch(){const ids=[...document.querySelectorAll('#xs input[type=c
  $('go').disabled=false;$('stop').style.display='none';$('prog').textContent='';st('Xong lô: '+res.join(' · '));api.addLog('Chạy tay — '+res.join(' · '))}
 $('ok').onclick=()=>{const v=$('code').value.trim();if(!v)return;mode==='api'?run(cur,null,v):run(cur,v)};$('code').onkeydown=e=>{if(e.key==='Enter')$('ok').click()};
 $('no').onclick=()=>{$('ask').style.display='none';st('Đã hủy')};
-$('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);api.onUpdate(u=>{const b=document.createElement('button');b.textContent='⬇ Có bản mới '+u.ver+' – bấm để tải';b.style.cssText='background:#ffd23f;color:#3b2a00';b.onclick=()=>api.open(u.url);$('home').before(b)});
+$('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);let upBtn=null;
+api.onUpdate(u=>{if(upBtn)upBtn.remove();upBtn=document.createElement('button');upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;upBtn.style.cssText='background:#2ecc71;color:#062';
+ upBtn.onclick=async()=>{if(!confirm('Cập nhật lên bản '+u.ver+'? Ứng dụng sẽ tự đóng và mở lại. Cài đặt và mã đồng bộ được giữ nguyên.'))return;upBtn.disabled=true;const r=await api.updInstall();if(r&&r.err){st('⚠ '+r.err);upBtn.disabled=false;if(confirm('Không cập nhật tự động được. Mở trang tải về trên GitHub?'))api.open(u.url)}};$('upd').before(upBtn)});
+$('upd').onclick=async()=>{st('Đang kiểm tra bản mới trên GitHub…');const r=await api.updCheck();st(r.r==='new'?'Có bản mới — bấm nút xanh "Cập nhật"':r.r==='same'?'Bạn đang dùng bản mới nhất (v'+r.cur+')':'Không kiểm tra được (mạng hoặc GitHub chưa có release)')};
 </script>
