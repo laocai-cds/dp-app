@@ -44,6 +44,8 @@ ipcMain.handle('help:open',()=>{
   if(helpWin&&!helpWin.isDestroyed()){helpWin.show();helpWin.focus();return true}
   helpWin=new BrowserWindow({width:900,height:780,parent:win,title:'Hướng dẫn sử dụng - Đồng bộ đảng phí',icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{sandbox:true}});
   helpWin.setMenuBarVisibility(false);helpWin.loadFile('huong-dan.html');
+  helpWin.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\//.test(url))shell.openExternal(url);return{action:'deny'}});
+  helpWin.webContents.on('will-navigate',(e,u)=>{if(!u.startsWith('file:')){e.preventDefault();if(/^https:\/\//.test(u))shell.openExternal(u)}});
   helpWin.on('closed',()=>{helpWin=null});return true});
 ipcMain.handle('bar',(e,h)=>{const n=Math.round(Math.min(Math.max(+h||0,60),520));if(n!==BAR){BAR=n;try{layout()}catch(_){}}return true});
 function layout(){const [w,h]=win.getContentSize();view.setBounds({x:0,y:BAR,width:w,height:Math.max(100,h-BAR)})}

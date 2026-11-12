@@ -13,11 +13,19 @@ ol,ul{margin:6px 0 4px;padding-left:22px}li{margin:3px 0}
 .warn{background:#fff6e5;border-left:4px solid #e07b00;padding:8px 12px;border-radius:6px;margin:8px 0}
 .ok{background:#e9f8ef;border-left:4px solid #169a4a;padding:8px 12px;border-radius:6px;margin:8px 0}
 table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #d6e0ef;padding:6px 9px;text-align:left;vertical-align:top}th{background:#eaf1fb}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:8px}
+.box{display:block;text-decoration:none;color:#0f3a6e;background:#f4f8fe;border:1px solid #c9daf2;border-radius:10px;padding:10px 12px;transition:.15s}
+.box:hover{background:#0f3a6e;color:#fff;border-color:#0f3a6e;transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,58,110,.25)}
+.box b{display:block;font-size:14.5px}.box small{display:block;opacity:.75;margin-top:2px;font-size:12px;word-break:break-all}
+.box.hq{background:#fff6e5;border-color:#f0c985}.box.hq:hover{background:#e07b00;border-color:#e07b00}
+nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-shadow:0 1px 4px rgba(15,58,110,.12);font-size:14px}nav a{color:#0f3a6e;font-weight:700;text-decoration:none;margin-right:14px;white-space:nowrap}nav a:hover{text-decoration:underline}
 </style></head><body>
 <header><h1>📖 Hướng dẫn sử dụng — Đồng bộ đảng phí gqtthc → Google Sheet</h1><p>Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai</p></header>
 <main>
+<nav>Đi nhanh tới: <a href="#s1">Lấy số liệu</a><a href="#s2">Nhiều xã</a><a href="#s3">Mã đồng bộ</a><a href="#s4">Tự động</a><a href="#s5">Cập nhật</a><a href="#s6">Sự cố</a><a href="#web">🌐 Website các đơn vị</a></nav>
 
-<section><h2><span>1</span>Lấy số liệu một xã (cách dùng hằng ngày)</h2>
+<section id="s1"><h2><span>1</span>Lấy số liệu một xã (cách dùng hằng ngày)</h2>
 <ol>
 <li>Trong khung gqtthc ở bên dưới, <b>đăng nhập</b> bằng tài khoản của bạn (ứng dụng nhớ phiên đăng nhập).</li>
 <li>Bấm nút ĐP (màu cam) của xã, ví dụ <span class="b">ĐP Võ Lao</span>.</li>
@@ -26,7 +34,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid 
 </ol>
 <div class="ok">Bấm xong thấy khung đỏ "đã gửi … nhưng chưa thấy Google Sheet cập nhật": thường là <b>mã đồng bộ sai</b>. Bấm lại nút xã đó, ứng dụng sẽ hỏi lại mã.</div></section>
 
-<section><h2><span>2</span>Lấy nhiều xã một lúc (chế độ quản trị)</h2>
+<section id="s2"><h2><span>2</span>Lấy nhiều xã một lúc (chế độ quản trị)</h2>
 <ol>
 <li>Tích ô vuông cạnh các xã cần lấy (hoặc tích <span class="k">Chọn tất cả</span>).</li>
 <li>Chọn <b>tháng</b>.</li>
@@ -35,23 +43,23 @@ table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid 
 </ol>
 <div class="warn">Có thể thu nhỏ cửa sổ khi đang chạy, nhưng <b>đừng đóng hẳn ứng dụng</b>. Xã nào chưa có mã thì bị bỏ qua, bấm riêng nút xã đó một lần để nhập mã.</div></section>
 
-<section><h2><span>3</span>Mã đồng bộ: mã chung và mã riêng</h2>
+<section id="s3"><h2><span>3</span>Mã đồng bộ: mã chung và mã riêng</h2>
 <table><tr><th>Loại mã</th><th>Dùng khi nào</th></tr>
 <tr><td><b>Mã riêng</b> của từng xã</td><td>Nhập khi bấm nút xã. Chỉ dùng cho xã đó.</td></tr>
 <tr><td><b>Mã chung</b></td><td>Nhập vào ô <b>Mã chung</b> ở hàng Quản trị rồi bấm <span class="k">Lưu mã chung</span>. Dấu <b style="color:#169a4a">✓</b> xanh báo đã lưu. Xã nào chưa có mã riêng sẽ dùng mã chung. Nếu cấu hình qua Apps Script <b>DP-CHUNG</b>, một mã chung dùng được cho tất cả xã.</td></tr></table>
 <ul><li>Muốn xóa mã chung: xóa trống ô rồi bấm Lưu mã chung.</li><li>Nhập sai mã riêng: bấm lại nút xã (ứng dụng hỏi lại), hoặc xóa thư mục <code>%APPDATA%\DP-DangPhi</code> rồi nhập lại.</li></ul></section>
 
-<section><h2><span>4</span>Tự động lấy dữ liệu</h2>
+<section id="s4"><h2><span>4</span>Tự động lấy dữ liệu</h2>
 <p><b>🔁 Tự động lấy dữ liệu (API đảng phí): mỗi [N] phút</b></p>
 <ul><li>Tích xã cần chạy, tích ô 🔁, nhập số phút (<b>tối thiểu 5</b>; nên 15–30 phút nếu nhiều xã).</li><li>Mỗi N phút ứng dụng tự lấy số liệu các xã đã tích rồi đẩy lên Google Sheet. Lần đầu chạy sau N phút kể từ lúc bật.</li></ul>
 <p><b>⏰ Tự chạy hằng ngày lúc [giờ]</b></p>
 <ul><li>Tích xã, tích ô ⏰, chọn giờ (ví dụ 06:00). Chỉ chạy trong 3 giờ sau giờ hẹn, mỗi ngày một lần.</li><li>Tích <b>Tự mở cùng Windows</b> để ứng dụng tự bật khi mở máy.</li><li><span class="k">Chạy thử ngay</span> để kiểm tra; <span class="k">Xem nhật ký</span> để xem kết quả các lần chạy.</li></ul>
 <div class="warn">Điều kiện: máy <b>luôn bật</b>, ứng dụng <b>đang mở</b> và <b>đã đăng nhập gqtthc</b>. Nếu gqtthc hết phiên đăng nhập thì cần đăng nhập lại.</div></section>
 
-<section><h2><span>5</span>Cập nhật phiên bản mới</h2>
+<section id="s5"><h2><span>5</span>Cập nhật phiên bản mới</h2>
 <ul><li>Góc trên bên trái ghi <b>"Phiên bản mới nhất: …"</b> (xanh = bạn đang dùng bản mới nhất, vàng = còn bản mới hơn).</li><li>Bấm <span class="k">Kiểm tra cập nhật</span>. Nút sẽ báo "Đã là bản mới nhất" hoặc "Có bản mới", rồi hiện nút <span class="g">⬇ Cập nhật lên bản …</span>.</li><li>Bấm nút xanh và đồng ý: ứng dụng tự tải, đóng, mở lại bằng phiên bản mới (cài đặt và mã được giữ nguyên).</li><li>Nên cập nhật khi <b>không đang chạy lấy số liệu</b>.</li></ul></section>
 
-<section><h2><span>6</span>Xử lý sự cố thường gặp</h2>
+<section id="s6"><h2><span>6</span>Xử lý sự cố thường gặp</h2>
 <table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
 <tr><td>Chưa đăng nhập / không thấy tiến độ</td><td>Đăng nhập lại gqtthc trong khung bên dưới, bấm <span class="k">Trang gqtthc</span> hoặc <span class="k">Tải lại</span> rồi bấm lại nút xã.</td></tr>
 <tr><td>Lỗi 500 / 504, API chậm</td><td>Máy chủ gqtthc đang bận. Ứng dụng tự thử lại tối đa 3 lần. Nếu vẫn lỗi, chạy lại vào giờ ít người dùng (sáng sớm, trưa).</td></tr>
@@ -61,5 +69,20 @@ table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid 
 
 <section><h2><span>7</span>Cài đặt</h2>
 <ul><li><b>Bản một file:</b> tải <b>DP-DangPhi-Setup.exe</b> ở trang Releases của github.com/laocai-cds/dp-app, bấm đôi để cài (không cần quyền admin). Mở bằng biểu tượng DP-DangPhi ngoài Desktop hoặc trong Start.</li><li>Windows có thể cảnh báo: bấm <b>More info → Run anyway</b>.</li></ul></section>
+
+<section id="web"><h2><span>8</span>🌐 Website các đơn vị</h2><p>Bấm vào ô của đơn vị để mở website theo dõi thu nộp đảng phí trong trình duyệt.</p><div class="grid">
+<a class="box hq" href="https://laocai-tthc.pages.dev/" target="_blank" rel="noopener"><b>Cổng thu nộp đảng phí tỉnh Lào Cai (tthc)</b><small>laocai-tthc.pages.dev</small></a>
+<a class="box" href="https://vanban.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Văn Bàn</b><small>vanban.pages.dev</small></a>
+<a class="box" href="https://xuanhoa.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Xuân Hòa</b><small>xuanhoa.pages.dev</small></a>
+<a class="box" href="https://pungluong.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Púng Luông</b><small>pungluong.pages.dev</small></a>
+<a class="box" href="https://laocai-cds.github.io/baothang/" target="_blank" rel="noopener"><b>Đảng bộ xã Bảo Thắng</b><small>laocai-cds.github.io/baothang</small></a>
+<a class="box" href="https://luongthinh.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Lương Thịnh</b><small>luongthinh.pages.dev</small></a>
+<a class="box" href="https://nghiado.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Nghĩa Đô</b><small>nghiado.pages.dev</small></a>
+<a class="box" href="https://phinhho.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Phình Hồ</b><small>phinhho.pages.dev</small></a>
+<a class="box" href="https://phuckhanh.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Phúc Khánh</b><small>phuckhanh.pages.dev</small></a>
+<a class="box" href="https://xasimacai.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Si Ma Cai</b><small>xasimacai.pages.dev</small></a>
+<a class="box" href="https://tramtau.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Trạm Tấu</b><small>tramtau.pages.dev</small></a>
+<a class="box" href="https://xavolao.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Võ Lao</b><small>xavolao.pages.dev</small></a>
+</div></section>
 
 </main></body></html>
