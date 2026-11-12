@@ -21,7 +21,7 @@ jobs:
       - name: Đóng gói
         shell: bash
         run: |
-          npx @electron/packager . DP-DangPhi --platform=win32 --arch=x64 --out=dist --overwrite --ignore="^/dist" --ignore="\.zip$" --ignore="^/\.github" --ignore="^/release"
+          npx @electron/packager . DP-DangPhi --platform=win32 --arch=x64 --icon=build/icon.ico --out=dist --overwrite --ignore="^/dist" --ignore="\.zip$" --ignore="^/\.github" --ignore="^/release"
           D=dist/DP-DangPhi-win32-x64
           for f in $D/locales/*.pak; do case $(basename $f) in en-US.pak|vi.pak) ;; *) rm "$f";; esac; done
           rm -f $D/LICENSES.chromium.html

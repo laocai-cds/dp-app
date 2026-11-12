@@ -1,6 +1,6 @@
 {
   "name": "dp-gqtthc",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "Đồng bộ đảng phí gqtthc",
   "main": "main.js",
   "scripts": {
@@ -31,7 +31,8 @@
       "toolbar.html",
       "bm/**",
       "config.json",
-      "package.json"
+      "package.json",
+      "build/icon.png"
     ],
     "extraFiles": [
       {
@@ -52,13 +53,17 @@
           ]
         }
       ],
-      "artifactName": "DP-DangPhi-Setup.exe"
+      "artifactName": "DP-DangPhi-Setup.exe",
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
       "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     }
   }
 }
