@@ -13,6 +13,37 @@ func jsonStr(_ o: [String: Any]) -> String {
 final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
     var web: WKWebView!
     let status = UILabel()
+    var sel: [String] = []
+    var xbtns: [String: UIButton] = [:]
+    var xitems: [String: [String: Any]] = [:]
+    var runSel: UIButton!
+    let orangeC = UIColor(red: 0.91, green: 0.514, blue: 0.102, alpha: 1)
+    let greenC = UIColor(red: 0.118, green: 0.557, blue: 0.243, alpha: 1)
+
+    func paint(_ id: String) {
+        guard let b = xbtns[id] else { return }
+        let on = sel.contains(id)
+        b.backgroundColor = on ? greenC : orangeC
+        let t = (xitems[id]?["label"] as? String) ?? ""
+        b.setTitle(on ? "✓ " + t : t, for: .normal)
+    }
+    func toggle(_ id: String) {
+        if let k = sel.firstIndex(of: id) { sel.remove(at: k) } else { sel.append(id) }
+        paint(id)
+        runSel.setTitle("▶ Chạy (\(sel.count))", for: .normal)
+        runSel.isHidden = sel.isEmpty
+    }
+    func runSelected() {
+        let ids = sel
+        sel = []
+        runSel.isHidden = true
+        for (n, id) in ids.enumerated() {
+            paint(id)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5 * Double(n)) { [weak self] in
+                if let x = self?.xitems[id] { self?.run(x) }
+            }
+        }
+    }
     var cfg: [String: Any] = [:]
     let ud = UserDefaults.standard
     let PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();"
@@ -65,13 +96,16 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 12)
         let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 9); author.adjustsFontSizeToFitWidth = true
 
+        runSel = btn("▶ Chạy (0)", greenC, .white, 11) { [weak self] in self?.runSelected() }
+        runSel.isHidden = true
         let ctl = hrow([
             btn("⟳  Tải lại", blue, .white, 11) { [weak self] in self?.web.reload() },
             btn("🔑  Mã chung", blue, .white, 11) { [weak self] in
                 guard let s = self else { return }
                 s.ask("Nhập Mã chung (lưu trên máy này)", true, s.ud.string(forKey: "__all") ?? "") { v in
                     s.ud.set(v, forKey: "__all"); s.say(v.isEmpty ? "Đã xóa mã chung" : "Đã lưu mã chung") }
-            }
+            },
+            runSel
         ])
 
         var rows: [UIView] = [title, author, ctl]
@@ -81,7 +115,18 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
             var bs: [UIView] = []
             for j in i..<min(i + 4, xa.count) {
                 let x = xa[j]
-                bs.append(btn((x["label"] as? String) ?? "", orange, .white, 9) { [weak self] in self?.run(x) })
+                let xid = (x["id"] as? String) ?? ""
+                let b = btn((x["label"] as? String) ?? "", orange, .white, 9) { [weak self] in
+                    guard let s = self else { return }
+                    if s.sel.isEmpty { s.run(x) } else { s.toggle(xid) }
+                }
+                let lp = UILongPressGestureRecognizer(target: nil, action: nil)
+                lp.addTarget(self, action: #selector(longPressed(_:)))
+                b.addGestureRecognizer(lp)
+                b.accessibilityIdentifier = xid
+                xbtns[xid] = b
+                xitems[xid] = x
+                bs.append(b)
             }
             while bs.count < 4 { bs.append(UIView()) }
             rows.append(hrow(bs))
@@ -114,6 +159,10 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
 
         let home = (cfg["home"] as? String) ?? "https://gqtthc.dcs.vn/"
         if let u = URL(string: home) { web.load(URLRequest(url: u)) }
+    }
+
+    @objc func longPressed(_ g: UILongPressGestureRecognizer) {
+        if g.state == .began, let id = g.view?.accessibilityIdentifier { toggle(id) }
     }
 
     func say(_ m: String) { DispatchQueue.main.async { self.status.text = m } }

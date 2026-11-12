@@ -85,6 +85,9 @@ public class MainActivity extends Activity {
             sp.edit().putString("__all", c.trim()).apply();
             say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
         })), eq());
+        runSel = btn("▶ Chạy (0)", 0xFF1E8E3E, Color.WHITE, v -> runSelected());
+        runSel.setVisibility(View.GONE);
+        row.addView(runSel, eq());
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
             GridLayout grid = new GridLayout(this);
@@ -93,7 +96,12 @@ public class MainActivity extends Activity {
             for (int i = 0; i < xa.length(); i++) {
                 final JSONObject x = xa.optJSONObject(i);
                 if (x == null) continue;
-                Button bt = btn(x.optString("label"), 0xFFE8831A, Color.WHITE, v -> run(x));
+                final String xid = x.optString("id");
+                final Button bt = btn(x.optString("label"), 0xFFE8831A, Color.WHITE, null);
+                bt.setOnClickListener(v -> { if (sel.isEmpty()) run(x); else toggle(xid, bt); });
+                bt.setOnLongClickListener(v -> { toggle(xid, bt); return true; });
+                btns.put(xid, bt);
+                items.put(xid, x);
                 bt.setTextSize(9);
                 bt.setPadding(dp(2), 0, dp(2), 0);
                 GridLayout.LayoutParams lp = new GridLayout.LayoutParams(GridLayout.spec(GridLayout.UNDEFINED), GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f));
@@ -161,6 +169,41 @@ public class MainActivity extends Activity {
         x.setPadding(dp(2), 0, dp(2), 0);
         x.setOnClickListener(l);
         return x;
+    }
+
+    Button runSel;
+    final java.util.LinkedHashSet<String> sel = new java.util.LinkedHashSet<>();
+    final java.util.HashMap<String, Button> btns = new java.util.HashMap<>();
+    final java.util.HashMap<String, JSONObject> items = new java.util.HashMap<>();
+
+    void paint(String id) {
+        Button b = btns.get(id);
+        if (b == null) return;
+        boolean on = sel.contains(id);
+        int bg = on ? 0xFF1E8E3E : 0xFFE8831A;
+        int dark = Color.rgb(Math.max(0, Color.red(bg) - 40), Math.max(0, Color.green(bg) - 40), Math.max(0, Color.blue(bg) - 40));
+        b.setBackground(shape(bg, dark));
+        String t = items.get(id).optString("label");
+        b.setText(on ? "✓ " + t : t);
+    }
+
+    void toggle(String id, Button b) {
+        if (!sel.remove(id)) sel.add(id);
+        paint(id);
+        runSel.setText("▶ Chạy (" + sel.size() + ")");
+        runSel.setVisibility(sel.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    void runSelected() {
+        final java.util.ArrayList<String> ids = new java.util.ArrayList<>(sel);
+        sel.clear();
+        runSel.setVisibility(View.GONE);
+        android.os.Handler h = new android.os.Handler();
+        for (int i = 0; i < ids.size(); i++) {
+            final String id = ids.get(i);
+            paint(id);
+            h.postDelayed(() -> run(items.get(id)), 1500L * i);
+        }
     }
 
     void say(final String m) { runOnUiThread(() -> android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()); }
