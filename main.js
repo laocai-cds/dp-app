@@ -188,7 +188,7 @@ async function checkUpdate(){
     lastWhy='';return 'same'}catch(e){lastWhy=String(e&&e.message||e).slice(0,50);try{win.webContents.send('latestver','')}catch(_){}return 'err'}
 }
 const updFile=()=>path.join(app.getPath('userData'),'update.json');
-const readUpd=()=>{try{return Object.assign({auto:false,mins:30},JSON.parse(fs.readFileSync(updFile(),'utf8')))}catch(e){return{auto:false,mins:30}}};
+const readUpd=()=>{try{return Object.assign({auto:true,mins:15},JSON.parse(fs.readFileSync(updFile(),'utf8')))}catch(e){return{auto:true,mins:15}}};
 let updTimer=null;
 function armUpd(){if(updTimer)clearInterval(updTimer);const u=readUpd();const mins=Math.min(1440,Math.max(5,+u.mins||30));updTimer=setInterval(checkUpdate,mins*60*1000)}
 async function maybeAuto(){const u=readUpd();if(!u.auto||!latest)return;
