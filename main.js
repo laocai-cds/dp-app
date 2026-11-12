@@ -37,10 +37,10 @@ new MutationObserver(()=>{if(!window.__dpMonth)return;const ov=[...document.quer
 window.__dpCancelled=false;})();\n`;
 function layout(){const [w,h]=win.getContentSize();view.setBounds({x:0,y:BAR,width:w,height:Math.max(100,h-BAR)})}
 function createWindow(){
-  win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js')}});
+  win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),backgroundThrottling:false}});
   win.setTitle(WIN_TITLE);win.on('page-title-updated',e=>e.preventDefault());
   win.loadFile('toolbar.html');
-  view=new WebContentsView({webPreferences:{partition:'persist:gqtthc',contextIsolation:true}});
+  view=new WebContentsView({webPreferences:{partition:'persist:gqtthc',contextIsolation:true,backgroundThrottling:false}});
   win.contentView.addChildView(view);layout();win.on('resize',layout);
   view.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\/[^/]*dcs\.vn\//.test(url))view.webContents.loadURL(url);else shell.openExternal(url);return{action:'deny'}});
   view.webContents.loadURL(cfg.home);
@@ -66,7 +66,7 @@ async function doRun(id,code,api,month){
   const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
   try{await view.webContents.executeJavaScript(js);return{ok:true}}catch(err){return{err:String(err&&err.message||err)}}
 }
-const BOXJS="(()=>{const b=[...document.querySelectorAll('div')].find(d=>d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px');return b?b.textContent.replace(/✕\s*$/,'').trim().slice(0,160):null})()";
+const BOXJS="(()=>{const b=[...document.querySelectorAll('div')].find(d=>d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px');return {t:b?b.textContent.replace(/✕\\s*$/,'').trim().slice(0,160):null,c:!!window.__dpCancelled}})()";
 let batchStop=false;
 ipcMain.handle('run',(e,{id,code,api})=>doRun(id,code,api,''));
 ipcMain.handle('code:all',(e,c)=>{const o=readCodes();if(c){o.__all=String(c).trim()}else delete o.__all;writeCodes(o);return !!o.__all});
@@ -78,15 +78,20 @@ async function runWaitCore(id,month){
   try{await view.webContents.executeJavaScript("document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px')d.remove()});void 0")}catch(_){}
   const r=await doRun(id,null,null,month);
   if(!r.ok)return r;
-  const t0=Date.now();let seen=false,miss=0;
+  const t0=Date.now();let seen=false,lostAt=0;
   while(Date.now()-t0<8*60*1000){
     await new Promise(z=>setTimeout(z,2000));
     if(batchStop)return{result:'stop'};
-    let t=null;try{t=await view.webContents.executeJavaScript(BOXJS)}catch(_){}
-    if(t){seen=true;miss=0;
+    let st=null;try{st=await view.webContents.executeJavaScript(BOXJS)}catch(_){}
+    if(!st)continue;
+    if(st.c)return{result:'cancel'};          /* chỉ coi là hủy khi người dùng bấm ✕ */
+    const t=st.t;
+    if(t){seen=true;lostAt=0;
       if(t.startsWith('✅'))return{result:'done',msg:t};
       if(t.startsWith('✕'))return{result:'fail',msg:t};
-    }else{miss++;if(seen&&miss>=2)return{result:'cancel'};if(!seen&&Date.now()-t0>25000)return{result:'fail',msg:'Không thấy tiến độ (chưa đăng nhập hoặc bị chặn?)'}}
+    }else if(!seen){if(Date.now()-t0>40000)return{result:'fail',msg:'Không thấy tiến độ (chưa đăng nhập hoặc bị chặn?)'}}
+    else{if(!lostAt)lostAt=Date.now();else if(Date.now()-lostAt>90000)return{result:'fail',msg:'Mất khung tiến độ quá 90 giây (trang gqtthc tải lại?)'}}
+    /* khung tạm thời biến mất (thu nhỏ cửa sổ, tải lại trang…): cứ chờ tiếp */
   }
   return{result:'fail',msg:'Quá thời gian chờ (8 phút)'};
 }
