@@ -44,13 +44,13 @@ async function initSched(){const s=await api.schedGet();$('schOn').checked=s.ena
 ['schOn','schT','schLg'].forEach(i=>$(i).addEventListener('change',async()=>{if($('schOn').checked&&!checkedIds().length){$('schOn').checked=false;st('Hãy tích chọn các xã cần tự chạy trước');return}await saveSched();st($('schOn').checked?'Đã hẹn: mỗi ngày '+$('schT').value+' tự lấy dữ liệu '+checkedIds().length+' xã (giữ ứng dụng mở và đã đăng nhập gqtthc)':'Đã tắt hẹn giờ')}));
  $('schNow').onclick=async()=>{if(!checkedIds().length){st('Hãy tích chọn các xã trước');return}await saveSched();st('Chạy thử theo lịch…');await api.schedNow()};
  $('schLog').onclick=async()=>{const r=await api.openLog();st('Đã mở file nhật ký (Notepad). Nếu không thấy: '+r)}}
-async function batch(){const ids=[...document.querySelectorAll('#xs input[type=checkbox]:checked')].map(k=>k.dataset.id);if(!ids.length){st('Hãy tích chọn ít nhất một xã');return}
+async function batch(){const ids=[...document.querySelectorAll('#xs input[type=checkbox]:checked')].map(k=>k.dataset.id).sort((a,b)=>(a==='tthc')-(b==='tthc'));if(!ids.length){st('Hãy tích chọn ít nhất một xã');return}
  stopped=false;$('go').disabled=true;$('stop').style.display='';const res=[];const label=id=>(XA.find(x=>x.id===id)||{}).label||id;
  for(let i=0;i<ids.length;i++){if(stopped)break;const id=ids[i];$('prog').textContent='('+(i+1)+'/'+ids.length+') '+label(id)+'…';st('Đang lấy '+label(id)+' — chờ gqtthc (có thể 1–2 phút/xã)');
   const r=await api.runWait(id,$('mon').value);
   if(r.need){res.push('⚠ '+label(id)+': chưa có mã — bấm riêng nút xã này một lần để nhập mã');continue}
   if(r.err){res.push('✕ '+label(id)+': '+r.err);if(/đăng nhập/.test(r.err))break;continue}
-  if(r.result==='done')res.push('✅ '+label(id));else if(r.result==='stop'||r.result==='cancel'){res.push('■ '+label(id)+': đã hủy');break}else res.push('✕ '+label(id)+': '+(r.msg||'lỗi').slice(0,70))}
+  if(r.result==='done')res.push('✅ '+label(id));else if(r.result==='stop'){res.push('■ '+label(id)+': đã dừng');break}else if(r.result==='cancel'){res.push('↷ '+label(id)+': bị gián đoạn, đã bỏ qua')}else res.push('✕ '+label(id)+': '+(r.msg||'lỗi').slice(0,70))}
  $('go').disabled=false;$('stop').style.display='none';$('prog').textContent='';st('Xong lô: '+res.join(' · '));api.addLog('Chạy tay — '+res.join(' · '))}
 api.onXaAdded(r=>{if(r.err){st('⚠ '+r.err)}else{st('✅ Đã thêm nút '+r.label+'. Đang tải lại…');setTimeout(()=>location.reload(),700)}});
 async function addXa(t){const r=await api.xaAdd(t);if(r.err){st('⚠ '+r.err);return false}st('✅ Đã thêm nút '+r.label+'. Đang tải lại…');setTimeout(()=>location.reload(),700);return true}

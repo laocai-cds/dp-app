@@ -178,7 +178,10 @@ ipcMain.handle('code:hasAll',()=>!!readCodes().__all);
 ipcMain.handle('stop',()=>{batchStop=true;return true});
 /* chạy một xã ở chế độ lô: chờ tới khi có kết quả (✅ xong / ✕ lỗi / bị hủy) */
 let lastActive=0;
-async function runWaitCore(id,month){
+/* Dừng hẳn mọi việc còn dang dở trong trang gqtthc (tải lại trang) để lần chạy bị lỗi/hủy không chạy ngầm tiếp */
+async function killRun(){try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.reload();setTimeout(r,15000)});await new Promise(r=>setTimeout(r,800))}catch(_){}}
+async function runWaitCore(id,month){const r=await runWaitCore0(id,month);if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun()}return r}
+async function runWaitCore0(id,month){
   lastActive=Date.now();
   batchStop=false;
   try{await view.webContents.executeJavaScript("document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px')d.remove()});void 0")}catch(_){}
@@ -216,6 +219,7 @@ const say=t=>{try{win.webContents.send('status',t)}catch(e){}};
 const logFile=()=>path.join(app.getPath('userData'),'lich-chay.log');
 const log=t=>{try{fs.appendFileSync(logFile(),new Date().toLocaleString('vi-VN')+'  '+t+'\n')}catch(e){}};
 async function runBatchMain(ids,label){
+  ids=[...ids].sort((a,b)=>(a==='tthc')-(b==='tthc')); /* xã chậm/hay lỗi (cấp tỉnh) chạy sau cùng */
   const now=new Date(),month=now.getFullYear()+'-'+(now.getMonth()+1);const res=[];
   /* tải lại trang để làm mới phiên, kiểm tra còn đăng nhập */
   try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.loadURL(cfg.home);setTimeout(r,20000)});await new Promise(r=>setTimeout(r,2500))}catch(e){}
@@ -228,7 +232,7 @@ async function runBatchMain(ids,label){
     const r=await runWaitCore(id,month);
     if(r.need){res.push('⚠ '+x.label+' (chưa có mã)');continue}
     if(r.err){res.push('✕ '+x.label+': '+r.err);continue}
-    if(r.result==='done')res.push('✅ '+x.label);else if(r.result==='stop'||r.result==='cancel'){res.push('■ '+x.label+' hủy');break}else res.push('✕ '+x.label+': '+String(r.msg||'lỗi').slice(0,60));
+    if(r.result==='done')res.push('✅ '+x.label);else if(r.result==='stop'){res.push('■ '+x.label+' dừng');break}else if(r.result==='cancel'){res.push('↷ '+x.label+' bị gián đoạn (đã bỏ qua, chạy tiếp xã sau)')}else res.push('✕ '+x.label+': '+String(r.msg||'lỗi').slice(0,60));
   }
   const t=label+' xong: '+res.join(' · ');say(t);log(t);return true;
 }
