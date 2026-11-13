@@ -262,8 +262,14 @@ async function checkUpdate(){
   try{let j=null;
     try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(r.ok)j=await r.json();else lastWhy='GitHub API trả mã '+r.status}catch(e){lastWhy=String(e&&e.message||e).slice(0,50)}
     if(!j){/* API bị giới hạn (403/429) → dùng trang releases/latest (không bị giới hạn) */
-      const r2=await net.fetch('https://github.com/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});
-      const mm=/\/releases\/tag\/(v[\d.]+)/.exec(r2.url||'');if(!mm){try{win.webContents.send('latestver','')}catch(_){}return 'err'}
+      let tag='';
+      for(const u of ['https://github.com/'+REPO+'/releases.atom','https://github.com/'+REPO+'/releases/latest']){
+        try{const r2=await net.fetch(u,{headers:{'User-Agent':'dp-dangphi'}});const fin=/\/releases\/tag\/(v[\d.]+)/.exec(r2.url||'');if(fin){tag=fin[1];break}
+          const tx=await r2.text();const all=[...tx.matchAll(/\/releases\/tag\/(v\d+\.\d+\.\d+)/g)].map(z=>z[1]);
+          if(all.length){all.sort((p,q)=>{const x=p.slice(1).split('.').map(Number),y=q.slice(1).split('.').map(Number);for(let i=0;i<3;i++)if(x[i]!==y[i])return y[i]-x[i];return 0});tag=all[0];break}
+        }catch(e2){lastWhy=String(e2&&e2.message||e2).slice(0,50)}
+      }
+      const mm=tag?[0,tag]:null;if(!mm){try{win.webContents.send('latestver','')}catch(_){}return 'err'}
       const base='https://github.com/'+REPO+'/releases/download/'+mm[1]+'/',ev=process.versions.electron;
       const ex=async n=>{try{const h=await net.fetch(base+n,{method:'HEAD',headers:{'User-Agent':'dp-dangphi'}});return h.ok}catch(_){return false}};
       const names=['DP-DangPhi-win32-x64.zip','app-electron-'+ev+'.asar.bin','dp-config.json'],ok=await Promise.all(names.map(ex));
