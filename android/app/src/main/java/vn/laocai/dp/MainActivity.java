@@ -130,12 +130,8 @@ public class MainActivity extends Activity {
             public void onReceivedSslError(WebView v, android.webkit.SslErrorHandler h, android.net.http.SslError e) {
                 String host = android.net.Uri.parse(e.getUrl()).getHost();
                 if (host != null && (host.equals("dcs.vn") || host.endsWith(".dcs.vn"))) {
-                    new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Chứng chỉ bảo mật của " + host + " chưa được điện thoại tin cậy")
-                        .setMessage("Thường do máy chủ cấu hình thiếu chứng chỉ trung gian. Chỉ tiếp tục nếu bạn đang dùng mạng tin cậy.")
-                        .setPositiveButton("Vẫn tiếp tục", (d, w) -> h.proceed())
-                        .setNegativeButton("Hủy", (d, w) -> { h.cancel(); showLoadError("Chứng chỉ SSL không hợp lệ"); })
-                        .setCancelable(false).show();
+                    // Máy chủ dcs.vn thiếu chứng chỉ trung gian: bỏ qua lỗi SSL, chỉ cho đúng tên miền này.
+                    h.proceed();
                 } else {
                     h.cancel();
                     showLoadError("Chứng chỉ SSL không hợp lệ");
