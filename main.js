@@ -268,9 +268,13 @@ setTimeout(staleCheck,3*60e3);setInterval(staleCheck,60*60e3);
 /* ===== Giữ phiên gqtthc "sống": cứ 10 phút gọi một API nhẹ như người đang thao tác; hiện hạn token còn lại ===== */
 const keepFile=()=>path.join(app.getPath('userData'),'giu-phien.json');
 const readKeep=()=>{try{return Object.assign({on:true},JSON.parse(fs.readFileSync(keepFile(),'utf8')))}catch(_){return{on:true}}};
-let sessInfo={text:'Phiên gqtthc: chưa kiểm tra',bad:false},lastExpWarn=0,lastKeepLog=0,lastKeepStatus=null;
+let lastReload=0,sessInfo={text:'Phiên gqtthc: chưa kiểm tra',bad:false},lastExpWarn=0,lastKeepLog=0,lastKeepStatus=null;
 const KEEPJS="(async()=>{const tk=localStorage.getItem('token');if(!tk)return{s:0,exp:0};let exp=0;try{exp=JSON.parse(atob(tk.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp||0}catch(e){}"+
- "try{const ac=new AbortController();setTimeout(()=>ac.abort(),20000);const r=await fetch('https://gateway-gqtthc.dcs.vn/category/v1/co-quan/get-all-by-current-user-v4',{headers:{Authorization:'Bearer '+tk,Accept:'application/json'},signal:ac.signal});return{s:r.status,exp}}catch(e){return{s:-1,exp}}})()";
+ /* gqtthc có đồng hồ 'không hoạt động' 30 phút (ng2-idle): giả lập thao tác chuột/bàn phím để reset; gọi API đơn thuần không reset được */
+ "const ex=()=>Number(localStorage.getItem('ng2Idle.main.expiry'))||0;const i0=ex();"+
+ "try{const d=document.documentElement;['mousemove','keydown','mousedown','scroll'].forEach(t=>d.dispatchEvent(t==='keydown'?new KeyboardEvent(t,{key:'Shift',bubbles:true}):t==='scroll'?new Event(t,{bubbles:true}):new MouseEvent(t,{bubbles:true,clientX:5+Math.floor(Math.random()*50),clientY:5+Math.floor(Math.random()*50)})))}catch(e){}"+
+ "await new Promise(r=>setTimeout(r,700));const i1=ex(),exp2=Number(localStorage.getItem('expirationTime'))||0;"+
+ "try{const ac=new AbortController();setTimeout(()=>ac.abort(),20000);const r=await fetch('https://gateway-gqtthc.dcs.vn/category/v1/co-quan/get-all-by-current-user-v4',{headers:{Authorization:'Bearer '+tk,Accept:'application/json'},signal:ac.signal});return{s:r.status,exp,i0,i1,rt:exp2}}catch(e){return{s:-1,exp,i0,i1,rt:exp2}}})()";
 async function keepAlive(manual){
   try{
     if(!manual&&!readKeep().on)return;
@@ -282,10 +286,15 @@ async function keepAlive(manual){
     else if(r.s===401||r.s===403){text='Phiên gqtthc: ĐÃ HẾT HẠN — hãy đăng nhập lại';bad=true;
       if(Date.now()-lastExpWarn>3*3600e3){lastExpWarn=Date.now();notify('gqtthc đã hết phiên đăng nhập','Hãy mở ứng dụng và đăng nhập lại để các lượt tự động lấy được dữ liệu.');hookPost('⚠ gqtthc đã hết phiên đăng nhập');}}
     else{const left=r.exp?r.exp*1000-Date.now():0;
-      text='Phiên gqtthc: '+(r.exp?(left>0?'token còn '+(left>=3600e3?Math.floor(left/3600e3)+' giờ ':'')+Math.round((left%3600e3)/60000)+' phút':'token đã quá hạn'):'không rõ hạn')+' · giữ phiên lúc '+hm+(r.s>=200&&r.s<300?'':' (API '+r.s+')');
+      text='Phiên gqtthc: '+(r.exp?(left>0?'token còn '+(left>=3600e3?Math.floor(left/3600e3)+' giờ ':'')+Math.round((left%3600e3)/60000)+' phút':'token đã quá hạn'):'không rõ hạn')+' · không hoạt động còn '+(r.i1?Math.max(0,Math.round((r.i1-Date.now())/60000)):'?')+' phút · giữ phiên lúc '+hm+(r.s>=200&&r.s<300?'':' (API '+r.s+')');
       if(r.exp&&left>0&&left<30*60e3&&Date.now()-lastExpWarn>3*3600e3){lastExpWarn=Date.now();notify('Phiên gqtthc sắp hết hạn','Còn dưới 30 phút. Hãy đăng nhập lại trong ứng dụng để lượt tự động không bị hụt.')}}
+    /* token truy cập chỉ sống 1 giờ: sắp hết (<5 phút) thì tải lại trang gqtthc để trang tự dùng refresh_token (24 giờ) xin token mới — chỉ khi không đang chạy lấy số liệu */
+    if(r&&r.exp&&r.exp*1000-Date.now()<5*60e3&&!manual&&!schedBusy&&Date.now()-lastActive>180000&&Date.now()-lastReload>15*60e3){
+      lastReload=Date.now();log('Giữ phiên: token sắp hết hạn → tải lại trang gqtthc để làm mới token');
+      try{await new Promise(z=>{view.webContents.once('did-finish-load',z);view.webContents.reload();setTimeout(z,20000)})}catch(_){}
+      setTimeout(()=>keepAlive(true),6000)}
     sessInfo={text,bad};try{win.webContents.send('sess',sessInfo)}catch(_){}
-    if(Date.now()-lastKeepLog>3600e3||lastKeepStatus!==(r&&r.s)){lastKeepLog=Date.now();lastKeepStatus=r&&r.s;log('Giữ phiên: HTTP '+(r&&r.s)+(r&&r.exp?' · token hết hạn lúc '+new Date(r.exp*1000).toLocaleString('vi-VN'):''))}
+    if(Date.now()-lastKeepLog>3600e3||lastKeepStatus!==(r&&r.s)){lastKeepLog=Date.now();lastKeepStatus=r&&r.s;log('Giữ phiên: HTTP '+(r&&r.s)+(r&&r.exp?' · token hết hạn lúc '+new Date(r.exp*1000).toLocaleString('vi-VN'):'')+(r&&r.i1?' · đồng hồ không-hoạt động '+(r.i1>r.i0?'đã reset':'KHÔNG reset')+' (còn '+Math.round((r.i1-Date.now())/60000)+' phút)':''))}
   }catch(_){}
 }
 ipcMain.handle('keep:get',()=>({on:readKeep().on,info:sessInfo}));
