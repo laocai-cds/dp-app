@@ -23,25 +23,27 @@ nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-sha
 </style></head><body>
 <header><h1>📖 Hướng dẫn sử dụng — Đồng bộ đảng phí gqtthc → Google Sheet</h1><p>Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai</p></header>
 <main>
-<nav>Đi nhanh tới: <a href="#s1">Lấy số liệu</a><a href="#s2">Nhiều xã</a><a href="#s3">Mã đồng bộ</a><a href="#s4">Tự động</a><a href="#s5">Cập nhật</a><a href="#s6">Sự cố</a><a href="#web">🌐 Website các đơn vị</a></nav>
+<nav>Đi nhanh tới: <a href="#s1">Lấy số liệu</a><a href="#s2">Nhiều đơn vị</a><a href="#s3">Mã đồng bộ</a><a href="#s4">Tự động</a><a href="#s5">Cập nhật</a><a href="#s6">Sự cố</a><a href="#web">🌐 Website các đơn vị</a></nav>
 
 <section id="s1"><h2><span>1</span>Lấy số liệu một xã (cách dùng hằng ngày)</h2>
 <ol>
 <li>Trong khung gqtthc ở bên dưới, <b>đăng nhập</b> bằng tài khoản của bạn (ứng dụng nhớ phiên đăng nhập).</li>
-<li>Bấm nút ĐP (màu cam) của xã, ví dụ <span class="b">ĐP Võ Lao</span>.</li>
+<li>Mở danh sách <span class="k">▾ ĐP các đơn vị</span> rồi bấm <span class="b">▶ Chạy</span> cạnh xã cần lấy, ví dụ <b>Võ Lao</b>.</li>
 <li>Lần đầu, ứng dụng hỏi <b>mã đồng bộ</b> của xã: nhập mã rồi bấm OK (mã được nhớ trên máy, lần sau không hỏi nữa).</li>
 <li>Chọn tháng nếu được hỏi. Chờ khung xanh ở góc phải trang báo <b>✅ HOÀN THÀNH</b>. Máy chủ gqtthc có thể mất 1–2 phút.</li>
 </ol>
 <div class="ok">Bấm xong thấy khung đỏ "đã gửi … nhưng chưa thấy Google Sheet cập nhật": thường là <b>mã đồng bộ sai</b>. Bấm lại nút xã đó, ứng dụng sẽ hỏi lại mã.</div></section>
 
-<section id="s2"><h2><span>2</span>Lấy nhiều xã một lúc (chế độ quản trị)</h2>
+<section id="s2"><h2><span>2</span>Lấy nhiều đơn vị một lúc (chế độ quản trị)</h2>
 <ol>
-<li>Tích ô vuông cạnh các xã cần lấy (hoặc tích <span class="k">Chọn tất cả</span>).</li>
-<li>Chọn <b>tháng</b>.</li>
-<li>Bấm <span class="g">▶ Lấy dữ liệu các xã đã chọn</span>. Ứng dụng chạy lần lượt từng xã và báo kết quả cuối cùng.</li>
-<li>Muốn dừng giữa chừng: bấm <b>■ Dừng</b> trên thanh công cụ.</li>
+<li>Bấm ô <span class="k">▾ ĐP các đơn vị · đã chọn N</span> trên thanh công cụ: một danh sách <b>xổ xuống</b> hiện ra.</li>
+<li>Tích từng đơn vị cần lấy, hoặc tích <b>Tất cả</b> ở đầu danh sách. Bấm <span class="k">Xong</span> (hoặc bấm ra ngoài / phím Esc) để thu gọn; ô sẽ báo <b>số đơn vị đã chọn</b>.</li>
+<li>Muốn lấy riêng một đơn vị ngay: bấm <span class="b">▶ Chạy</span> cạnh tên đơn vị đó trong danh sách.</li>
+<li>Chọn <b>tháng</b>, rồi bấm <span class="g">▶ Lấy dữ liệu các đơn vị đã chọn</span>. Ứng dụng chạy lần lượt từng đơn vị (phần <b>tthc</b> luôn chạy cuối).</li>
+<li><b>Một đơn vị lỗi / bị ngắt không làm dừng cả lượt</b>: ứng dụng ghi "↷ bị gián đoạn" rồi chạy tiếp đơn vị kế. Chỉ khi bấm <b>■ Dừng</b> thì mới dừng toàn bộ.</li>
 </ol>
-<div class="warn">Có thể thu nhỏ cửa sổ khi đang chạy, nhưng <b>đừng đóng hẳn ứng dụng</b>. Xã nào chưa có mã thì bị bỏ qua, bấm riêng nút xã đó một lần để nhập mã.</div></section>
+<p><b>Thêm xã mới vào danh sách:</b> bấm <span class="k">➕ Thêm xã</span> (hoặc kéo nút ĐP từ website xã thả vào cửa sổ). Ứng dụng tự tải lại và xã mới <b>xuất hiện trong danh sách xổ xuống</b> như các đơn vị khác. <b>ĐP Tỉnh Lào Cai</b> chạy qua Apps Script <b>DP-CHUNG</b> (dùng chung một mã).</p>
+<div class="warn">Có thể thu nhỏ cửa sổ khi đang chạy, nhưng <b>đừng đóng hẳn ứng dụng</b>. Đơn vị nào chưa có mã thì bị bỏ qua, bấm <span class="b">▶ Chạy</span> riêng đơn vị đó một lần để nhập mã.</div></section>
 
 <section id="s3"><h2><span>3</span>Mã đồng bộ: mã chung và mã riêng</h2>
 <table><tr><th>Loại mã</th><th>Dùng khi nào</th></tr>
@@ -51,13 +53,13 @@ nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-sha
 
 <section id="s4"><h2><span>4</span>Tự động lấy dữ liệu</h2>
 <p><b>🔁 Tự động lấy dữ liệu (API đảng phí): mỗi [N] phút</b></p>
-<ul><li>Tích xã cần chạy, tích ô 🔁, nhập số phút (<b>tối thiểu 5</b>; nên 15–30 phút nếu nhiều xã).</li><li>Mỗi N phút ứng dụng tự lấy số liệu các xã đã tích rồi đẩy lên Google Sheet. Lần đầu chạy sau N phút kể từ lúc bật.</li></ul>
+<ul><li>Chọn đơn vị trong danh sách xổ xuống, tích ô 🔁, nhập số phút (<b>tối thiểu 5</b>; nên 15–30 phút nếu nhiều xã).</li><li>Mỗi N phút ứng dụng tự lấy số liệu các xã đã tích rồi đẩy lên Google Sheet. Lần đầu chạy sau N phút kể từ lúc bật.</li></ul>
 <p><b>⏰ Tự chạy hằng ngày lúc [giờ]</b></p>
-<ul><li>Tích xã, tích ô ⏰, chọn giờ (ví dụ 06:00). Chỉ chạy trong 3 giờ sau giờ hẹn, mỗi ngày một lần.</li><li>Tích <b>Tự mở cùng Windows</b> để ứng dụng tự bật khi mở máy.</li><li><span class="k">Chạy thử ngay</span> để kiểm tra; <span class="k">Xem nhật ký</span> để xem kết quả các lần chạy.</li></ul>
+<ul><li>Chọn đơn vị, tích ô ⏰, chọn giờ (ví dụ 06:00). Chỉ chạy trong 3 giờ sau giờ hẹn, mỗi ngày một lần.</li><li>Tích <b>Tự mở cùng Windows</b> để ứng dụng tự bật khi mở máy.</li><li><span class="k">Chạy thử ngay</span> để kiểm tra; <span class="k">Xem nhật ký</span> để xem kết quả các lần chạy.</li></ul>
 <div class="warn">Điều kiện: máy <b>luôn bật</b>, ứng dụng <b>đang mở</b> và <b>đã đăng nhập gqtthc</b>. Nếu gqtthc hết phiên đăng nhập thì cần đăng nhập lại.</div></section>
 
 <section id="s5"><h2><span>5</span>Cập nhật phiên bản mới</h2>
-<ul><li>Góc trên bên trái ghi <b>"Phiên bản mới nhất: …"</b> (xanh = bạn đang dùng bản mới nhất, vàng = còn bản mới hơn).</li><li>Bấm <span class="k">Kiểm tra cập nhật</span>. Nút sẽ báo "Đã là bản mới nhất" hoặc "Có bản mới", rồi hiện nút <span class="g">⬇ Cập nhật lên bản …</span>.</li><li>Bấm nút xanh và đồng ý: ứng dụng tự tải, đóng, mở lại bằng phiên bản mới (cài đặt và mã được giữ nguyên).</li><li>Nên cập nhật khi <b>không đang chạy lấy số liệu</b>.</li></ul></section>
+<ul><li>Góc trên bên trái ghi <b>"Phiên bản mới nhất: …"</b> (xanh = đang dùng bản mới nhất, vàng = còn bản mới hơn).</li><li>Bấm <span class="k">Kiểm tra cập nhật</span> rồi <span class="g">⬇ Cập nhật lên bản …</span>: ứng dụng tự tải, đóng, mở lại bằng bản mới (cài đặt và mã được giữ nguyên). Nên cập nhật khi <b>không đang chạy</b>.</li><li><b>Cách chắc chắn nhất:</b> tải <b>DP-DangPhi-Setup.exe</b> mới và chạy đè lên bản cũ. Ứng dụng sẽ <b>tự thay biểu tượng cũ ngoài Desktop/Start</b> trỏ về bản mới.</li><li>Nếu cập nhật xong vẫn hiện bản cũ: đóng hết cửa sổ DP-DangPhi, cài lại bằng Setup.exe. Có thể xem nhật ký cập nhật ở <code>%TEMP%\dp-update.log</code>.</li></ul></section>
 
 <section id="s6"><h2><span>6</span>Xử lý sự cố thường gặp</h2>
 <table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
@@ -65,6 +67,7 @@ nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-sha
 <tr><td>Lỗi 500 / 504, API chậm</td><td>Máy chủ gqtthc đang bận. Ứng dụng tự thử lại tối đa 3 lần. Nếu vẫn lỗi, chạy lại vào giờ ít người dùng (sáng sớm, trưa).</td></tr>
 <tr><td>"Đã gửi … nhưng chưa thấy Google Sheet cập nhật"</td><td>Mã đồng bộ sai. Bấm lại nút xã và nhập đúng mã.</td></tr>
 <tr><td>Nút xã báo "chưa có mã"</td><td>Bấm riêng nút xã đó một lần để nhập mã, hoặc lưu Mã chung.</td></tr>
+<tr><td>Chạy nhiều đơn vị, một đơn vị báo lỗi</td><td>Không cần làm gì: ứng dụng tự chạy tiếp các đơn vị còn lại. Xong lượt, chạy lại riêng đơn vị lỗi bằng <span class="b">▶ Chạy</span>.</td></tr>
 <tr><td>Muốn xem lịch sử các lần chạy</td><td>Bấm <span class="k">Xem nhật ký</span> (mở bằng Notepad).</td></tr></table></section>
 
 <section><h2><span>7</span>Cài đặt</h2>
