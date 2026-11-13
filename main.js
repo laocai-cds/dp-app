@@ -258,8 +258,17 @@ const REPO='laocai-cds/dp-app';
 let latest=null;
 let lastWhy='';
 async function checkUpdate(){
-  try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok){lastWhy='GitHub trả mã '+r.status;try{win.webContents.send('latestver','')}catch(_){}return 'err'}
-    const j=await r.json();const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();try{win.webContents.send('latestver',nv)}catch(_){}
+  try{let j=null;
+    try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(r.ok)j=await r.json();else lastWhy='GitHub API trả mã '+r.status}catch(e){lastWhy=String(e&&e.message||e).slice(0,50)}
+    if(!j){/* API bị giới hạn (403/429) → dùng trang releases/latest (không bị giới hạn) */
+      const r2=await net.fetch('https://github.com/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});
+      const mm=/\/releases\/tag\/(v[\d.]+)/.exec(r2.url||'');if(!mm){try{win.webContents.send('latestver','')}catch(_){}return 'err'}
+      const base='https://github.com/'+REPO+'/releases/download/'+mm[1]+'/',ev=process.versions.electron;
+      const ex=async n=>{try{const h=await net.fetch(base+n,{method:'HEAD',headers:{'User-Agent':'dp-dangphi'}});return h.ok}catch(_){return false}};
+      const names=['DP-DangPhi-win32-x64.zip','app-electron-'+ev+'.asar.bin','dp-config.json'],ok=await Promise.all(names.map(ex));
+      j={tag_name:mm[1],html_url:'https://github.com/'+REPO+'/releases/tag/'+mm[1],assets:names.filter((n,i)=>ok[i]).map(n=>({name:n,browser_download_url:base+n}))};lastWhy='';
+    }
+const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();try{win.webContents.send('latestver',nv)}catch(_){}
     const cmp=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1}return 0};
     const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
     const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar\.bin$/.exec(a.name);return k&&k[1]===process.versions.electron});
