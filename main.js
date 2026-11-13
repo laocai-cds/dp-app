@@ -244,7 +244,7 @@ async function healthCore(){
       if(!o.t)o.msg='chưa có lần đồng bộ nào'
     }catch(e){o.msg='không kết nối được ('+String(e&&e.message||e).slice(0,30)+')'}
     return o}));
-  let chung='';if(cfg.chung){try{const j=await fetchJson(cfg.chung+'?action=status&_='+Date.now(),9000);chung=j&&j.ok?('DP-CHUNG v'+(j.version||'?')+(j.tthc?' (có ĐP Tỉnh)':' (chưa hỗ trợ ĐP Tỉnh — cần triển khai bản mới)')):'DP-CHUNG báo lỗi'}catch(_){chung='DP-CHUNG không kết nối được'}}
+  let chung='';if(cfg.chung){try{const j=await fetchJson(cfg.chung+'?_='+Date.now(),9000);chung=j&&j.ok?('DP-CHUNG v'+(j.version||'?')+(j.tthc?' (có ĐP Tỉnh)':' (chưa hỗ trợ ĐP Tỉnh — cần triển khai bản mới)')):'DP-CHUNG báo lỗi'}catch(_){chung='DP-CHUNG không kết nối được'}}
   return {login,rs,chung};
 }
 const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?m+' phút trước':m<1440?Math.round(m/60)+' giờ trước':Math.round(m/1440)+' ngày trước'};
