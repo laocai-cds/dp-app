@@ -265,6 +265,32 @@ async function staleCheck(){try{if(Date.now()-lastStaleWarn<12*3600e3)return;con
   const old=h.rs.filter(o=>o.ok&&o.t&&Date.now()-o.t>24*3600e3).map(o=>o.label);
   if(old.length){lastStaleWarn=Date.now();notify('Dữ liệu đảng phí chưa cập nhật quá 24 giờ',old.slice(0,6).join(', ')+(old.length>6?'…':''));log('Cảnh báo dữ liệu cũ: '+old.join(', '))}}catch(_){}}
 setTimeout(staleCheck,3*60e3);setInterval(staleCheck,60*60e3);
+/* ===== Giữ phiên gqtthc "sống": cứ 10 phút gọi một API nhẹ như người đang thao tác; hiện hạn token còn lại ===== */
+const keepFile=()=>path.join(app.getPath('userData'),'giu-phien.json');
+const readKeep=()=>{try{return Object.assign({on:true},JSON.parse(fs.readFileSync(keepFile(),'utf8')))}catch(_){return{on:true}}};
+let sessInfo={text:'Phiên gqtthc: chưa kiểm tra',bad:false},lastExpWarn=0,lastKeepLog=0,lastKeepStatus=null;
+const KEEPJS="(async()=>{const tk=localStorage.getItem('token');if(!tk)return{s:0,exp:0};let exp=0;try{exp=JSON.parse(atob(tk.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp||0}catch(e){}"+
+ "try{const ac=new AbortController();setTimeout(()=>ac.abort(),20000);const r=await fetch('https://gateway-gqtthc.dcs.vn/category/v1/co-quan/get-all-by-current-user-v4',{headers:{Authorization:'Bearer '+tk,Accept:'application/json'},signal:ac.signal});return{s:r.status,exp}}catch(e){return{s:-1,exp}}})()";
+async function keepAlive(manual){
+  try{
+    if(!manual&&!readKeep().on)return;
+    if(!view||!/^https:\/\/gqtthc\.dcs\.vn\//.test(view.webContents.getURL()))return;
+    const r=await view.webContents.executeJavaScript(KEEPJS);
+    const hm=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    let text,bad=false;
+    if(!r||r.s===0){text='Phiên gqtthc: chưa đăng nhập';bad=true}
+    else if(r.s===401||r.s===403){text='Phiên gqtthc: ĐÃ HẾT HẠN — hãy đăng nhập lại';bad=true;
+      if(Date.now()-lastExpWarn>3*3600e3){lastExpWarn=Date.now();notify('gqtthc đã hết phiên đăng nhập','Hãy mở ứng dụng và đăng nhập lại để các lượt tự động lấy được dữ liệu.');hookPost('⚠ gqtthc đã hết phiên đăng nhập');}}
+    else{const left=r.exp?r.exp*1000-Date.now():0;
+      text='Phiên gqtthc: '+(r.exp?(left>0?'token còn '+(left>=3600e3?Math.floor(left/3600e3)+' giờ ':'')+Math.round((left%3600e3)/60000)+' phút':'token đã quá hạn'):'không rõ hạn')+' · giữ phiên lúc '+hm+(r.s>=200&&r.s<300?'':' (API '+r.s+')');
+      if(r.exp&&left>0&&left<30*60e3&&Date.now()-lastExpWarn>3*3600e3){lastExpWarn=Date.now();notify('Phiên gqtthc sắp hết hạn','Còn dưới 30 phút. Hãy đăng nhập lại trong ứng dụng để lượt tự động không bị hụt.')}}
+    sessInfo={text,bad};try{win.webContents.send('sess',sessInfo)}catch(_){}
+    if(Date.now()-lastKeepLog>3600e3||lastKeepStatus!==(r&&r.s)){lastKeepLog=Date.now();lastKeepStatus=r&&r.s;log('Giữ phiên: HTTP '+(r&&r.s)+(r&&r.exp?' · token hết hạn lúc '+new Date(r.exp*1000).toLocaleString('vi-VN'):''))}
+  }catch(_){}
+}
+ipcMain.handle('keep:get',()=>({on:readKeep().on,info:sessInfo}));
+ipcMain.handle('keep:set',async(e,on)=>{fs.writeFileSync(keepFile(),JSON.stringify({on:!!on}));if(on)keepAlive(true);return true});
+setTimeout(()=>keepAlive(),60e3);setInterval(()=>keepAlive(),10*60e3);
 /* cấu hình từ xa: lấy config.json mới nhất trên GitHub (raw, không bị giới hạn API); áp dụng khi mở lại ứng dụng */
 async function syncRemoteCfg(){try{
   const r=await net.fetch('https://raw.githubusercontent.com/'+REPO+'/main/config.json?_='+Date.now(),{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return;
