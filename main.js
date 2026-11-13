@@ -364,6 +364,27 @@ ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))
 function announceUpdated(){try{const f=path.join(app.getPath('userData'),'lastver.txt');let old='';try{old=fs.readFileSync(f,'utf8').trim()}catch(_){}
   const cur=app.getVersion();if(old&&old!==cur){setTimeout(()=>{say('✅ Đã cập nhật xong: bản '+old+' → bản '+cur+'. Ứng dụng đã khởi động lại bằng phiên bản mới.');log('Đã cập nhật '+old+' → '+cur)},2500)}
   if(old!==cur)fs.writeFileSync(f,cur)}catch(e){}}
+/* Biểu tượng (shortcut) cũ trỏ tới bản khác của ứng dụng → sửa lại cho trỏ đúng bản đang chạy (Desktop, Start, thanh tác vụ) */
+function fixShortcuts(){
+  if(!app.isPackaged||process.platform!=='win32')return;
+  try{
+    const exe=process.execPath,base=path.basename(exe).toLowerCase(),dirs=[];
+    try{dirs.push(app.getPath('desktop'))}catch(_){}
+    try{dirs.push(path.join(process.env.PUBLIC||'C:\\Users\\Public','Desktop'))}catch(_){}
+    const ap=process.env.APPDATA||'';
+    if(ap){dirs.push(path.join(ap,'Microsoft','Windows','Start Menu','Programs'));dirs.push(path.join(ap,'Microsoft','Internet Explorer','Quick Launch','User Pinned','TaskBar'))}
+    const seen=new Set();let n=0;
+    const walk=(d,depth)=>{let es=[];try{es=fs.readdirSync(d,{withFileTypes:true})}catch(_){return}
+      for(const e of es){const p=path.join(d,e.name);
+        if(e.isDirectory()){if(depth<1)walk(p,depth+1);continue}
+        if(!/\.lnk$/i.test(e.name)||seen.has(p))continue;seen.add(p);
+        try{const s=shell.readShortcutLink(p);const t=String(s.target||'');
+          if(t&&path.basename(t).toLowerCase()===base&&t.toLowerCase()!==exe.toLowerCase()){
+            shell.writeShortcutLink(p,'update',{target:exe,cwd:path.dirname(exe),icon:exe,iconIndex:0});n++;log('Sửa biểu tượng: '+p+' | '+t+' → '+exe)}}catch(_){}}};
+    dirs.forEach(d=>walk(d,0));
+    if(n)setTimeout(()=>say('✅ Đã sửa '+n+' biểu tượng cũ để mở đúng bản mới này.'),4000);
+  }catch(e){}
+}
 function reportUpdLog(){try{const f=path.join(os.tmpdir(),'dp-update.log');if(!fs.existsSync(f))return;const t=fs.readFileSync(f,'utf8');fs.unlinkSync(f);log('Nhật ký cập nhật: '+t.replace(/\r?\n/g,' | ').slice(0,500));if(/THAT BAI/.test(t))setTimeout(()=>say('⚠ Cập nhật lần trước KHÔNG chép được file mới ('+(t.split('\n').filter(x=>/lan /.test(x)).pop()||'').slice(0,120)+'). Hãy cài đè bằng DP-DangPhi-Setup.exe.'),3000)}catch(_){}}
-app.whenReady().then(()=>{createWindow();announceUpdated();reportUpdLog();applySched();setInterval(tickSched,30000);armUpd();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
+app.whenReady().then(()=>{createWindow();announceUpdated();reportUpdLog();fixShortcuts();applySched();setInterval(tickSched,30000);armUpd();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
