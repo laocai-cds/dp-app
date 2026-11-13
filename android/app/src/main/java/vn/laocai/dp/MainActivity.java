@@ -298,8 +298,12 @@ public class MainActivity extends Activity {
             }
             String all = sp.getString("__all", "");
 
+            String chungU = cfg.optString("chung", "");
+            boolean viaChung = needApi && !all.isEmpty() && !chungU.isEmpty();
             String apiUrl = "";
-            if (needApi) {
+            if (needApi && viaChung) {
+                apiUrl = chungU;
+            } else if (needApi) {
                 apiUrl = sp.getString("api_" + id, arg instanceof String ? (String) arg : "");
                 if (!apiUrl.matches("^https://script\\.google\\.com/macros/s/[^/]+/exec$")) {
                     ask("Dán địa chỉ Apps Script (…/exec) của trang tthc", false, "", v -> {
@@ -311,7 +315,8 @@ public class MainActivity extends Activity {
             }
 
             String code = sp.getString("code_" + id, "");
-            if (code.isEmpty() && !all.isEmpty()) code = all;
+            if (code.isEmpty() && !all.isEmpty() && (!needApi || viaChung)) code = all;
+            if (viaChung) code = all;
             if (code.isEmpty()) {
                 ask("Nhập mã đồng bộ của " + x.optString("label") + " (chỉ 1 lần)", true, "", v -> {
                     sp.edit().putString("code_" + id, v).apply();
