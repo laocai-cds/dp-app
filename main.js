@@ -280,8 +280,8 @@ ipcMain.handle('update:check',async()=>{const r=await checkUpdate();return {r,cu
 async function dl(url,file,label,silent){
   const r=await net.fetch(url,{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)throw new Error('Không tải được ('+r.status+')');
   const total=+r.headers.get('content-length')||0;let got=0,last=0;const out=fs.createWriteStream(file);let werr=null;out.on('error',e=>{werr=e});
-  const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(!silent&&total&&Date.now()-last>800){last=Date.now();say(label+': '+Math.round(got*100/total)+'% ('+(got/1048576).toFixed(1)+'/'+(total/1048576).toFixed(1)+' MB)')}}
-  await new Promise(z=>out.end(z));if(werr)throw werr;return got;
+  const rd=r.body.getReader();for(;;){const {done,value}=await rd.read();if(done)break;out.write(Buffer.from(value));got+=value.length;if(total&&Date.now()-last>800){last=Date.now();try{win.webContents.send('updprog',Math.round(got*100/total))}catch(_){}if(!silent)say(label+': '+Math.round(got*100/total)+'% ('+(got/1048576).toFixed(1)+'/'+(total/1048576).toFixed(1)+' MB)')}}
+  await new Promise(z=>out.end(z));if(werr)throw werr;try{win.webContents.send('updprog',100)}catch(_){}return got;
 }
 let pre={ver:'',file:'',cfg:'',done:false,busy:null};
 const PRE_CFG=()=>path.join(os.tmpdir(),'dp-config-new.json');
