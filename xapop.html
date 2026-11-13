@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8">
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:transparent;font:14px system-ui,sans-serif;color:#12315f;overflow:hidden}
+#c{height:100%;background:#fff;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.45);border:1px solid #c9d6ea;display:flex;flex-direction:column;overflow:hidden}
+#h{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#eef4ff;border-bottom:1px solid #d5e0f2;font-weight:700}
+#h span{flex:1}#cnt{background:#0f8a3c;color:#fff;border-radius:10px;padding:1px 9px;font-size:12px}
+#l{flex:1;overflow:auto;padding:4px 0}
+.r{display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;user-select:none}.r:hover{background:#eef4ff}
+.r input{width:18px;height:18px;margin:0;accent-color:#0f8a3c;cursor:pointer}.r .n{flex:1}
+.r button{border:0;border-radius:6px;background:#e07b00;color:#fff;font:700 12px system-ui;padding:3px 9px;cursor:pointer}
+#f{display:flex;gap:8px;padding:8px 12px;border-top:1px solid #d5e0f2;background:#f7faff}
+#f button{flex:1;border:0;border-radius:6px;padding:7px;font:700 13px system-ui;cursor:pointer;background:#0f8a3c;color:#fff}
+</style>
+<div id="c"><div id="h"><input type="checkbox" id="all" style="width:18px;height:18px;accent-color:#0f8a3c"><span>Tất cả</span><b id="cnt">0/0</b></div><div id="l"></div><div id="f"><button id="ok">Xong</button></div></div>
+<script>
+const $=i=>document.getElementById(i);let items=[],sel=new Set();
+function paint(){const n=sel.size;$('cnt').textContent=n+'/'+items.length;$('all').checked=n===items.length&&n>0;$('all').indeterminate=n>0&&n<items.length;
+ document.querySelectorAll('.r input').forEach(k=>k.checked=sel.has(k.dataset.id))}
+const push=()=>pop.change([...sel]);
+pop.onData(d=>{items=d.items;sel=new Set(d.checked);$('l').innerHTML='';
+ items.forEach(x=>{const r=document.createElement('div');r.className='r';const k=document.createElement('input');k.type='checkbox';k.dataset.id=x.id;
+  const n=document.createElement('span');n.className='n';n.textContent=x.label;const b=document.createElement('button');b.textContent='▶ Chạy';b.title='Chạy riêng '+x.label;
+  b.onclick=e=>{e.stopPropagation();pop.run(x.id)};
+  r.onclick=e=>{if(e.target===b)return;if(e.target!==k)k.checked=!k.checked;k.checked?sel.add(x.id):sel.delete(x.id);paint();push()};
+  r.append(k,n,b);$('l').appendChild(r)});paint()});
+$('all').onchange=()=>{sel=$('all').checked?new Set(items.map(x=>x.id)):new Set();paint();push()};
+$('ok').onclick=()=>pop.close();addEventListener('keydown',e=>{if(e.key==='Escape')pop.close()});
+</script>

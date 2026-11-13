@@ -100,9 +100,27 @@ ipcMain.handle('help:open',()=>{
   helpWin.on('closed',()=>{helpWin=null});return true});
 ipcMain.handle('bar',(e,h)=>{const n=Math.round(Math.min(Math.max(+h||0,60),520));if(n!==BAR){BAR=n;try{layout()}catch(_){}}return true});
 function layout(){const [w,h]=win.getContentSize();view.setBounds({x:0,y:BAR,width:w,height:Math.max(100,h-BAR)})}
+/* hộp xổ chọn đơn vị: một khung nổi nằm trên khung gqtthc (như danh sách chọn trong APK) */
+let pop=null,popAt=0;
+function popClose(){if(!pop)return;const p=pop;pop=null;try{win.contentView.removeChildView(p)}catch(_){}try{p.webContents.close()}catch(_){}popAt=Date.now();try{win.webContents.send('pop:closed')}catch(_){}}
+ipcMain.handle('pop:open',(e,o)=>{
+  if(pop){popClose();return true}
+  if(Date.now()-popAt<300)return true;
+  const items=(o&&o.items)||[],[ww,wh]=win.getContentSize();
+  const w=Math.min(340,Math.max(240,ww-20)),h=Math.min(46+items.length*37+52,Math.max(160,wh-(o.y||0)-12));
+  const x=Math.max(4,Math.min(Math.round(o.x||0),ww-w-4)),y=Math.round(o.y||0);
+  pop=new WebContentsView({webPreferences:{preload:path.join(__dirname,'preload-pop.js'),contextIsolation:true,backgroundThrottling:false}});
+  win.contentView.addChildView(pop);pop.setBounds({x,y,width:w,height:h});
+  pop.webContents.loadFile('xapop.html');
+  pop.webContents.once('did-finish-load',()=>{try{pop.webContents.send('pop:data',{items,checked:o.checked||[]});pop.webContents.focus()}catch(_){}});
+  pop.webContents.on('blur',()=>setTimeout(()=>{if(pop&&!pop.webContents.isFocused())popClose()},120));
+  return true});
+ipcMain.on('pop:change',(e,ids)=>{try{win.webContents.send('pop:sel',ids)}catch(_){}});
+ipcMain.on('pop:run',(e,id)=>{popClose();try{win.webContents.send('pop:run',id)}catch(_){}});
+ipcMain.on('pop:close',()=>popClose());
 function createWindow(){
   win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),backgroundThrottling:false}});
-  win.setTitle(WIN_TITLE);win.on('page-title-updated',e=>e.preventDefault());
+  win.setTitle(WIN_TITLE);win.on('page-title-updated',e=>e.preventDefault());win.on('resize',()=>popClose());win.on('minimize',()=>popClose());
   win.loadFile('toolbar.html');
   /* mở lên phía trước và hiện giao diện (kể cả khi vừa tự khởi động lại sau cập nhật) */
   win.once('ready-to-show',()=>{try{if(win.isMinimized())win.restore();win.show();win.setAlwaysOnTop(true);win.focus();setTimeout(()=>{try{win.setAlwaysOnTop(false)}catch(_){}},1500)}catch(e){}});

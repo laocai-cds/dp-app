@@ -1,6 +1,6 @@
 {
   "name": "dp-gqtthc",
-  "version": "1.1.47",
+  "version": "1.1.48",
   "description": "Đồng bộ đảng phí gqtthc",
   "main": "main.js",
   "scripts": {
@@ -28,7 +28,9 @@
     "files": [
       "main.js",
       "preload.js",
+      "preload-pop.js",
       "toolbar.html",
+      "xapop.html",
       "huong-dan.html",
       "bm/**",
       "config.json",
