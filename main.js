@@ -157,13 +157,14 @@ async function doRun(id,code,api,month){
   const needApi=x.fn==='dpBookmarklet';
   const apiUrl=needApi?(codes[id+'_api']||(typeof x.arg==='string'?x.arg:'')):'';
   if(needApi&&!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(apiUrl))return{need:'api'};
-  if(!x.extra&&!codes[id]&&codes.__all)codes[id]=codes.__all;
-  if(!codes[id])return{need:'code'};
+  if(!x.extra&&!needApi&&!codes[id]&&codes.__all)codes[id]=codes.__all;
+  if(!needApi&&!codes[id])return{need:'code'};
   const url=view.webContents.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
   let BM;try{BM=fs.readFileSync(path.join(__dirname,x.file),'utf8')}catch(err){return{err:'Thiếu file '+x.file}}
   const useChung=!!(!x.extra&&cfg.chung&&codes.__all&&await chungOk()&&(!needApi||_chT));
   if(useChung)codes[id]=codes.__all;
+  if(!codes[id])return{need:'code'}; /* ĐP Tỉnh (tthc) chạy trực tiếp cần mật khẩu riêng của tthc, không dùng mã chung */
   /* ĐP Tỉnh Lào Cai (dpBookmarklet): qua DP-CHUNG thì thay địa chỉ Apps Script bằng DP-CHUNG, mật khẩu = mã chung */
   const arg=needApi?(useChung?cfg.chung:apiUrl):(useChung?Object.assign({},x.arg,{chung:cfg.chung}):x.arg);
   const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';

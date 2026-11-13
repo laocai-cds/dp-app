@@ -32,7 +32,7 @@ const XA = {
 
 // ĐP Tỉnh Lào Cai (tthc): Apps Script riêng, nhận dữ liệu dạng form (payload=...) và trả trạng thái qua JSONP
 const TTHC_KEY = 'tthc';
-const TTHC_URL = 'https://script.google.com/macros/s/AKfycbym3FHqtE20kg8F3SCuc6LizXSwGhSFT-KBY90c58BuOuRigFbOdyruPkTx4uBscZ-ibw/exec';
+const TTHC_URL = 'https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec';
 
 function datMa() {
   const CHUNG = '';            // <-- mã chung (điền, chạy, rồi xóa)
