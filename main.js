@@ -434,6 +434,10 @@ async function prefetch(){
   }catch(e){log('Tải ngầm bản '+L.ver+' lỗi: '+String(e&&e.message||e).slice(0,80));mine.ver=''}finally{mine.busy=null}})();
   return mine.busy;
 }
+const PS_UI=['$ver=$args[0]','$f=$null;$lb=$null',
+  'function W($s){$e=(Get-Date).AddSeconds($s);while((Get-Date) -lt $e){try{[System.Windows.Forms.Application]::DoEvents()}catch{};Start-Sleep -Milliseconds 80}}',
+  'function T($m){try{if($lb){$lb.Text=$m;[System.Windows.Forms.Application]::DoEvents()}}catch{}}',
+  'try{Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing;$f=New-Object System.Windows.Forms.Form;$f.Text="DP-DangPhi - Cập nhật";$f.ClientSize=New-Object System.Drawing.Size(420,90);$f.StartPosition="CenterScreen";$f.TopMost=$true;$f.ControlBox=$false;$f.FormBorderStyle="FixedDialog";$lb=New-Object System.Windows.Forms.Label;$lb.Location=New-Object System.Drawing.Point(14,12);$lb.Size=New-Object System.Drawing.Size(392,26);$lb.Font=New-Object System.Drawing.Font("Segoe UI",10);$lb.Text="Đang cài đặt bản mới…";$f.Controls.Add($lb);$pb=New-Object System.Windows.Forms.ProgressBar;$pb.Style="Marquee";$pb.MarqueeAnimationSpeed=25;$pb.Location=New-Object System.Drawing.Point(14,48);$pb.Size=New-Object System.Drawing.Size(392,22);$f.Controls.Add($pb);$f.Show();[System.Windows.Forms.Application]::DoEvents()}catch{$f=$null;$lb=$null}'];
 async function installUpdate(){
   if(!latest||(!latest.asset&&!latest.light))return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
   if(!app.isPackaged||process.platform!=='win32')return{err:'Chỉ cập nhật tự động khi chạy bản .exe trên Windows.'};
@@ -452,18 +456,20 @@ async function installUpdate(){
         if(n<20000)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
         if(latest.cfg){try{await dl(latest.cfg,path.join(exeDir,'config.new.json'),'Đang tải cấu hình')}catch(e){}}
       }
-      fs.writeFileSync(ps,[
+      fs.writeFileSync(ps,'\ufeff'+[
         'param($pid1,$asar,$dest,$exe)',
+        ...PS_UI,
         '$log=Join-Path $env:TEMP "dp-update.log"',
         'function L($m){try{Add-Content -Path $log -Value ((Get-Date -Format "HH:mm:ss")+" "+$m)}catch{}}',
         'L ("bat dau; dich="+$dest)',
         'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
-        'Start-Sleep -Seconds 2',
+        'T "Đang cài đặt bản mới, vui lòng chờ…";W 2',
         '$t=Join-Path $dest "resources\\app.asar"',
         '$ok=$false',
-        'for($i=1;$i -le 20 -and -not $ok;$i++){try{Copy-Item -LiteralPath $asar -Destination $t -Force -ErrorAction Stop;$ok=$true}catch{L ("lan "+$i+": "+$_.Exception.Message);Start-Sleep -Seconds 2}}',
-        'if($ok){L "DA CHEP"}else{L "THAT BAI: khong chep duoc app.asar"}',
-        'Start-Process -FilePath $exe'
+        'for($i=1;$i -le 20 -and -not $ok;$i++){try{Copy-Item -LiteralPath $asar -Destination $t -Force -ErrorAction Stop;$ok=$true}catch{L ("lan "+$i+": "+$_.Exception.Message);T ("Đang chờ phần mềm cũ đóng hẳn… ("+$i+")");W 2}}',
+        'if($ok){L "DA CHEP";T "Cài xong. Đang mở lại phần mềm…";W 1}else{L "THAT BAI: khong chep duoc app.asar";T "Không chép được file mới. Hãy cài đè bằng DP-DangPhi-Setup.exe";W 5}',
+        'Start-Process -FilePath $exe',
+        'try{if($f){$f.Close()}}catch{}'
       ].join('\r\n'),'utf8');
       args=[String(process.pid),asar,exeDir,process.execPath];
     }else{
@@ -476,10 +482,11 @@ async function installUpdate(){
         const n=await dl(latest.asset,zip,'Đang tải bản '+latest.ver);
         if(n<5e6)return{err:'File tải về quá nhỏ ('+n+' byte), có thể bị lỗi.'};
       }
-      fs.writeFileSync(ps,[
+      fs.writeFileSync(ps,'\ufeff'+[
         'param($pid1,$zip,$dest,$exe)',
+        ...PS_UI,
         'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
-        'Start-Sleep -Seconds 2',
+        'T "Đang cài đặt bản mới, vui lòng chờ…";W 2',
         '$tmp=Join-Path $env:TEMP "dp-update-x"',
         'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
         'Expand-Archive -Path $zip -DestinationPath $tmp -Force',
@@ -487,7 +494,9 @@ async function installUpdate(){
         'Copy-Item (Join-Path $src "config.json") (Join-Path $dest "config.new.json") -Force -ErrorAction SilentlyContinue',
         'robocopy $src $dest /E /XF config.json /NFL /NDL /NJH /NJS /NP | Out-Null',
         'Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue',
-        'Start-Process -FilePath $exe'
+        'T "Cài xong. Đang mở lại phần mềm…";W 1',
+        'Start-Process -FilePath $exe',
+        'try{if($f){$f.Close()}}catch{}'
       ].join('\r\n'),'utf8');
       args=[String(process.pid),zip,exeDir,process.execPath];
     }
