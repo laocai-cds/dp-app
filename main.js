@@ -318,9 +318,15 @@ async function installUpdate(){
       }
       fs.writeFileSync(ps,[
         'param($pid1,$asar,$dest,$exe)',
+        '$log=Join-Path $env:TEMP "dp-update.log"',
+        'function L($m){try{Add-Content -Path $log -Value ((Get-Date -Format "HH:mm:ss")+" "+$m)}catch{}}',
+        'L ("bat dau; dich="+$dest)',
         'try{Wait-Process -Id $pid1 -Timeout 60 -ErrorAction SilentlyContinue}catch{}',
         'Start-Sleep -Seconds 2',
-        'Copy-Item $asar (Join-Path $dest "resources\\app.asar") -Force',
+        '$t=Join-Path $dest "resources\\app.asar"',
+        '$ok=$false',
+        'for($i=1;$i -le 20 -and -not $ok;$i++){try{Copy-Item -LiteralPath $asar -Destination $t -Force -ErrorAction Stop;$ok=$true}catch{L ("lan "+$i+": "+$_.Exception.Message);Start-Sleep -Seconds 2}}',
+        'if($ok){L "DA CHEP"}else{L "THAT BAI: khong chep duoc app.asar"}',
         'Start-Process -FilePath $exe'
       ].join('\r\n'),'utf8');
       args=[String(process.pid),asar,exeDir,process.execPath];
@@ -358,5 +364,6 @@ ipcMain.handle('open',(e,u)=>{if(/^https:\/\/github\.com\/laocai-cds\//.test(u))
 function announceUpdated(){try{const f=path.join(app.getPath('userData'),'lastver.txt');let old='';try{old=fs.readFileSync(f,'utf8').trim()}catch(_){}
   const cur=app.getVersion();if(old&&old!==cur){setTimeout(()=>{say('✅ Đã cập nhật xong: bản '+old+' → bản '+cur+'. Ứng dụng đã khởi động lại bằng phiên bản mới.');log('Đã cập nhật '+old+' → '+cur)},2500)}
   if(old!==cur)fs.writeFileSync(f,cur)}catch(e){}}
-app.whenReady().then(()=>{createWindow();announceUpdated();applySched();setInterval(tickSched,30000);armUpd();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
+function reportUpdLog(){try{const f=path.join(os.tmpdir(),'dp-update.log');if(!fs.existsSync(f))return;const t=fs.readFileSync(f,'utf8');fs.unlinkSync(f);log('Nhật ký cập nhật: '+t.replace(/\r?\n/g,' | ').slice(0,500));if(/THAT BAI/.test(t))setTimeout(()=>say('⚠ Cập nhật lần trước KHÔNG chép được file mới ('+(t.split('\n').filter(x=>/lan /.test(x)).pop()||'').slice(0,120)+'). Hãy cài đè bằng DP-DangPhi-Setup.exe.'),3000)}catch(_){}}
+app.whenReady().then(()=>{createWindow();announceUpdated();reportUpdLog();applySched();setInterval(tickSched,30000);armUpd();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
