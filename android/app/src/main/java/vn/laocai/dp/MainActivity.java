@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
         row.setPadding(dp(4), 0, dp(4), dp(2));
         root.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        row.addView(btn("⟳ Tải lại", 0xFF2E6BB0, Color.WHITE, v -> web.reload()), eq());
+        row.addView(btn("⟳ Tải lại", 0xFF2E6BB0, Color.WHITE, v -> web.loadUrl(cfg.optString("home", "https://gqtthc.dcs.vn/"))), eq());
         row.addView(btn("🔑 Mã", 0xFF2E6BB0, Color.WHITE, v -> ask("Nhập Mã chung (lưu trên máy này)", true, sp.getString("__all", ""), c -> {
             sp.edit().putString("__all", c.trim()).apply();
             say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
@@ -115,9 +115,43 @@ public class MainActivity extends Activity {
         s.setDisplayZoomControls(false);
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
-        web.setWebViewClient(new WebViewClient());
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        s.setUserAgentString(WebSettings.getDefaultUserAgent(this).replace("; wv", "").replace("Version/4.0 ", ""));
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView v, android.webkit.WebResourceRequest r, android.webkit.WebResourceError e) {
+                if (r != null && r.isForMainFrame()) showLoadError(String.valueOf(e.getDescription()) + " (" + e.getErrorCode() + ")");
+            }
+            @Override
+            public void onReceivedHttpError(WebView v, android.webkit.WebResourceRequest r, android.webkit.WebResourceResponse e) {
+                if (r != null && r.isForMainFrame() && e.getStatusCode() >= 400) showLoadError("Máy chủ trả mã " + e.getStatusCode());
+            }
+            @Override
+            public void onReceivedSslError(WebView v, android.webkit.SslErrorHandler h, android.net.http.SslError e) {
+                String host = android.net.Uri.parse(e.getUrl()).getHost();
+                if (host != null && (host.equals("dcs.vn") || host.endsWith(".dcs.vn"))) {
+                    new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Chứng chỉ bảo mật của " + host + " chưa được điện thoại tin cậy")
+                        .setMessage("Thường do máy chủ cấu hình thiếu chứng chỉ trung gian. Chỉ tiếp tục nếu bạn đang dùng mạng tin cậy.")
+                        .setPositiveButton("Vẫn tiếp tục", (d, w) -> h.proceed())
+                        .setNegativeButton("Hủy", (d, w) -> { h.cancel(); showLoadError("Chứng chỉ SSL không hợp lệ"); })
+                        .setCancelable(false).show();
+                } else {
+                    h.cancel();
+                    showLoadError("Chứng chỉ SSL không hợp lệ");
+                }
+            }
+        });
         web.setWebChromeClient(new WebChromeClient());
         web.loadUrl(cfg.optString("home", "https://gqtthc.dcs.vn/"));
+    }
+
+    void showLoadError(String why) {
+        status.setText("⚠ Không mở được gqtthc: " + why + " — bấm ⟳ Tải lại");
+        String h = "<meta name=viewport content='width=device-width,initial-scale=1'><body style='font-family:sans-serif;padding:24px;text-align:center'>"
+            + "<h3>Không mở được trang gqtthc.dcs.vn</h3><p>" + android.text.TextUtils.htmlEncode(why)
+            + "</p><p>Kiểm tra Wi-Fi/4G rồi bấm nút <b>⟳ Tải lại</b> ở trên.</p></body>";
+        web.loadDataWithBaseURL(null, h, "text/html", "UTF-8", null);
     }
 
     int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
