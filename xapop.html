@@ -6,7 +6,7 @@
 #h span{flex:1}#cnt{background:#0f8a3c;color:#fff;border-radius:10px;padding:1px 9px;font-size:12px}
 #l{flex:1;overflow:auto;padding:4px 0}
 .r{display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;user-select:none}.r:hover{background:#eef4ff}
-.r input{width:18px;height:18px;margin:0;accent-color:#0f8a3c;cursor:pointer}.r .n{flex:1}
+.r input{width:18px;height:18px;margin:0;accent-color:#0f8a3c;cursor:pointer}.r .n{flex:1;display:flex;flex-direction:column;line-height:1.2}.r .n small{font-size:11px;font-weight:600;color:#7a8aa6}.r .n small.ok{color:#0f8a3c}.r .n small.bad{color:#c0392b}.r .n small.old{color:#d98200}
 .r button{border:0;border-radius:6px;background:#e07b00;color:#fff;font:700 12px system-ui;padding:3px 9px;cursor:pointer}
 #f{display:flex;gap:8px;padding:8px 12px;border-top:1px solid #d5e0f2;background:#f7faff}
 #f button{flex:1;border:0;border-radius:6px;padding:7px;font:700 13px system-ui;cursor:pointer;background:#0f8a3c;color:#fff}
@@ -19,7 +19,7 @@ function paint(){const n=sel.size;$('cnt').textContent=n+'/'+items.length;$('all
 const push=()=>pop.change([...sel]);
 pop.onData(d=>{items=d.items;sel=new Set(d.checked);$('l').innerHTML='';
  items.forEach(x=>{const r=document.createElement('div');r.className='r';const k=document.createElement('input');k.type='checkbox';k.dataset.id=x.id;
-  const n=document.createElement('span');n.className='n';n.textContent=x.label;const b=document.createElement('button');b.textContent='▶ Chạy';b.title='Chạy riêng '+x.label;
+  const n=document.createElement('span');n.className='n';n.append(document.createTextNode(x.label));{const s=document.createElement('small'),q=x.s;if(!q){s.textContent='chưa chạy lần nào'}else{const d=new Date(q.t),p=v=>String(v).padStart(2,'0'),tm=(new Date().toDateString()===d.toDateString()?'':p(d.getDate())+'/'+p(d.getMonth()+1)+' ')+p(d.getHours())+':'+p(d.getMinutes());if(q.ok){const old=Date.now()-q.t>24*36e5;s.className=old?'old':'ok';s.textContent=(old?'⚠ cũ · ':'✅ ')+tm}else{s.className='bad';s.textContent='✕ '+tm+' · '+(q.msg||'lỗi').slice(0,40)}s.title=q.msg||''}n.appendChild(s)};const b=document.createElement('button');b.textContent='▶ Chạy';b.title='Chạy riêng '+x.label;
   b.onclick=e=>{e.stopPropagation();pop.run(x.id)};
   r.onclick=e=>{if(e.target===b)return;if(e.target!==k)k.checked=!k.checked;k.checked?sel.add(x.id):sel.delete(x.id);paint();push()};
   r.append(k,n,b);$('l').appendChild(r)});paint()});

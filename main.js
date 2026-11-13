@@ -1,4 +1,4 @@
-const {app,BrowserWindow,WebContentsView,ipcMain,shell,net,powerSaveBlocker}=require('electron');
+const {app,BrowserWindow,WebContentsView,ipcMain,shell,net,powerSaveBlocker,Notification,Tray,Menu,dialog}=require('electron');
 const {spawn}=require('child_process');
 const os=require('os');
 const path=require('path'),fs=require('fs');
@@ -120,7 +120,7 @@ ipcMain.on('pop:run',(e,id)=>{popClose();try{win.webContents.send('pop:run',id)}
 ipcMain.on('pop:close',()=>popClose());
 function createWindow(){
   win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),backgroundThrottling:false}});
-  win.setTitle(WIN_TITLE);win.on('page-title-updated',e=>e.preventDefault());win.on('resize',()=>popClose());win.on('minimize',()=>popClose());
+  win.setTitle(WIN_TITLE);win.on('close',e=>{try{const s=readSched();if(!quitting&&process.platform==='win32'&&(s.enabled||s.everyOn)){e.preventDefault();win.hide();setupTray();notify('Đồng bộ đảng phí','Ứng dụng vẫn chạy nền để tự động lấy số liệu. Bấm biểu tượng ở khay hệ thống (góc phải thanh tác vụ) để mở lại hoặc thoát hẳn.')}}catch(_){}});win.on('page-title-updated',e=>e.preventDefault());win.on('resize',()=>popClose());win.on('minimize',()=>popClose());
   win.loadFile('toolbar.html');
   /* mở lên phía trước và hiện giao diện (kể cả khi vừa tự khởi động lại sau cập nhật) */
   win.once('ready-to-show',()=>{try{if(win.isMinimized())win.restore();win.show();win.setAlwaysOnTop(true);win.focus();setTimeout(()=>{try{win.setAlwaysOnTop(false)}catch(_){}},1500)}catch(e){}});
@@ -181,12 +181,12 @@ ipcMain.handle('stop',()=>{batchStop=true;return true});
 let lastActive=0;
 /* Dừng hẳn mọi việc còn dang dở trong trang gqtthc (tải lại trang) để lần chạy bị lỗi/hủy không chạy ngầm tiếp */
 async function killRun(){try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.reload();setTimeout(r,15000)});await new Promise(r=>setTimeout(r,800))}catch(_){}}
-async function runWaitCore(id,month){const r=await runWaitCore0(id,month);if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun()}return r}
-async function runWaitCore0(id,month){
+async function runWaitCore(id,month,code,api){const r=await runWaitCore0(id,month,code,api);recRes(id,r);if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun()}return r}
+async function runWaitCore0(id,month,code,api){
   lastActive=Date.now();
   batchStop=false;
   try{await view.webContents.executeJavaScript("document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px')d.remove()});void 0")}catch(_){}
-  const r=await doRun(id,null,null,month);
+  const r=await doRun(id,code||null,api||null,month);
   if(!r.ok)return r;
   const t0=Date.now();let seen=false,lostAt=0;
   while(Date.now()-t0<8*60*1000){
@@ -205,7 +205,82 @@ async function runWaitCore0(id,month){
   }
   return{result:'fail',msg:'Quá thời gian chờ (8 phút)'};
 }
-ipcMain.handle('runWait',(e,{id,month})=>runWaitCore(id,month));
+
+/* ===== Kết quả từng đơn vị (hiện trong hộp xổ chọn) ===== */
+const resFile=()=>path.join(app.getPath('userData'),'ket-qua.json');
+let RES={};try{RES=JSON.parse(fs.readFileSync(resFile(),'utf8'))||{}}catch(_){RES={}}
+function recRes(id,r){
+  if(!r||r.need)return;let ok,msg='';
+  if(r.err){ok=false;msg=r.err}else if(r.result==='done'){ok=true;msg=r.msg||''}
+  else if(r.result==='stop'){ok=false;msg='đã dừng'}else if(r.result==='cancel'){ok=false;msg='bị gián đoạn'}
+  else if(r.result==='fail'){ok=false;msg=r.msg||'lỗi'}else return;
+  RES[id]={ok,t:Date.now(),msg:String(msg).replace(/\s+/g,' ').slice(0,140)};
+  try{fs.writeFileSync(resFile(),JSON.stringify(RES))}catch(_){}
+  try{win.webContents.send('res',RES)}catch(_){}
+}
+ipcMain.handle('res:get',()=>RES);
+const notify=(title,body)=>{try{if(Notification.isSupported())new Notification({title,body}).show()}catch(_){}};
+/* webhook báo kết quả (tùy chọn): POST JSON {text, content} — dùng được với Slack/Discord/Make/Zalo bot trung gian */
+const hookFile=()=>path.join(app.getPath('userData'),'hook.json');
+const readHook=()=>{try{return JSON.parse(fs.readFileSync(hookFile(),'utf8')).url||''}catch(_){return''}};
+async function hookPost(text){const u=readHook();if(!/^https:\/\//.test(u))return;try{await net.fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,content:text})})}catch(e){log('Webhook lỗi: '+String(e&&e.message||e).slice(0,60))}}
+ipcMain.handle('hook:get',()=>readHook());
+ipcMain.handle('hook:set',(e,u)=>{u=String(u||'').trim();if(u&&!/^https:\/\//.test(u))return{err:'Địa chỉ webhook phải bắt đầu bằng https://'};fs.writeFileSync(hookFile(),JSON.stringify({url:u}));return{ok:true}});
+/* ===== Kiểm tra hệ thống / bảng tình trạng ===== */
+async function fetchJson(u,ms){const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms||9000);try{const r=await net.fetch(u,{signal:ac.signal,headers:{'User-Agent':'dp-dangphi'}});return JSON.parse(await r.text())}finally{clearTimeout(t)}}
+const parseVN=s=>{const k=/^(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+)(?::(\d+))?/.exec(String(s||''));return k?new Date(+k[3],+k[2]-1,+k[1],+k[4],+k[5],+(k[6]||0)).getTime():0};
+const epOf=x=>{const c=readCodes();return x.fn==='dpBookmarklet'?(c[x.id+'_api']||(typeof x.arg==='string'?x.arg:'')):((x.arg&&x.arg.ep)||'')};
+async function healthCore(){
+  let login=false;try{login=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(_){}
+  const codes=readCodes();
+  const rs=await Promise.all(cfg.xa.map(async x=>{
+    const o={id:x.id,label:x.label,ok:false,t:0,msg:'',code:!!(codes[x.id]||codes.__all)};const ep=epOf(x);
+    if(!ep){o.msg='chưa có địa chỉ Apps Script';return o}
+    if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(ep)){o.msg='địa chỉ Apps Script không đúng dạng …/exec';return o}
+    try{const j=await fetchJson(ep+'?action=status&_='+Date.now());
+      if(!j||j.ok===false){o.msg=(j&&j.error)||'script báo lỗi';return o}
+      o.ok=true;
+      if(j.last&&j.last.updatedAtText){o.t=parseVN(j.last.updatedAtText)}else if(j.lastSync){o.t=Date.parse(j.lastSync)||0}
+      if(!o.t)o.msg='chưa có lần đồng bộ nào'
+    }catch(e){o.msg='không kết nối được ('+String(e&&e.message||e).slice(0,30)+')'}
+    return o}));
+  let chung='';if(cfg.chung){try{const j=await fetchJson(cfg.chung+'?action=status&_='+Date.now(),9000);chung=j&&j.ok?('DP-CHUNG v'+(j.version||'?')+(j.tthc?' (có ĐP Tỉnh)':' (chưa hỗ trợ ĐP Tỉnh — cần triển khai bản mới)')):'DP-CHUNG báo lỗi'}catch(_){chung='DP-CHUNG không kết nối được'}}
+  return {login,rs,chung};
+}
+const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?m+' phút trước':m<1440?Math.round(m/60)+' giờ trước':Math.round(m/1440)+' ngày trước'};
+const hhmm=t=>{const d=new Date(t),p=n=>String(n).padStart(2,'0');return p(d.getHours())+':'+p(d.getMinutes())+' '+p(d.getDate())+'/'+p(d.getMonth()+1)};
+ipcMain.handle('health',async()=>{
+  say('🩺 Đang kiểm tra hệ thống…');const h=await healthCore();
+  const lines=[(h.login?'✅ Đã đăng nhập gqtthc':'✕ CHƯA đăng nhập gqtthc — hãy đăng nhập ở khung bên dưới')];
+  if(h.chung)lines.push((/chưa hỗ trợ|lỗi|không kết nối/.test(h.chung)?'⚠ ':'✅ ')+h.chung);
+  lines.push('');
+  h.rs.forEach(o=>{const age=o.t?Date.now()-o.t:0;const ic=!o.ok?'✕':!o.t?'⚪':age<6*3600e3?'🟢':age<24*3600e3?'🟡':'🔴';
+    lines.push(ic+' '+o.label+' — '+(o.ok?(o.t?hhmm(o.t)+' ('+ago(o.t)+')':o.msg):o.msg)+(o.code?'':' · thiếu mã đồng bộ'))});
+  lines.push('','🟢 mới (<6 giờ)  🟡 <24 giờ  🔴 cũ >24 giờ  ✕ lỗi kết nối/địa chỉ  ⚪ chưa có dữ liệu');
+  say('🩺 Kiểm tra xong');try{log('Kiểm tra hệ thống:\n'+lines.join('\n'))}catch(_){}
+  await dialog.showMessageBox(win,{type:'info',title:'Tình trạng hệ thống',message:'Tình trạng đồng bộ các đơn vị',detail:lines.join('\n'),buttons:['Đóng']});return true});
+/* cảnh báo dữ liệu cũ (>24 giờ): chạy nền mỗi giờ, nhắc tối đa 1 lần / 12 giờ */
+let lastStaleWarn=0;
+async function staleCheck(){try{if(Date.now()-lastStaleWarn<12*3600e3)return;const h=await healthCore();
+  const old=h.rs.filter(o=>o.ok&&o.t&&Date.now()-o.t>24*3600e3).map(o=>o.label);
+  if(old.length){lastStaleWarn=Date.now();notify('Dữ liệu đảng phí chưa cập nhật quá 24 giờ',old.slice(0,6).join(', ')+(old.length>6?'…':''));log('Cảnh báo dữ liệu cũ: '+old.join(', '))}}catch(_){}}
+setTimeout(staleCheck,3*60e3);setInterval(staleCheck,60*60e3);
+/* cấu hình từ xa: lấy config.json mới nhất trên GitHub (raw, không bị giới hạn API); áp dụng khi mở lại ứng dụng */
+async function syncRemoteCfg(){try{
+  const r=await net.fetch('https://raw.githubusercontent.com/'+REPO+'/main/config.json?_='+Date.now(),{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return;
+  const n=await r.json();if(!n||!Array.isArray(n.xa)||!n.xa.length)return;
+  if(!n.xa.every(x=>x&&x.id&&x.file&&fs.existsSync(path.join(__dirname,x.file))))return;   /* chỉ nhận nếu bản app này có đủ bộ lấy số liệu */
+  const cf=path.join(exeDir,'config.json'),c=JSON.parse(fs.readFileSync(cf,'utf8'));
+  const need=n.xa.some(x=>{const y=(c.xa||[]).find(z=>z.id===x.id);return !y||JSON.stringify(y)!==JSON.stringify(x)})||(n.chung!==undefined&&n.chung!==c.chung);
+  if(need){fs.writeFileSync(path.join(exeDir,'config.new.json'),JSON.stringify(n));log('Có cấu hình mới trên GitHub — sẽ áp dụng khi mở lại ứng dụng');say('ℹ Có cấu hình mới (địa chỉ/đơn vị). Hãy đóng và mở lại ứng dụng để áp dụng.')}
+}catch(_){}}
+setTimeout(syncRemoteCfg,25e3);setInterval(syncRemoteCfg,3*3600e3);
+/* chạy nền ở khay hệ thống khi đang bật hẹn giờ / tự động */
+let tray=null,quitting=false;app.on('before-quit',()=>{quitting=true});
+const showWin=()=>{try{win.show();win.restore();win.focus()}catch(_){}};
+function setupTray(){if(tray)return;app.getFileIcon(process.execPath).then(img=>{tray=new Tray(img);tray.setToolTip('Đồng bộ đảng phí — đang chạy nền');
+  tray.setContextMenu(Menu.buildFromTemplate([{label:'Mở cửa sổ',click:showWin},{label:'Thoát hẳn',click:()=>{quitting=true;app.quit()}}]));tray.on('click',showWin)}).catch(()=>{})}
+ipcMain.handle('runWait',(e,{id,month,code,api})=>runWaitCore(id,month,code,api));
 
 /* ===== Hẹn giờ tự chạy hằng ngày ===== */
 const schedFile=()=>path.join(app.getPath('userData'),'schedule.json');
@@ -225,7 +300,7 @@ async function runBatchMain(ids,label){
   /* tải lại trang để làm mới phiên, kiểm tra còn đăng nhập */
   try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.loadURL(cfg.home);setTimeout(r,20000)});await new Promise(r=>setTimeout(r,2500))}catch(e){}
   let tok=false;try{tok=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(e){}
-  if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc — hãy đăng nhập lại trong ứng dụng';say(t);log(t);return false}
+  if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc — hãy đăng nhập lại trong ứng dụng';say(t);log(t);notify('Đồng bộ đảng phí — hết phiên đăng nhập','gqtthc đã hết phiên. Hãy mở ứng dụng và đăng nhập lại để lần chạy sau lấy được dữ liệu.');hookPost('⚠ '+t);try{win.show()}catch(_){}return false}
   batchStop=false;
   for(let i=0;i<ids.length;i++){
     const id=ids[i],x=cfg.xa.find(v=>v.id===id);if(!x)continue;
@@ -235,7 +310,10 @@ async function runBatchMain(ids,label){
     if(r.err){res.push('✕ '+x.label+': '+r.err);continue}
     if(r.result==='done')res.push('✅ '+x.label);else if(r.result==='stop'){res.push('■ '+x.label+' dừng');break}else if(r.result==='cancel'){res.push('↷ '+x.label+' bị gián đoạn (đã bỏ qua, chạy tiếp xã sau)')}else res.push('✕ '+x.label+': '+String(r.msg||'lỗi').slice(0,60));
   }
-  const t=label+' xong: '+res.join(' · ');say(t);log(t);return true;
+  const t=label+' xong: '+res.join(' · ');say(t);log(t);
+  { const okN=res.filter(s=>s.startsWith('✅')).length,bad=res.filter(s=>!s.startsWith('✅'));
+    notify('Đồng bộ đảng phí — '+okN+'/'+res.length+' thành công',bad.length?('Chưa xong: '+bad.join(' · ').slice(0,200)):'Tất cả đơn vị đã đồng bộ.');hookPost(t.slice(0,900)) }
+  return true;
 }
 function tickSched(){
   const s=readSched();
@@ -260,7 +338,14 @@ let latest=null;
 let lastWhy='';
 async function checkUpdate(){
   try{let j=null;
-    try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(r.ok)j=await r.json();else lastWhy='GitHub API trả mã '+r.status}catch(e){lastWhy=String(e&&e.message||e).slice(0,50)}
+    /* 1) latest.json (tệp phát hành, không qua GitHub API nên không bị 403) */
+    try{const rl=await net.fetch('https://github.com/'+REPO+'/releases/latest/download/latest.json',{headers:{'User-Agent':'dp-dangphi'}});
+      if(rl.ok){const lj=await rl.json();if(lj&&/^\d+\.\d+\.\d+$/.test(String(lj.ver||''))){
+        const tag='v'+lj.ver,base='https://github.com/'+REPO+'/releases/download/'+tag+'/',ev=process.versions.electron;
+        const names=['DP-DangPhi-win32-x64.zip','app-electron-'+ev+'.asar.bin','dp-config.json'];
+        const ok=await Promise.all(names.map(async n=>{try{return (await net.fetch(base+n,{method:'HEAD',headers:{'User-Agent':'dp-dangphi'}})).ok}catch(_){return false}}));
+        j={tag_name:tag,html_url:'https://github.com/'+REPO+'/releases/tag/'+tag,assets:names.filter((n,i)=>ok[i]).map(n=>({name:n,browser_download_url:base+n}))};lastWhy=''}}}catch(_){}
+    if(!j)try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(r.ok)j=await r.json();else lastWhy='GitHub API trả mã '+r.status}catch(e){lastWhy=String(e&&e.message||e).slice(0,50)}
     if(!j){/* API bị giới hạn (403/429) → dùng trang releases/latest (không bị giới hạn) */
       let tag='';
       for(const u of ['https://github.com/'+REPO+'/releases.atom','https://github.com/'+REPO+'/releases/latest']){

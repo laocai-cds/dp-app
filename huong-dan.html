@@ -23,7 +23,7 @@ nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-sha
 </style></head><body>
 <header><h1>📖 Hướng dẫn sử dụng — Đồng bộ đảng phí gqtthc → Google Sheet</h1><p>Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai</p></header>
 <main>
-<nav>Đi nhanh tới: <a href="#s1">Lấy số liệu</a><a href="#s2">Nhiều đơn vị</a><a href="#s3">Mã đồng bộ</a><a href="#s4">Tự động</a><a href="#s5">Cập nhật</a><a href="#s6">Sự cố</a><a href="#web">🌐 Website các đơn vị</a></nav>
+<nav>Đi nhanh tới: <a href="#s1">Lấy số liệu</a><a href="#s2">Nhiều đơn vị</a><a href="#s2b">Theo dõi &amp; kiểm tra</a><a href="#s3">Mã đồng bộ</a><a href="#s4">Tự động</a><a href="#s5">Cập nhật</a><a href="#s6">Sự cố</a><a href="#web">🌐 Website các đơn vị</a></nav>
 
 <section id="s1"><h2><span>1</span>Lấy số liệu một xã (cách dùng hằng ngày)</h2>
 <ol>
@@ -44,6 +44,17 @@ nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-sha
 </ol>
 <p><b>Thêm xã mới vào danh sách:</b> bấm <span class="k">➕ Thêm xã</span> (hoặc kéo nút ĐP từ website xã thả vào cửa sổ). Ứng dụng tự tải lại và xã mới <b>xuất hiện trong danh sách xổ xuống</b> như các đơn vị khác. <b>ĐP Tỉnh Lào Cai</b> chạy qua Apps Script <b>DP-CHUNG</b> (dùng chung một mã).</p>
 <div class="warn">Có thể thu nhỏ cửa sổ khi đang chạy, nhưng <b>đừng đóng hẳn ứng dụng</b>. Đơn vị nào chưa có mã thì bị bỏ qua, bấm <span class="b">▶ Chạy</span> riêng đơn vị đó một lần để nhập mã.</div></section>
+
+<section id="s2b"><h2><span>2b</span>Theo dõi kết quả, kiểm tra hệ thống, chạy nền</h2>
+<ul>
+<li><b>Trạng thái từng đơn vị:</b> trong danh sách xổ xuống, dưới tên mỗi đơn vị có dòng <b>✅ giờ chạy</b> (xanh), <b>✕ lỗi</b> (đỏ) hoặc <b>⚠ cũ</b> (đã quá 24 giờ).</li>
+<li><b>↻ Chạy lại đơn vị lỗi:</b> sau một lượt chạy, nếu có đơn vị lỗi thì hiện nút cam này; bấm một lần để chạy lại đúng các đơn vị đó.</li>
+<li><b>🩺 Kiểm tra hệ thống:</b> bảng tình trạng cho biết đã đăng nhập gqtthc chưa, địa chỉ Apps Script từng xã còn đúng không, lần đồng bộ gần nhất (🟢 mới &lt;6 giờ, 🟡 &lt;24 giờ, 🔴 cũ hơn 24 giờ, ✕ lỗi địa chỉ/kết nối) và DP-CHUNG đã hỗ trợ ĐP Tỉnh chưa.</li>
+<li><b>Cảnh báo dữ liệu cũ:</b> ứng dụng tự kiểm tra mỗi giờ; xã nào quá 24 giờ chưa đồng bộ thì hiện thông báo Windows (tối đa 12 giờ một lần).</li>
+<li><b>Chạy nền:</b> khi đã bật hẹn giờ hoặc tự động lấy dữ liệu, bấm ✕ đóng cửa sổ thì ứng dụng <b>thu xuống khay hệ thống</b> và vẫn chạy. Bấm biểu tượng ở khay để mở lại hoặc <b>Thoát hẳn</b>.</li>
+<li><b>Báo kết quả:</b> sau mỗi lượt chạy tự động có thông báo Windows ("n/m thành công"). Nếu nhập địa chỉ <b>Webhook</b> (https://…) ở hàng hẹn giờ, ứng dụng còn gửi tóm tắt tới đó (Slack, Discord, Make, bot Zalo…). Khi gqtthc hết phiên đăng nhập cũng có thông báo để bạn đăng nhập lại.</li>
+<li><b>Cấu hình từ xa:</b> khi có địa chỉ Apps Script hoặc đơn vị mới trên GitHub, ứng dụng tự tải về; đóng và mở lại ứng dụng để áp dụng.</li>
+</ul></section>
 
 <section id="s3"><h2><span>3</span>Mã đồng bộ: mã chung và mã riêng</h2>
 <table><tr><th>Loại mã</th><th>Dùng khi nào</th></tr>
