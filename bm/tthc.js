@@ -55,6 +55,9 @@
         const tA = performance.now();
         const d = new Date(), p2 = n => String(n).padStart(2, '0'), mm = p2(SM), yy = cy;
         const body = { kyNopStart: '01/' + mm + '/' + yy, kyNopEnd: new Date(yy, SM, 0).getDate() + '/' + mm + '/' + yy, parentId: 2122408, hasChildren: true, page: 1, size: 500 };
+        /* Sổ S02 chạy SONG SONG với API chính (trước đây chạy nối tiếp sau, cộng thêm thời gian chờ) */
+        const s02P = fetch('https://gateway-gqtthc.dcs.vn/report/s02/danh-sach', { method: 'POST', headers: { Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ page: 1, size: 500, donViId: null, fromDate: body.kyNopStart, toDate: body.kyNopEnd }) }).then(r2 => { if (!r2.ok) throw new Error('HTTP ' + r2.status); return r2.json(); });
+        s02P.catch(() => {});
         let r = null;
         for (let at = 1; at <= 3 && !r; at++) { /* chờ tối đa 90 giây mỗi lần; chậm hoặc lỗi máy chủ thì tự thử lại 1 lần */
           if (dead) throw new Error('Đã hủy'); const ac = new AbortController(); acs.add(ac); const to = setTimeout(() => ac.abort(), 90000);
@@ -79,9 +82,7 @@
         let s02Msg = '';
         try {
           say('Đang lấy sổ S02 (nộp cấp trên)…', false, true);
-          const r2 = await fetch('https://gateway-gqtthc.dcs.vn/report/s02/danh-sach', { method: 'POST', headers: { Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ page: 1, size: 500, donViId: null, fromDate: body.kyNopStart, toDate: body.kyNopEnd }) });
-          if (!r2.ok) throw new Error('HTTP ' + r2.status);
-          const j2 = await r2.json(), l2 = j2.data || [];
+          const j2 = await s02P, l2 = j2.data || [];
           const nm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
           const kr = o => num(o && o.kyBaoCao), mp = new Map(l2.map(x => [nm(x.tenToChucDang), x]));
           let hit = 0;
