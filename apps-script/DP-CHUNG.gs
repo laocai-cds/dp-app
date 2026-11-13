@@ -30,6 +30,10 @@ const XA = {
   'website-den-sang-api': 'https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec', // ĐP Dền Sáng
 };
 
+// ĐP Tỉnh Lào Cai (tthc): Apps Script riêng, nhận dữ liệu dạng form (payload=...) và trả trạng thái qua JSONP
+const TTHC_KEY = 'tthc';
+const TTHC_URL = 'https://script.google.com/macros/s/AKfycbym3FHqtE20kg8F3SCuc6LizXSwGhSFT-KBY90c58BuOuRigFbOdyruPkTx4uBscZ-ibw/exec';
+
 function datMa() {
   const CHUNG = '';            // <-- mã chung (điền, chạy, rồi xóa)
   const RIENG = {               // <-- mã riêng từng xã (điền, chạy, rồi xóa)
@@ -45,11 +49,12 @@ function datMa() {
     'website-tram-tau-api': '', // ĐP Trạm Tấu
     'website-vo-lao-api': '', // ĐP Võ Lao
     'website-den-sang-api': '', // ĐP Dền Sáng
+    'tthc': '', // ĐP Tỉnh Lào Cai (mật khẩu đồng bộ riêng của tthc)
   };
   const P = PropertiesService.getScriptProperties();
   if (CHUNG) P.setProperty('CHUNG_HASH', sha_(CHUNG));
   Object.keys(RIENG).forEach(k => { if (RIENG[k]) P.setProperty('XA_' + k, RIENG[k]); });
-  const con = Object.keys(XA).filter(k => !P.getProperty('XA_' + k));
+  const con = Object.keys(XA).concat([TTHC_KEY]).filter(k => !P.getProperty('XA_' + k));
   Logger.log('Mã chung: ' + (P.getProperty('CHUNG_HASH') ? 'đã đặt' : 'CHƯA đặt'));
   Logger.log('Xã còn thiếu mã riêng: ' + (con.length ? con.join(', ') : 'không'));
 }
@@ -62,12 +67,35 @@ function out_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
 
-function doGet() {
-  return out_({ ok: true, name: 'DP-CHUNG', version: 1 });
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.action === 'status') {
+    /* ĐP Tỉnh Lào Cai: chuyển câu hỏi trạng thái (JSONP) sang Apps Script tthc */
+    const cb = /^[A-Za-z0-9_.$]{1,80}$/.test(p.callback || '') ? p.callback : '';
+    let txt = '{"ok":false}';
+    try {
+      const r = UrlFetchApp.fetch(TTHC_URL + '?action=status' + (cb ? '&callback=' + cb : '') + '&_=' + Date.now(), { muteHttpExceptions: true, followRedirects: true });
+      txt = r.getContentText();
+    } catch (err) { txt = (cb ? cb + '(' : '') + JSON.stringify({ ok: false, error: String(err) }) + (cb ? ')' : ''); }
+    return ContentService.createTextOutput(txt).setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
+  }
+  return out_({ ok: true, name: 'DP-CHUNG', version: 2, tthc: true });
 }
 
 function doPost(e) {
   try {
+    /* ĐP Tỉnh Lào Cai: dữ liệu dạng form payload=... (không phải JSON) */
+    if (e && e.parameter && e.parameter.payload) {
+      const P0 = PropertiesService.getScriptProperties();
+      const h0 = P0.getProperty('CHUNG_HASH');
+      const pl = JSON.parse(e.parameter.payload);
+      if (!h0 || sha_(pl.token || '') !== h0) return out_({ ok: false, error: 'Mã đồng bộ chung không đúng.' });
+      const c0 = P0.getProperty('XA_' + TTHC_KEY);
+      if (!c0) return out_({ ok: false, error: 'Chưa đặt mã riêng cho tthc' });
+      pl.token = c0;
+      const r0 = UrlFetchApp.fetch(TTHC_URL, { method: 'post', payload: { payload: JSON.stringify(pl) }, muteHttpExceptions: true, followRedirects: true });
+      return out_({ ok: r0.getResponseCode() < 400, status: r0.getResponseCode(), xa: TTHC_KEY });
+    }
     const body = JSON.parse(e.postData.contents);
     const P = PropertiesService.getScriptProperties();
     const hash = P.getProperty('CHUNG_HASH');

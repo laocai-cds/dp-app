@@ -121,13 +121,13 @@ function createWindow(){
 ipcMain.handle('init',()=>({ver:app.getVersion(),admin:!cfg.only,title:cfg.title,xa:xaList().map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id],extra:!!x.extra}))}));
 ipcMain.handle('nav',(e,a)=>{if(a==='home')view.webContents.loadURL(cfg.home);else if(a==='reload')view.webContents.reload()});
 ipcMain.handle('reset',(e,id)=>{const c=readCodes();delete c[id];writeCodes(c);return true});
-let _chOk=null,_chAt=0;
+let _chOk=null,_chAt=0,_chT=false;
 async function chungOk(){
   if(_chOk!==null&&Date.now()-_chAt<300000)return _chOk;
   let ok=false;
   try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),10000);
     const r=await net.fetch(cfg.chung,{signal:ac.signal,headers:{'User-Agent':'dp-dangphi'}});clearTimeout(to);
-    const j=JSON.parse(await r.text());ok=!!(j&&j.ok&&j.name==='DP-CHUNG')}catch(e){ok=false}
+    const j=JSON.parse(await r.text());ok=!!(j&&j.ok&&j.name==='DP-CHUNG');_chT=ok&&j.tthc===true}catch(e){ok=false;_chT=false}
   _chOk=ok;_chAt=Date.now();log('DP-CHUNG '+(ok?'kết nối được: dùng mã chung qua DP-CHUNG':'KHÔNG kết nối được: gửi thẳng tới từng xã bằng mã đã lưu'));
   return ok;
 }
@@ -144,9 +144,10 @@ async function doRun(id,code,api,month){
   const url=view.webContents.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
   let BM;try{BM=fs.readFileSync(path.join(__dirname,x.file),'utf8')}catch(err){return{err:'Thiếu file '+x.file}}
-  const useChung=!!(!x.extra&&cfg.chung&&codes.__all&&!needApi&&await chungOk());
+  const useChung=!!(!x.extra&&cfg.chung&&codes.__all&&await chungOk()&&(!needApi||_chT));
   if(useChung)codes[id]=codes.__all;
-  const arg=needApi?apiUrl:(useChung?Object.assign({},x.arg,{chung:cfg.chung}):x.arg);
+  /* ĐP Tỉnh Lào Cai (dpBookmarklet): qua DP-CHUNG thì thay địa chỉ Apps Script bằng DP-CHUNG, mật khẩu = mã chung */
+  const arg=needApi?(useChung?cfg.chung:apiUrl):(useChung?Object.assign({},x.arg,{chung:cfg.chung}):x.arg);
   const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
   try{await view.webContents.executeJavaScript(js);return{ok:true}}catch(err){return{err:String(err&&err.message||err)}}
 }
