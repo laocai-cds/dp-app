@@ -4,6 +4,7 @@
 3) Bấm nút xã. Lần đầu nhập "mã đồng bộ" của xã (lưu trên máy). Nút "ĐP Tỉnh Lào Cai" cần thêm địa chỉ Apps Script (…/exec) lần đầu.
 4) Chọn tháng, chờ thông báo HOÀN THÀNH ở góc phải. Bấm ✕ ở góc thông báo để hủy/tắt.
 CHẾ ĐỘ QUẢN TRỊ (bản có đủ nút): tích chọn các xã (hoặc "Chọn tất cả"), chọn tháng, bấm "Lấy dữ liệu các xã đã chọn" - ứng dụng chạy lần lượt từng xã. Xã nào chưa có mã đồng bộ thì bị bỏ qua: bấm riêng nút xã đó 1 lần để nhập mã.
+Chọn "Chạy: Lần lượt" (ổn định, mặc định) hoặc "Song song" (nhanh hơn, chạy cùng lúc tối đa 2–5 xã; ĐP Tỉnh Lào Cai luôn chạy riêng sau cùng). Cách chọn áp dụng cả cho tự động lấy dữ liệu và hẹn giờ.
 Chỉ hiện 1 xã (không có ô tích): mở config.json, đặt  "only": "vanban"  (id: tthc, vanban, xuanhoa, pungluong, baothang, luongthinh, nghiado, phinhho, phuckhanh, simacai, tramtau, volao, densang).
 Nhập sai mã: xóa thư mục %APPDATA%\DP-DangPhi rồi nhập lại.
 HẸN GIỜ TỰ CHẠY (chế độ quản trị): tích chọn các xã -> tích "Tự chạy hằng ngày lúc" -> chọn giờ (ví dụ 06:00). Để máy luôn bật, ứng dụng mở và đã đăng nhập gqtthc. Có thể tích "Tự mở cùng Windows". "Chạy thử ngay" để kiểm tra, "Xem nhật ký" xem kết quả các lần chạy. Ứng dụng chỉ chạy trong vòng 3 giờ sau giờ hẹn mỗi ngày; nếu gqtthc hết phiên đăng nhập thì cần đăng nhập lại.

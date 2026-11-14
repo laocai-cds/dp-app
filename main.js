@@ -149,7 +149,8 @@ async function chungOk(){
   _chOk=ok;_chAt=Date.now();log('DP-CHUNG '+(ok?'kết nối được: dùng mã chung qua DP-CHUNG':'KHÔNG kết nối được: gửi thẳng tới từng xã bằng mã đã lưu'));
   return ok;
 }
-async function doRun(id,code,api,month){
+async function doRun(id,code,api,month,wc){
+  wc=wc||view.webContents;
   const x=cfg.xa.find(v=>v.id===id);if(!x)return{err:'Không có cấu hình xã này'};
   const codes=readCodes();if(code){codes[id]=String(code).trim();}
   if(api){codes[id+'_api']=String(api).trim();}
@@ -159,7 +160,7 @@ async function doRun(id,code,api,month){
   if(needApi&&!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(apiUrl))return{need:'api'};
   if(!x.extra&&!needApi&&!codes[id]&&codes.__all)codes[id]=codes.__all;
   if(!needApi&&!codes[id])return{need:'code'};
-  const url=view.webContents.getURL();
+  const url=wc.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
   let BM;try{BM=fs.readFileSync(path.join(__dirname,x.file),'utf8')}catch(err){return{err:'Thiếu file '+x.file}}
   const useChung=!!(!x.extra&&cfg.chung&&codes.__all&&await chungOk()&&(!needApi||_chT));
@@ -168,7 +169,7 @@ async function doRun(id,code,api,month){
   /* ĐP Tỉnh Lào Cai (dpBookmarklet): qua DP-CHUNG thì thay địa chỉ Apps Script bằng DP-CHUNG, mật khẩu = mã chung */
   const arg=needApi?(useChung?cfg.chung:apiUrl):(useChung?Object.assign({},x.arg,{chung:cfg.chung}):x.arg);
   const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
-  try{await view.webContents.executeJavaScript(js);return{ok:true}}catch(err){return{err:String(err&&err.message||err)}}
+  try{await wc.executeJavaScript(js);return{ok:true}}catch(err){return{err:String(err&&err.message||err)}}
 }
 const BOXJS="(()=>{const b=[...document.querySelectorAll('div')].find(d=>d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px');return {t:b?b.textContent.replace(/✕\\s*$/,'').trim().slice(0,160):null,c:!!window.__dpCancelled}})()";
 let batchStop=false;
@@ -180,19 +181,20 @@ ipcMain.handle('stop',()=>{batchStop=true;return true});
 /* chạy một xã ở chế độ lô: chờ tới khi có kết quả (✅ xong / ✕ lỗi / bị hủy) */
 let lastActive=0;
 /* Dừng hẳn mọi việc còn dang dở trong trang gqtthc (tải lại trang) để lần chạy bị lỗi/hủy không chạy ngầm tiếp */
-async function killRun(){try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.reload();setTimeout(r,15000)});await new Promise(r=>setTimeout(r,800))}catch(_){}}
-async function runWaitCore(id,month,code,api){const r=await runWaitCore0(id,month,code,api);recRes(id,r);if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun()}return r}
-async function runWaitCore0(id,month,code,api){
+async function killRun(wc){wc=wc||view.webContents;try{await new Promise(r=>{wc.once('did-finish-load',r);wc.reload();setTimeout(r,15000)});await new Promise(r=>setTimeout(r,800))}catch(_){}}
+async function runWaitCore(id,month,code,api,wc,noReset){const r=await runWaitCore0(id,month,code,api,wc,noReset);recRes(id,r);if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun(wc)}return r}
+async function runWaitCore0(id,month,code,api,wc,noReset){
+  wc=wc||view.webContents;
   lastActive=Date.now();
-  batchStop=false;
-  try{await view.webContents.executeJavaScript("document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px')d.remove()});void 0")}catch(_){}
-  const r=await doRun(id,code||null,api||null,month);
+  if(!noReset)batchStop=false;
+  try{await wc.executeJavaScript("document.querySelectorAll('div').forEach(d=>{if(d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px')d.remove()});void 0")}catch(_){}
+  const r=await doRun(id,code||null,api||null,month,wc);
   if(!r.ok)return r;
   const t0=Date.now();let seen=false,lostAt=0;
   while(Date.now()-t0<8*60*1000){
     await new Promise(z=>setTimeout(z,2000));lastActive=Date.now();
     if(batchStop){try{log('Dừng lô ('+id+'): người dùng bấm Dừng; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'stop'}}
-    let st=null;try{st=await view.webContents.executeJavaScript(BOXJS)}catch(_){}
+    let st=null;try{st=await wc.executeJavaScript(BOXJS)}catch(_){}
     if(!st)continue;
     if(st.c){try{log('Hủy ('+id+'): khung tiến độ bị bấm ✕ hoặc trang gqtthc tải lại; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'cancel'}}          /* chỉ coi là hủy khi người dùng bấm ✕ */
     const t=st.t;
@@ -205,6 +207,67 @@ async function runWaitCore0(id,month,code,api){
   }
   return{result:'fail',msg:'Quá thời gian chờ (8 phút)'};
 }
+
+/* ===== Chế độ chạy nhiều đơn vị: lần lượt (mặc định) hoặc song song ===== */
+const rmFile=()=>path.join(app.getPath('userData'),'che-do-chay.json');
+const readRM=()=>{let o={};try{o=JSON.parse(fs.readFileSync(rmFile(),'utf8'))||{}}catch(_){}return{mode:o.mode==='par'?'par':'seq',conc:Math.min(5,Math.max(2,parseInt(o.conc)||3))}};
+ipcMain.handle('rm:get',()=>readRM());
+ipcMain.handle('rm:set',(e,o)=>{const v={mode:o&&o.mode==='par'?'par':'seq',conc:Math.min(5,Math.max(2,parseInt(o&&o.conc)||3))};try{fs.writeFileSync(rmFile(),JSON.stringify(v))}catch(_){}return v});
+/* cửa sổ ẩn dùng chung phiên đăng nhập gqtthc: mỗi cửa sổ có hộp tiến độ riêng nên chạy song song không đè lên nhau */
+async function openWorker(){
+  const w=new BrowserWindow({show:false,width:1200,height:800,webPreferences:{partition:'persist:gqtthc',contextIsolation:true,backgroundThrottling:false}});
+  w.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+  w.webContents.on('will-navigate',(e,u)=>{if(!/^https?:/i.test(u))e.preventDefault()});
+  try{await new Promise(r=>{w.webContents.once('did-finish-load',r);w.webContents.loadURL(cfg.home);setTimeout(r,20000)});await new Promise(r=>setTimeout(r,2500))}catch(_){}
+  let tok=false;try{tok=await w.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(_){}
+  if(!tok){try{w.destroy()}catch(_){}return null}
+  return w;
+}
+/* chạy song song tối đa `conc` xã cùng lúc; ĐP Tỉnh (tthc) nặng nên chạy riêng sau cùng. Trả về {id: kết quả} */
+async function runPool(ids,month,conc,onProg){
+  const light=ids.filter(i=>i!=='tthc'),heavy=ids.filter(i=>i==='tthc'),out={},total=ids.length;let next=0,done=0;
+  const note=l=>{try{onProg&&onProg(done,total,l)}catch(_){}};
+  const n=Math.min(Math.max(2,conc||3),light.length);
+  if(n>=2){
+    note('đang mở '+n+' luồng chạy…');
+    const ws=(await Promise.all(Array.from({length:n},()=>openWorker()))).filter(Boolean);
+    if(ws.length<2){ws.forEach(w=>{try{w.destroy()}catch(_){}});log('Song song: không mở được đủ luồng (chưa đăng nhập?) → chạy lần lượt');heavy.unshift(...light);light.length=0}
+    else{
+      batchStop=false;
+      await Promise.all(ws.map(async w=>{
+        while(!batchStop&&next<light.length){
+          const id=light[next++],x=cfg.xa.find(v=>v.id===id);if(!x){done++;continue}
+          note('đang chạy song song: '+x.label);
+          let r;try{r=await runWaitCore(id,month,null,null,w.webContents,true)}catch(err){r={err:String(err&&err.message||err)}}
+          out[id]=r;done++;note('xong '+x.label);
+        }
+      }));
+      ws.forEach(w=>{try{w.destroy()}catch(_){}});
+      light.slice(next).forEach(id=>{out[id]={result:'stop'}});
+    }
+  }else heavy.unshift(...light);
+  for(const id of heavy){
+    if(batchStop){out[id]={result:'stop'};continue}
+    const x=cfg.xa.find(v=>v.id===id);if(!x){done++;continue}
+    note('đang chạy: '+x.label);
+    let r;try{r=await runWaitCore(id,month,null,null,null,true)}catch(err){r={err:String(err&&err.message||err)}}
+    out[id]=r;done++;note('xong '+x.label);
+  }
+  return out;
+}
+const fmtRes=(label,r)=>{r=r||{};
+  if(r.need)return'⚠ '+label+': chưa có mã — bấm riêng nút xã này một lần để nhập mã';
+  if(r.err)return'✕ '+label+': '+r.err;
+  if(r.result==='done')return'✅ '+label;
+  if(r.result==='stop')return'■ '+label+': đã dừng';
+  if(r.result==='cancel')return'↷ '+label+': bị gián đoạn, đã bỏ qua';
+  return'✕ '+label+': '+String(r.msg||'lỗi').slice(0,70)};
+ipcMain.handle('runPar',async(e,{ids,month,conc})=>{
+  ids=(Array.isArray(ids)?ids:[]).filter(i=>cfg.xa.some(v=>v.id===i));
+  const out=await runPool(ids,month||'',conc,(d,t,l)=>{try{win.webContents.send('parprog',{d,t,l})}catch(_){}});
+  const res={};ids.forEach(id=>{res[id]=fmtRes((cfg.xa.find(v=>v.id===id)||{}).label||id,out[id])});
+  return{res,raw:out};
+});
 
 /* ===== Kết quả từng đơn vị (hiện trong hộp xổ chọn) ===== */
 const resFile=()=>path.join(app.getPath('userData'),'ket-qua.json');
@@ -342,6 +405,11 @@ async function runBatchMain(ids,label){
   let tok=false;try{tok=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(e){}
   if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc — hãy đăng nhập lại trong ứng dụng';say(t);log(t);notify('Đồng bộ đảng phí — hết phiên đăng nhập','gqtthc đã hết phiên. Hãy mở ứng dụng và đăng nhập lại để lần chạy sau lấy được dữ liệu.');hookPost('⚠ '+t);try{win.show()}catch(_){}return false}
   batchStop=false;
+  const rm=readRM();
+  if(rm.mode==='par'&&ids.length>1){
+    const out=await runPool(ids,month,rm.conc,(d,t,l)=>say(label+' ('+d+'/'+t+') song song · '+l));
+    ids.forEach(id=>{const x=cfg.xa.find(v=>v.id===id);if(x)res.push(fmtRes(x.label,out[id]))});
+  }else
   for(let i=0;i<ids.length;i++){
     const id=ids[i],x=cfg.xa.find(v=>v.id===id);if(!x)continue;
     say(label+' ('+(i+1)+'/'+ids.length+') '+x.label+'…');
