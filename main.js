@@ -214,7 +214,9 @@ function recRes(id,r){
   if(r.err){ok=false;msg=r.err}else if(r.result==='done'){ok=true;msg=r.msg||''}
   else if(r.result==='stop'){ok=false;msg='đã dừng'}else if(r.result==='cancel'){ok=false;msg='bị gián đoạn'}
   else if(r.result==='fail'){ok=false;msg=r.msg||'lỗi'}else return;
-  RES[id]={ok,t:Date.now(),msg:String(msg).replace(/\s+/g,' ').slice(0,140)};
+  const now=Date.now(),prev=RES[id]||{},prevOk=prev.okT||(prev.ok?prev.t:0)||0;
+  /* okT = lần chạy THÀNH CÔNG gần nhất (giữ nguyên khi lần sau bị lỗi/dừng) — bảng tình trạng lấy mốc này */
+  RES[id]={ok,t:now,okT:ok?now:prevOk,msg:String(msg).replace(/\s+/g,' ').slice(0,140)};
   try{fs.writeFileSync(resFile(),JSON.stringify(RES))}catch(_){}
   try{win.webContents.send('res',RES)}catch(_){}
 }
@@ -234,14 +236,17 @@ async function healthCore(){
   let login=false;try{login=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(_){}
   const codes=readCodes();
   const rs=await Promise.all(cfg.xa.map(async x=>{
-    const o={id:x.id,label:x.label,ok:false,t:0,msg:'',code:!!(codes[x.id]||codes.__all)};const ep=epOf(x);
+    const o={id:x.id,label:x.label,ok:false,t:0,msg:'',code:!!(codes[x.id]||codes.__all)};
+    /* mốc cập nhật lấy từ chính phần mềm: lần chạy thành công gần nhất đã ghi trên máy này */
+    const lr=RES[x.id],lt=lr?(lr.okT||(lr.ok?lr.t:0)):0;if(lt){o.ok=true;o.t=lt;return o}
+    const ep=epOf(x);
     if(!ep){o.msg='chưa có địa chỉ Apps Script';return o}
     if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(ep)){o.msg='địa chỉ Apps Script không đúng dạng …/exec';return o}
     try{const j=await fetchJson(ep+'?action=status&_='+Date.now());
       if(!j||j.ok===false){o.msg=(j&&j.error)||'script báo lỗi';return o}
       o.ok=true;
       if(j.last&&j.last.updatedAtText){o.t=parseVN(j.last.updatedAtText)}else if(j.lastSync){o.t=Date.parse(j.lastSync)||0}
-      if(!o.t)o.msg='chưa có lần đồng bộ nào'
+      if(!o.t)o.msg='chưa đồng bộ lần nào trên máy này'
     }catch(e){o.msg='không kết nối được ('+String(e&&e.message||e).slice(0,30)+')'}
     return o}));
   let chung='';if(cfg.chung){try{const j=await fetchJson(cfg.chung+'?_='+Date.now(),9000);chung=j&&j.ok?('DP-CHUNG v'+(j.version||'?')+(j.tthc?' (có ĐP Tỉnh)':' (chưa hỗ trợ ĐP Tỉnh — cần triển khai bản mới)')):'DP-CHUNG báo lỗi'}catch(_){chung='DP-CHUNG không kết nối được'}}
