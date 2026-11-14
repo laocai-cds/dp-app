@@ -127,9 +127,24 @@ public class MainActivity extends Activity {
                 if (r != null && r.isForMainFrame() && e.getStatusCode() >= 400) showLoadError("Máy chủ trả mã " + e.getStatusCode());
             }
             @Override
+            public android.webkit.WebResourceResponse shouldInterceptRequest(WebView v, android.webkit.WebResourceRequest r) {
+                /* Học thêm các tên miền *.dcs.vn mà trang gqtthc gọi tới, để lần sau mở trước (xem warmHost) */
+                try {
+                    String h = r.getUrl().getHost();
+                    if (isDcs(h) && !h.equals("gqtthc.dcs.vn") && warmHosts.add(h)) {
+                        final String hh = h;
+                        java.util.HashSet<String> copy;
+                        synchronized (warmHosts) { copy = new java.util.HashSet<>(warmHosts); }
+                        sp.edit().putStringSet("warm", copy).apply();
+                        runOnUiThread(() -> warmHost(hh, null));
+                    }
+                } catch (Exception e) { }
+                return null;
+            }
+            @Override
             public void onReceivedSslError(WebView v, android.webkit.SslErrorHandler h, android.net.http.SslError e) {
                 String host = android.net.Uri.parse(e.getUrl()).getHost();
-                if (host != null && (host.equals("dcs.vn") || host.endsWith(".dcs.vn"))) {
+                if (isDcs(host)) {
                     // Máy chủ dcs.vn thiếu chứng chỉ trung gian: bỏ qua lỗi SSL, chỉ cho đúng tên miền này.
                     h.proceed();
                 } else {
@@ -139,7 +154,52 @@ public class MainActivity extends Activity {
             }
         });
         web.setWebChromeClient(new WebChromeClient());
-        web.loadUrl(cfg.optString("home", "https://gqtthc.dcs.vn/"));
+        warmThenLoad(cfg.optString("home", "https://gqtthc.dcs.vn/"));
+    }
+
+    final java.util.Set<String> warmHosts = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<String>());
+
+    boolean isDcs(String h) { return h != null && (h.equals("dcs.vn") || h.endsWith(".dcs.vn")); }
+
+    /* Máy chủ dcs.vn thiếu chứng chỉ trung gian. WebView chỉ nhớ "bỏ qua lỗi SSL" theo từng tên miền và chỉ khi tên miền đó
+       được mở trực tiếp; lệnh gọi API (fetch/XHR) của trang tới tên miền khác (vd gateway-gqtthc.dcs.vn: đăng nhập, lấy số liệu)
+       sẽ bị chặn. Vì vậy mở trước từng tên miền trong một WebView ẩn, rồi mới tải trang chính. */
+    void warmHost(final String host, final Runnable done) {
+        final android.os.Handler hd = new android.os.Handler();
+        final WebView w = new WebView(this);
+        final boolean[] fin = {false};
+        final Runnable finish = () -> {
+            if (fin[0]) return;
+            fin[0] = true;
+            hd.post(() -> { try { w.stopLoading(); w.destroy(); } catch (Exception e) { } });
+            if (done != null) done.run();
+        };
+        w.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedSslError(WebView v, android.webkit.SslErrorHandler h, android.net.http.SslError e) {
+                if (isDcs(android.net.Uri.parse(e.getUrl()).getHost())) h.proceed(); else h.cancel();
+            }
+            @Override
+            public void onPageFinished(WebView v, String url) { finish.run(); }
+            @Override
+            public void onReceivedError(WebView v, android.webkit.WebResourceRequest r, android.webkit.WebResourceError e) {
+                if (r != null && r.isForMainFrame()) finish.run();
+            }
+        });
+        w.loadUrl("https://" + host + "/");
+        hd.postDelayed(finish, 7000);
+    }
+
+    void warmThenLoad(final String home) {
+        final java.util.LinkedHashSet<String> hs = new java.util.LinkedHashSet<>();
+        hs.add("gateway-gqtthc.dcs.vn");
+        hs.addAll(sp.getStringSet("warm", new java.util.HashSet<String>()));
+        warmHosts.addAll(hs);
+        final int[] left = {hs.size()};
+        final boolean[] loaded = {false};
+        final Runnable go = () -> { if (loaded[0]) return; loaded[0] = true; web.loadUrl(home); };
+        new android.os.Handler().postDelayed(go, 9000);
+        for (String h : hs) warmHost(h, () -> { if (--left[0] <= 0) go.run(); });
     }
 
     void showLoadError(String why) {

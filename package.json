@@ -1,6 +1,6 @@
 {
   "name": "dp-gqtthc",
-  "version": "1.1.64",
+  "version": "1.1.65",
   "description": "Đồng bộ đảng phí gqtthc",
   "main": "main.js",
   "scripts": {
