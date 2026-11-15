@@ -74,3 +74,32 @@ footer{text-align:center;color:var(--mut);font-size:12px;padding:8px 0 4px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top));z-index:9;background:#222;color:#fff;
   padding:10px 16px;border-radius:99px;font-size:14px;max-width:90vw;box-shadow:0 6px 20px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:no-preference){.btn,.chip{transition:background .15s,opacity .15s}}
+
+/* ───── Màn hình rộng: chia 3 cột vừa khít màn hình, danh sách và nhật ký tự cuộn bên trong ───── */
+@media (min-width:900px) and (min-height:520px){
+  html,body{height:100%}
+  body{display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding-bottom:0;overflow:hidden}
+  .top{position:static}
+  main{max-width:none;width:100%;margin:0;padding:12px 16px;min-height:0;
+    display:grid;grid-template-columns:minmax(300px,1fr) minmax(360px,1.3fr) minmax(300px,1fr);
+    grid-template-rows:auto minmax(0,1fr);gap:12px;
+    grid-template-areas:"conn run log" "code run log"}
+  main>.card{margin:0;min-height:0;overflow:auto}
+  .c-conn{grid-area:conn} .c-code{grid-area:code} .c-run{grid-area:run;display:flex;flex-direction:column;overflow:hidden}
+  .c-log{grid-area:log;display:flex;flex-direction:column;overflow:hidden}
+  .c-log .log{flex:1;max-height:none;min-height:0}
+  .c-run .xalist{flex:1;min-height:0;overflow:auto}
+  .c-run .actions{margin-top:12px}
+  .c-foot{display:none}
+  #iosHint{display:none!important}
+  .bar{position:static;box-shadow:none}
+}
+/* Điện thoại nằm ngang / màn hình thấp: gọn lại */
+@media (max-height:520px) and (orientation:landscape){.top{position:static}}
+@media (min-width:900px) and (min-height:520px){
+  .c-run .xalist{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:min-content;align-content:start}
+  .c-run .xalist li{padding:6px 10px;border-right:1px solid var(--line)}
+  .c-run .xalist li:nth-child(2n){border-right:0}
+  .c-run .xalist li:last-child{border-bottom:1px solid var(--line)}
+  .c-run .xalist .btn{min-height:32px;padding:4px 10px}
+}
