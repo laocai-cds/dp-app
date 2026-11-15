@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Đồng bộ đảng phí</title>
+<meta name="theme-color" content="#12315f">
+<meta name="description" content="Đồng bộ đảng phí gqtthc → Google Sheet — Phòng CĐS-CY, VPTU Lào Cai">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ĐP Đảng phí">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <img src="icons/icon-192.png" alt="" width="44" height="44">
+  <div class="ttl">
+    <h1>Đồng bộ đảng phí</h1>
+    <p>gqtthc → Google Sheet · <span id="ver">PWA 1.0</span></p>
+  </div>
+  <button id="btnInstall" class="btn light" hidden>Cài đặt</button>
+</header>
+
+<main>
+  <div id="iosHint" class="note" hidden>Trên iPhone: bấm nút <b>Chia sẻ</b> của Safari → <b>Thêm vào Màn hình chính</b> để cài app.</div>
+
+  <section class="card">
+    <h2>1. Token gqtthc <span id="tkChip" class="chip"></span></h2>
+    <p class="hint">PWA không nhúng được trang gqtthc như app cũ nên cần lấy token đăng nhập từ trang gqtthc (token chỉ sống khoảng 30 phút, hết hạn thì lấy lại).</p>
+    <div class="row">
+      <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Dán token đăng nhập gqtthc">
+      <button id="btnPaste" class="btn">Dán</button>
+      <button id="btnTokOpen" class="btn ghost" title="Mở trang gqtthc">Mở gqtthc</button>
+    </div>
+    <details>
+      <summary>Cách lấy token</summary>
+      <ol class="steps">
+        <li><b>Cách nhanh (dấu trang):</b> kéo nút <a id="bmLink" class="bm" href="#" draggable="true">Lấy token gqtthc</a> lên thanh dấu trang (hoặc bấm <button id="btnBmCopy" class="lnk">sao chép mã</button> rồi tự tạo dấu trang, dán mã vào ô địa chỉ). Mở trang gqtthc.dcs.vn đã đăng nhập, bấm dấu trang đó, token sẽ tự chuyển sang trang này.</li>
+        <li><b>Cách thủ công:</b> trên máy tính, mở gqtthc.dcs.vn đã đăng nhập → F12 → Application → Local Storage → dòng <code>token</code> → sao chép giá trị → dán vào ô trên.</li>
+        <li><b>iPhone:</b> app cài trên Màn hình chính có bộ nhớ riêng, dùng cách sao chép mã rồi bấm <b>Dán</b>.</li>
+      </ol>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>2. Mã đồng bộ</h2>
+    <label class="lbl" for="pw">Mã chung (cho các xã)</label>
+    <div class="row">
+      <input id="pw" type="password" autocomplete="off" placeholder="Mã chung">
+      <button id="btnPwShow" class="btn ghost" aria-label="Hiện/ẩn mã">👁</button>
+    </div>
+    <label class="lbl" for="pwTinh">Mật khẩu cấp Tỉnh <span class="mut">(để trống = dùng Mã chung)</span></label>
+    <input id="pwTinh" type="password" autocomplete="off" placeholder="Chỉ cần khi khác Mã chung">
+    <details>
+      <summary>Nâng cao</summary>
+      <label class="lbl" for="proxy">Địa chỉ proxy gqtthc <span class="mut">(chỉ cần khi báo “không cho trang này gọi trực tiếp”)</span></label>
+      <input id="proxy" type="url" placeholder="https://ten-worker.ten-ban.workers.dev">
+      <label class="lbl" for="only">Chỉ hiện các xã <span class="mut">(mã xã, cách nhau dấu phẩy; để trống = hiện tất cả)</span></label>
+      <input id="only" type="text" placeholder="vd: vanban hoặc vanban,xuanhoa">
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>3. Lấy dữ liệu</h2>
+    <div class="grid2">
+      <div>
+        <label class="lbl" for="period">Kỳ</label>
+        <select id="period"></select>
+      </div>
+      <div>
+        <label class="lbl" for="auto">Tự động lặp lại <span class="mut">(giữ app mở)</span></label>
+        <select id="auto">
+          <option value="0">Không — chỉ lấy một lần</option>
+          <option value="2">Mỗi 2 phút</option>
+          <option value="5">Mỗi 5 phút</option>
+          <option value="10">Mỗi 10 phút</option>
+          <option value="15">Mỗi 15 phút</option>
+          <option value="30">Mỗi 30 phút</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="listhead">
+      <label class="chk"><input type="checkbox" id="all"> <span>Tất cả</span></label>
+      <span id="selCount" class="mut"></span>
+    </div>
+    <ul id="xaList" class="xalist"></ul>
+
+    <div class="actions">
+      <button id="btnRun" class="btn go">▶ Lấy dữ liệu các xã đã chọn</button>
+      <button id="btnStop" class="btn stop" hidden>■ Dừng</button>
+    </div>
+    <div id="autoBadge" class="badge" hidden></div>
+  </section>
+
+  <section class="card">
+    <h2>Nhật ký <button id="btnClear" class="lnk right">Xóa</button></h2>
+    <pre id="log" class="log" aria-live="polite">Chưa có hoạt động.</pre>
+  </section>
+
+  <footer>Phát triển bởi Mr. Dũng · Phòng CĐS-CY, VPTU Lào Cai</footer>
+</main>
+
+<div id="bar" class="bar" hidden><span id="barTxt"></span></div>
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

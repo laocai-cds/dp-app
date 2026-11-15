@@ -1,0 +1,17 @@
+{
+  "name": "Đồng bộ đảng phí",
+  "short_name": "ĐP Đảng phí",
+  "description": "Đồng bộ đảng phí gqtthc → Google Sheet — Phòng CĐS-CY, VPTU Lào Cai",
+  "lang": "vi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#12315f",
+  "theme_color": "#12315f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
