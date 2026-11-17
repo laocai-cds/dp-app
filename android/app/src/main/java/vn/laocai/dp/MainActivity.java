@@ -71,6 +71,7 @@ public class MainActivity extends Activity {
         author.setSingleLine(true);
         author.setGravity(Gravity.CENTER);
         author.setPadding(dp(6), 0, dp(6), dp(2));
+        author.setOnClickListener(v -> checkUpdate(true));
         root.addView(author);
 
         status = new TextView(this);
@@ -95,6 +96,13 @@ public class MainActivity extends Activity {
         row.addView(pickBtn, eq());
         goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
         row.addView(goBtn, eq());
+        /* Thanh cập nhật: chỉ hiện khi trên GitHub có bản mới hơn bản đang cài */
+        updBtn = btn("", 0xFFD97706, Color.WHITE, v -> startUpdate());
+        updBtn.setTextSize(11);
+        LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(34));
+        ulp.setMargins(dp(6), dp(2), dp(6), dp(4));
+        updBtn.setVisibility(View.GONE);
+        root.addView(updBtn, ulp);
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
             for (int i = 0; i < xa.length(); i++) {
@@ -159,6 +167,7 @@ public class MainActivity extends Activity {
         });
         web.setWebChromeClient(new WebChromeClient());
         warmThenLoad(cfg.optString("home", "https://gqtthc.dcs.vn/"));
+        checkUpdate(false);
     }
 
     final java.util.Set<String> warmHosts = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<String>());
@@ -388,6 +397,121 @@ public class MainActivity extends Activity {
             }, 1500L * i);
         }
         h.postDelayed(() -> web.evaluateJavascript("window.__dpBatch=false;void 0", null), 1500L * ids.size() + 8000);
+    }
+
+    /* ===== Cập nhật phiên bản mới (APK trên GitHub Releases, tag android-latest) ===== */
+    static final String UPD_BASE = "https://github.com/laocai-cds/dp-app/releases/download/android-latest/";
+    Button updBtn;
+    String newName = "";
+    int newCode = 0;
+    boolean downloading = false;
+
+    @SuppressWarnings("deprecation")
+    int installedCode() {
+        try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode; } catch (Exception e) { return 0; }
+    }
+
+    /* manual = true: người dùng bấm vào dòng phiên bản để kiểm tra, có báo kết quả */
+    void checkUpdate(final boolean manual) {
+        if (downloading) return;
+        if (manual) say("Đang kiểm tra bản mới…");
+        new Thread(() -> {
+            try {
+                java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(UPD_BASE + "android.json").openConnection();
+                c.setConnectTimeout(10000);
+                c.setReadTimeout(15000);
+                c.setUseCaches(false);
+                c.setRequestProperty("Cache-Control", "no-cache");
+                InputStream in = c.getInputStream();
+                ByteArrayOutputStream o = new ByteArrayOutputStream();
+                byte[] b = new byte[4096];
+                int n;
+                while ((n = in.read(b)) > 0) o.write(b, 0, n);
+                in.close();
+                JSONObject j = new JSONObject(new String(o.toByteArray(), "UTF-8"));
+                newCode = j.optInt("versionCode", 0);
+                newName = j.optString("versionName", "");
+                final boolean has = newCode > installedCode();
+                runOnUiThread(() -> {
+                    if (has) {
+                        updBtn.setText("⬆ Có bản mới " + newName + " (" + newCode + ") — bấm để cập nhật");
+                        updBtn.setVisibility(View.VISIBLE);
+                    } else {
+                        updBtn.setVisibility(View.GONE);
+                        if (manual) say("Đang là bản mới nhất");
+                    }
+                });
+            } catch (Exception e) {
+                if (manual) say("Không kiểm tra được bản mới (kiểm tra mạng)");
+            }
+        }).start();
+    }
+
+    void startUpdate() {
+        if (downloading) return;
+        if (android.os.Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+            new AlertDialog.Builder(this)
+                .setTitle("Cho phép cài đặt ứng dụng")
+                .setMessage("Android cần bạn cho phép ứng dụng này cài bản cập nhật. Bấm Mở cài đặt, bật \"Cho phép từ nguồn này\", rồi quay lại bấm cập nhật lần nữa.")
+                .setPositiveButton("Mở cài đặt", (d, w) -> startActivity(new android.content.Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:" + getPackageName()))))
+                .setNegativeButton("Để sau", null)
+                .show();
+            return;
+        }
+        downloading = true;
+        updBtn.setEnabled(false);
+        updBtn.setText("⏳ Đang tải bản mới… 0%");
+        new Thread(() -> {
+            java.io.File f = new java.io.File(getCacheDir(), "update/DP-DangPhi.apk");
+            try {
+                f.getParentFile().mkdirs();
+                java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(UPD_BASE + "DP-DangPhi.apk").openConnection();
+                c.setConnectTimeout(15000);
+                c.setReadTimeout(30000);
+                c.setUseCaches(false);
+                final long len = c.getContentLengthLong();
+                InputStream in = c.getInputStream();
+                java.io.FileOutputStream out = new java.io.FileOutputStream(f);
+                byte[] b = new byte[16384];
+                int n, last = -1;
+                long got = 0;
+                while ((n = in.read(b)) > 0) {
+                    out.write(b, 0, n);
+                    got += n;
+                    final int pct = len > 0 ? (int) (got * 100 / len) : 0;
+                    if (pct != last && pct % 3 == 0) { last = pct; runOnUiThread(() -> updBtn.setText("⏳ Đang tải bản mới… " + pct + "%")); }
+                }
+                out.close();
+                in.close();
+                if (len > 0 && f.length() != len) throw new Exception("tải thiếu");
+                java.io.FileInputStream chk = new java.io.FileInputStream(f);
+                boolean zip = chk.read() == 'P' && chk.read() == 'K';
+                chk.close();
+                if (!zip) throw new Exception("file không phải APK");
+                runOnUiThread(() -> {
+                    downloading = false;
+                    updBtn.setEnabled(true);
+                    updBtn.setText("⬆ Đã tải xong — bấm để cài " + newName);
+                    installApk();
+                });
+            } catch (Exception e) {
+                f.delete();
+                runOnUiThread(() -> {
+                    downloading = false;
+                    updBtn.setEnabled(true);
+                    updBtn.setText("⚠ Tải lỗi — bấm để thử lại");
+                });
+            }
+        }).start();
+    }
+
+    void installApk() {
+        try {
+            android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+            i.setDataAndType(android.net.Uri.parse("content://vn.laocai.dp.apk/DP-DangPhi.apk"), "application/vnd.android.package-archive");
+            i.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION | android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+        } catch (Exception e) { say("Không mở được trình cài đặt"); }
     }
 
     void say(final String m) { runOnUiThread(() -> android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()); }

@@ -30,6 +30,8 @@ jobs:
         run: gradle --no-daemon assembleRelease -Pvname=${{ steps.ver.outputs.v }} -Pvcode=${{ github.run_number }}
       - name: Đổi tên APK
         run: cp android/app/build/outputs/apk/release/app-release.apk DP-DangPhi.apk
+      - name: Tạo android.json (để app biết có bản mới)
+        run: echo '{"versionName":"v${{ steps.ver.outputs.v }}","versionCode":${{ github.run_number }}}' > android.json
       - name: Đăng lên Releases (không làm thành bản mới nhất của app Windows)
         uses: softprops/action-gh-release@v2
         with:
@@ -38,4 +40,6 @@ jobs:
           body: "Tải file DP-DangPhi.apk về điện thoại Android và cài đặt. Phiên bản ${{ steps.ver.outputs.v }}."
           prerelease: true
           make_latest: false
-          files: DP-DangPhi.apk
+          files: |
+            DP-DangPhi.apk
+            android.json
