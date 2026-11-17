@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         title.setText("ĐỒNG BỘ ĐẢNG PHÍ 2026");
         title.setTextColor(Color.WHITE);
         title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setTextSize(15);
+        title.setTextSize(16);
         title.setGravity(Gravity.CENTER);
         title.setPadding(dp(6), dp(3), dp(6), 0);
         root.addView(title);
@@ -67,7 +67,7 @@ public class MainActivity extends Activity {
         try { android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0); verTxt = "v" + pi.versionName + " (" + pi.versionCode + ")"; ver = "  ·  " + verTxt; } catch (Exception e) { }
         author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai" + ver);
         author.setTextColor(0xFFFFD27A);
-        author.setTextSize(10);
+        author.setTextSize(11);
         author.setSingleLine(true);
         author.setGravity(Gravity.CENTER);
         author.setPadding(dp(6), 0, dp(6), dp(2));
@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
 
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setPadding(dp(4), dp(4), dp(4), dp(4));
+        row.setPadding(dp(4), dp(8), dp(4), dp(4));
         root.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         row.addView(btn("⟳ Tải lại", 0xFF2E6BB0, Color.WHITE, v -> web.loadUrl(cfg.optString("home", "https://gqtthc.dcs.vn/"))), eq());
@@ -97,14 +97,14 @@ public class MainActivity extends Activity {
         goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
         goBtn.setSingleLine(false);
         goBtn.setMaxLines(2);
-        goBtn.setTextSize(10);
+        goBtn.setTextSize(12);
         goBtn.setGravity(Gravity.CENTER);
         row.addView(goBtn, eq());
         /* Thanh cập nhật: chỉ hiện khi trên GitHub có bản mới hơn bản đang cài */
         updBtn = btn("⟳ Kiểm tra cập nhật · " + verTxt, 0xFF2E6BB0, Color.WHITE, v -> { if (newCode > installedCode()) startUpdate(); else checkUpdate(true); });
-        updBtn.setTextSize(11);
-        LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(40));
-        ulp.setMargins(dp(6), dp(2), dp(6), dp(4));
+        updBtn.setTextSize(13);
+        LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50));
+        ulp.setMargins(dp(6), dp(4), dp(6), dp(8));
         root.addView(updBtn, ulp);
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
@@ -244,8 +244,8 @@ public class MainActivity extends Activity {
     int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
     LinearLayout.LayoutParams eq() {
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(40), 1f);
-        lp.setMargins(dp(3), 0, dp(3), 0);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(50), 1f);
+        lp.setMargins(dp(4), 0, dp(4), 0);
         return lp;
     }
 
@@ -267,7 +267,7 @@ public class MainActivity extends Activity {
         Button x = new Button(this);
         x.setText(t);
         x.setAllCaps(false);
-        x.setTextSize(11);
+        x.setTextSize(13);
         x.setSingleLine(true);
         x.setTypeface(Typeface.DEFAULT_BOLD);
         x.setTextColor(fg);
