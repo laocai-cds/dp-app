@@ -205,6 +205,23 @@
         "m": true,
         "ep": "https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec"
       }
+    },
+    {
+      "id": "xuanquang",
+      "label": "ĐP Xuân Quang",
+      "fn": "apiBookmarklet",
+      "file": "bm/xuanquang.js",
+      "key": "xq_apipw",
+      "arg": {
+        "pid": 2122408,
+        "cid": 2124823,
+        "name": "Đảng bộ xã Xuân Quang",
+        "max": 0,
+        "k": "xq_apipw",
+        "src": "website-xuan-quang-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbyfW_GQckCdByg0recIU4Hgjjrv6l_UGjijxs-272FZrAI3ZPmtl1Oj0NR_XWg-pj9J/exec"
+      }
     }
   ],
   "chung": "https://script.google.com/macros/s/AKfycbz_v6ANKDhIBofzmmCkG3WProojbstCCKk-zBUAEQP_B-ge-JVezdeQsevj_mQ-b8FO/exec"
