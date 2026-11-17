@@ -23,6 +23,8 @@ mergeNewCfg();
 const cfg=loadCfg();let BAR=cfg.only?110:178;
 /* ===== Xã thêm bằng cách kéo nút "ĐP" từ website xã vào app (lưu trên máy này) ===== */
 const extraFile=()=>path.join(app.getPath('userData'),'extra-xa.json');
+/* mọi nút ĐP xã (apiBookmarklet) dùng chung một lõi bm/core.js; khác biệt từng xã nằm ở tham số trong config.json */
+const bmFile=x=>x&&x.fn==='apiBookmarklet'?'bm/core.js':(x&&x.file);
 const readExtra=()=>{try{const a=JSON.parse(fs.readFileSync(extraFile(),'utf8'));return Array.isArray(a)?a:[]}catch(e){return[]}};
 const writeExtra=a=>fs.writeFileSync(extraFile(),JSON.stringify(a,null,2));
 function loadExtra(){const have=new Set(cfg.xa.map(x=>x.id));const srcs=new Set(),eps=new Set();cfg.xa.forEach(x=>{if(x.arg&&typeof x.arg==='object'){if(x.arg.src)srcs.add(x.arg.src);if(x.arg.ep)eps.add(x.arg.ep)}});readExtra().forEach(x=>{if(!x||!x.id||have.has(x.id))return;const g=x.arg&&typeof x.arg==='object'?x.arg:{};/* bỏ nút tự kéo thả nếu xã đó đã có sẵn trong app (tránh trùng) */if((g.src&&srcs.has(g.src))||(g.ep&&eps.has(g.ep)))return;cfg.xa.push(x);have.add(x.id);if(g.src)srcs.add(g.src);if(g.ep)eps.add(g.ep)})}
@@ -45,7 +47,7 @@ function addXaCore(raw){
     const id='x_'+String(C.src).replace(/^website-/,'').replace(/-api$/,'').replace(/[^\w-]/g,'');
     const label='ĐP '+C.name.replace(/^(Đảng bộ|Đảng ủy)\s+(xã|phường|thị trấn)\s+/i,'').trim();
     const arg={pid:+C.pid||0,name:C.name,max:+C.max||0,k:C.k,src:C.src,m:true,ep:C.ep};if(C.cid)arg.cid=+C.cid;
-    const ent={id,label,fn:'apiBookmarklet',file:'bm/xuanhoa.js',key:C.k,arg,extra:true};
+    const ent={id,label,fn:'apiBookmarklet',file:'bm/core.js',key:C.k,arg,extra:true};
     const a=readExtra().filter(x=>x.id!==id);a.push(ent);writeExtra(a);log('Thêm nút '+label+' (kéo từ website xã)');
     return{ok:true,label}}catch(err){return{err:String(err&&err.message||err)}}
 }
@@ -162,7 +164,7 @@ async function doRun(id,code,api,month,wc){
   if(!needApi&&!codes[id])return{need:'code'};
   const url=wc.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
-  let BM;try{BM=fs.readFileSync(path.join(__dirname,x.file),'utf8')}catch(err){return{err:'Thiếu file '+x.file}}
+  let BM;try{BM=fs.readFileSync(path.join(__dirname,bmFile(x)),'utf8')}catch(err){return{err:'Thiếu file '+bmFile(x)}}
   const useChung=!!(!x.extra&&cfg.chung&&codes.__all&&await chungOk()&&(!needApi||_chT));
   if(useChung)codes[id]=codes.__all;
   if(!codes[id])return{need:'code'}; /* ĐP Tỉnh (tthc) chạy trực tiếp cần mật khẩu riêng của tthc, không dùng mã chung */
@@ -372,7 +374,7 @@ setTimeout(()=>keepAlive(),60e3);setInterval(()=>keepAlive(),10*60e3);
 async function syncRemoteCfg(){try{
   const r=await net.fetch('https://raw.githubusercontent.com/'+REPO+'/main/config.json?_='+Date.now(),{headers:{'User-Agent':'dp-dangphi'}});if(!r.ok)return;
   const n=await r.json();if(!n||!Array.isArray(n.xa)||!n.xa.length)return;
-  if(!n.xa.every(x=>x&&x.id&&x.file&&fs.existsSync(path.join(__dirname,x.file))))return;   /* chỉ nhận nếu bản app này có đủ bộ lấy số liệu */
+  if(!n.xa.every(x=>x&&x.id&&x.file&&fs.existsSync(path.join(__dirname,bmFile(x)))))return;   /* chỉ nhận nếu bản app này có đủ bộ lấy số liệu */
   const cf=path.join(exeDir,'config.json'),c=JSON.parse(fs.readFileSync(cf,'utf8'));
   const need=n.xa.some(x=>{const y=(c.xa||[]).find(z=>z.id===x.id);return !y||JSON.stringify(y)!==JSON.stringify(x)})||(n.chung!==undefined&&n.chung!==c.chung);
   if(need){fs.writeFileSync(path.join(exeDir,'config.new.json'),JSON.stringify(n));log('Có cấu hình mới trên GitHub — sẽ áp dụng khi mở lại ứng dụng');say('ℹ Có cấu hình mới (địa chỉ/đơn vị). Hãy đóng và mở lại ứng dụng để áp dụng.')}
