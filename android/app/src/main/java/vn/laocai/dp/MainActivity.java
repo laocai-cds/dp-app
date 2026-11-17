@@ -67,7 +67,7 @@ public class MainActivity extends Activity {
         try { android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0); verTxt = "v" + pi.versionName + " (" + pi.versionCode + ")"; ver = "  ·  " + verTxt; } catch (Exception e) { }
         author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai" + ver);
         author.setTextColor(0xFFFFD27A);
-        author.setTextSize(11);
+        author.setTextSize(8);
         author.setSingleLine(true);
         author.setGravity(Gravity.CENTER);
         author.setPadding(dp(6), 0, dp(6), dp(2));
@@ -97,12 +97,12 @@ public class MainActivity extends Activity {
         goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
         goBtn.setSingleLine(false);
         goBtn.setMaxLines(2);
-        goBtn.setTextSize(12);
+        goBtn.setTextSize(10);
         goBtn.setGravity(Gravity.CENTER);
         row.addView(goBtn, eq());
         /* Thanh cập nhật: chỉ hiện khi trên GitHub có bản mới hơn bản đang cài */
         updBtn = btn("⟳ Kiểm tra cập nhật · " + verTxt, 0xFF2E6BB0, Color.WHITE, v -> { if (newCode > installedCode()) startUpdate(); else checkUpdate(true); });
-        updBtn.setTextSize(13);
+        updBtn.setTextSize(11);
         LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50));
         ulp.setMargins(dp(6), dp(4), dp(6), dp(8));
         root.addView(updBtn, ulp);
@@ -267,7 +267,7 @@ public class MainActivity extends Activity {
         Button x = new Button(this);
         x.setText(t);
         x.setAllCaps(false);
-        x.setTextSize(13);
+        x.setTextSize(11);
         x.setSingleLine(true);
         x.setTypeface(Typeface.DEFAULT_BOLD);
         x.setTextColor(fg);
