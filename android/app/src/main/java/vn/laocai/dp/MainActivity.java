@@ -65,10 +65,11 @@ public class MainActivity extends Activity {
         TextView author = new TextView(this);
         String ver = "";
         try { android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0); verTxt = "v" + pi.versionName + " (" + pi.versionCode + ")"; ver = "  ·  " + verTxt; } catch (Exception e) { }
-        author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai");
+        author.setText("Phát triển bởi: Mr. Dũng\nPhòng CĐS-CY VPTU Lào Cai");
         author.setTextColor(0xFFFFD27A);
-        author.setTextSize(8);
-        author.setSingleLine(true);
+        author.setTextSize(13);
+        author.setSingleLine(false);
+        author.setMaxLines(2);
         author.setGravity(Gravity.CENTER);
         author.setPadding(dp(6), 0, dp(6), dp(2));
         author.setOnClickListener(v -> checkUpdate(true));
