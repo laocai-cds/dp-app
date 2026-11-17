@@ -92,14 +92,14 @@ public class MainActivity extends Activity {
             sp.edit().putString("__all", c.trim()).apply();
             say(c.trim().isEmpty() ? "Đã xóa mã chung" : "Đã lưu mã chung");
         })), eq());
-        pickBtn = btn("▼ Chọn ĐP", 0xFFE8831A, Color.WHITE, v -> pick());
+        pickBtn = btn("▼ Chọn", 0xFFE8831A, Color.WHITE, v -> pick());
         row.addView(pickBtn, eq());
         goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
         row.addView(goBtn, eq());
         /* Thanh cập nhật: chỉ hiện khi trên GitHub có bản mới hơn bản đang cài */
         updBtn = btn("⟳ Kiểm tra cập nhật · " + verTxt, 0xFF2E6BB0, Color.WHITE, v -> { if (newCode > installedCode()) startUpdate(); else checkUpdate(true); });
-        updBtn.setTextSize(13);
-        LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
+        updBtn.setTextSize(11);
+        LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(40));
         ulp.setMargins(dp(6), dp(2), dp(6), dp(4));
         root.addView(updBtn, ulp);
         JSONArray xa = cfg.optJSONArray("xa");
@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
     int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
     LinearLayout.LayoutParams eq() {
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(44), 1f);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(40), 1f);
         lp.setMargins(dp(3), 0, dp(3), 0);
         return lp;
     }
@@ -263,7 +263,8 @@ public class MainActivity extends Activity {
         Button x = new Button(this);
         x.setText(t);
         x.setAllCaps(false);
-        x.setTextSize(12);
+        x.setTextSize(11);
+        x.setSingleLine(true);
         x.setTypeface(Typeface.DEFAULT_BOLD);
         x.setTextColor(fg);
         int dark = Color.rgb(Math.max(0, Color.red(bg) - 40), Math.max(0, Color.green(bg) - 40), Math.max(0, Color.blue(bg) - 40));
@@ -328,7 +329,7 @@ public class MainActivity extends Activity {
                 .setOnDismissListener(d -> {
                     chosen.clear();
                     for (CheckBox c : cbs) if (c.isChecked()) chosen.add((String) c.getTag());
-                    pickBtn.setText(chosen.isEmpty() ? "▼ Chọn ĐP" : "▼ Đã chọn " + chosen.size());
+                    pickBtn.setText(chosen.isEmpty() ? "▼ Chọn" : "▼ Chọn " + chosen.size());
                 })
                 .show();
     }
@@ -434,10 +435,10 @@ public class MainActivity extends Activity {
                 final boolean has = newCode > installedCode();
                 runOnUiThread(() -> {
                     if (has) {
-                        updBtn.setText("⬆ Có bản mới " + newName + " (" + newCode + ") — bấm để cập nhật");
+                        updBtn.setText("⬆ Có bản mới " + newName + " (" + newCode + ") — bấm cập nhật");
                         updBtn.setBackground(shape(0xFFD97706, 0xFFB45309));
                     } else {
-                        updBtn.setText("✓ Đã là bản mới nhất · " + verTxt + " — bấm để kiểm tra lại");
+                        updBtn.setText("✓ Bản mới nhất · " + verTxt);
                         updBtn.setBackground(shape(0xFF1E8E3E, 0xFF166B2F));
                         if (manual) say("Đang là bản mới nhất");
                     }
@@ -462,7 +463,7 @@ public class MainActivity extends Activity {
         }
         downloading = true;
         updBtn.setEnabled(false);
-        updBtn.setText("⏳ Đang tải bản mới… 0%");
+        updBtn.setText("⏳ Đang tải… 0%");
         new Thread(() -> {
             java.io.File f = new java.io.File(getCacheDir(), "update/DP-DangPhi.apk");
             try {
@@ -481,7 +482,7 @@ public class MainActivity extends Activity {
                     out.write(b, 0, n);
                     got += n;
                     final int pct = len > 0 ? (int) (got * 100 / len) : 0;
-                    if (pct != last && pct % 3 == 0) { last = pct; runOnUiThread(() -> updBtn.setText("⏳ Đang tải bản mới… " + pct + "%")); }
+                    if (pct != last && pct % 3 == 0) { last = pct; runOnUiThread(() -> updBtn.setText("⏳ Đang tải… " + pct + "%")); }
                 }
                 out.close();
                 in.close();
@@ -493,7 +494,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     downloading = false;
                     updBtn.setEnabled(true);
-                    updBtn.setText("⬆ Đã tải xong — bấm để cài " + newName);
+                    updBtn.setText("⬆ Đã tải xong — bấm để cài");
                     installApk();
                 });
             } catch (Exception e) {
