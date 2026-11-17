@@ -25,7 +25,7 @@ const cfg=loadCfg();let BAR=cfg.only?110:178;
 const extraFile=()=>path.join(app.getPath('userData'),'extra-xa.json');
 const readExtra=()=>{try{const a=JSON.parse(fs.readFileSync(extraFile(),'utf8'));return Array.isArray(a)?a:[]}catch(e){return[]}};
 const writeExtra=a=>fs.writeFileSync(extraFile(),JSON.stringify(a,null,2));
-function loadExtra(){const have=new Set(cfg.xa.map(x=>x.id));readExtra().forEach(x=>{if(x&&x.id&&!have.has(x.id)){cfg.xa.push(x);have.add(x.id)}})}
+function loadExtra(){const have=new Set(cfg.xa.map(x=>x.id));const srcs=new Set(),eps=new Set();cfg.xa.forEach(x=>{if(x.arg&&typeof x.arg==='object'){if(x.arg.src)srcs.add(x.arg.src);if(x.arg.ep)eps.add(x.arg.ep)}});readExtra().forEach(x=>{if(!x||!x.id||have.has(x.id))return;const g=x.arg&&typeof x.arg==='object'?x.arg:{};/* bỏ nút tự kéo thả nếu xã đó đã có sẵn trong app (tránh trùng) */if((g.src&&srcs.has(g.src))||(g.ep&&eps.has(g.ep)))return;cfg.xa.push(x);have.add(x.id);if(g.src)srcs.add(g.src);if(g.ep)eps.add(g.ep)})}
 function parseDp(raw){
   let t=String(raw||'').trim();if(!t)throw new Error('Chưa có nội dung.');
   t=t.split(/\r?\n/).map(l=>l.trim()).find(l=>/^javascript:/i.test(l))||t;
