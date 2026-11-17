@@ -195,10 +195,6 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         if let u = URL(string: home) { web.load(URLRequest(url: u)) }
     }
 
-    @objc func longPressed(_ g: UILongPressGestureRecognizer) {
-        if g.state == .began, let id = g.view?.accessibilityIdentifier { toggle(id) }
-    }
-
     func say(_ m: String) { DispatchQueue.main.async { self.status.text = m } }
 
     func ask(_ title: String, _ secret: Bool, _ initial: String, _ done: @escaping (String) -> Void) {
