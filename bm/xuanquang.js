@@ -103,9 +103,9 @@ function apiBookmarklet(C){
             const L=X.list||[];
             if(L.length&&!L.some(y=>fold(y.tenDonVi)===fold(x.tenDonVi)||/tinh lao cai/.test(fold(y.tenDonVi)))&&L.every(y=>!top.has(fold(y.tenDonVi))||/^chi bo truong/.test(fold(y.tenDonVi)))){
               try{localStorage.setItem(ck2,String(c))}catch(e){}
-              L.forEach(y=>{kid.set(fold(y.tenDonVi),y);kn++});break}}
+              L.forEach(y=>{const z=Object.assign({},y,{tenDonVi:String(x.tenDonVi).trim()+' › '+String(y.tenDonVi).trim()});kid.set(fold(z.tenDonVi),z);kn++});break}}
         }
-        if(kid.size){const keep=list.filter(x=>!kid.has(fold(x.tenDonVi)));list=keep.concat([...kid.values()]);say('Đã lấy thêm '+kid.size+' chi bộ trực thuộc các Đảng bộ trường.',false,true)}
+        if(kid.size){const keep=list.filter(x=>!/^chi bộ trường/i.test(String(x.tenDonVi||'').trim()));list=keep.concat([...kid.values()]);say('Đã lấy thêm '+kid.size+' chi bộ trực thuộc các Đảng bộ trường.',false,true)}
       }catch(e){}
       if(!list.length)throw new Error('API không trả đơn vị nào.');
       if(list.some(x=>/tỉnh Lào Cai/i.test(String(x.tenDonVi||''))||String(x.tenDonVi||'').trim()===C.name))throw new Error('Dữ liệu KHÔNG phải của các chi bộ/đảng bộ trực thuộc '+C.name+' (nhận '+list.length+' đơn vị, đầu tiên: '+(list[0]&&list[0].tenDonVi)+'). Đã dừng, chưa ghi vào Google Sheet.');
