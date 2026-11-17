@@ -439,7 +439,7 @@ public class MainActivity extends Activity {
                 final boolean has = newCode > installedCode();
                 runOnUiThread(() -> {
                     if (has) {
-                        updBtn.setText("⬆ Có bản mới " + newName + " (" + newCode + ") — bấm cập nhật");
+                        updBtn.setText("⬆ Cập nhật bản " + installedCode() + " → " + newCode + " — bấm để cài");
                         updBtn.setBackground(shape(0xFFD97706, 0xFFB45309));
                     } else {
                         updBtn.setText("✓ Bản mới nhất · " + verTxt);
@@ -495,10 +495,16 @@ public class MainActivity extends Activity {
                 boolean zip = chk.read() == 'P' && chk.read() == 'K';
                 chk.close();
                 if (!zip) throw new Exception("file không phải APK");
+                final int dl = apkCode(f);
                 runOnUiThread(() -> {
                     downloading = false;
                     updBtn.setEnabled(true);
-                    updBtn.setText("⬆ Đã tải xong — bấm để cài");
+                    if (dl <= installedCode()) {
+                        f.delete();
+                        updBtn.setText("⚠ File tải về là bản " + dl + ", không mới hơn bản đang cài (" + installedCode() + ") — bấm tải lại");
+                        return;
+                    }
+                    updBtn.setText("⬆ Đã tải bản " + dl + " — bấm để cài");
                     installApk();
                 });
             } catch (Exception e) {
@@ -510,6 +516,14 @@ public class MainActivity extends Activity {
                 });
             }
         }).start();
+    }
+
+    @SuppressWarnings("deprecation")
+    int apkCode(java.io.File f) {
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageArchiveInfo(f.getPath(), 0);
+            return pi == null ? 0 : pi.versionCode;
+        } catch (Exception e) { return 0; }
     }
 
     void installApk() {
