@@ -17,6 +17,15 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
     var pickBtn: UIButton!
     var goBtn: UIButton!
     var runGen = 0
+    var stamped = Set<String>()
+
+    /* Giờ hoàn thành: hôm nay chỉ giờ:phút, ngày khác kèm ngày/tháng */
+    func hm(_ t: TimeInterval) -> String {
+        let d = Date(timeIntervalSince1970: t)
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = Calendar.current.isDateInToday(d) ? "HH:mm" : "HH:mm dd/MM"
+        return f.string(from: d)
+    }
     let greenC = UIColor(red: 0.118, green: 0.557, blue: 0.243, alpha: 1)
 
     func track(_ sel: [String]) {
@@ -24,20 +33,25 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let gen = runGen
         let total = sel.count
         let t0 = Date()
+        stamped = []
         goBtn.setTitle("⏳ 0/\(total)", for: .normal)
         func tick() {
             if gen != runGen { return }
             web.evaluateJavaScript("JSON.stringify(window.__dpRes||{})") { [weak self] v, _ in
                 guard let s = self, gen == s.runGen else { return }
                 var done = 0, bad = 0
+                let now = Date().timeIntervalSince1970
                 if let t = v as? String, let d = t.data(using: .utf8), let r = (try? JSONSerialization.jsonObject(with: d)) as? [String: String] {
                     for id in sel {
                         let l = (s.xitems[id]?["label"] as? String) ?? ""
-                        if let st = r[l] { done += 1; if st == "bad" { bad += 1 } }
+                        if let st = r[l] {
+                            done += 1; if st == "bad" { bad += 1 }
+                            if s.stamped.insert(id).inserted { s.ud.set(now, forKey: "tm_" + id); s.ud.set(st, forKey: "st_" + id) }
+                        }
                     }
                 }
                 let fin = done >= total
-                s.goBtn.setTitle((fin ? "✓ " : "⏳ ") + "\(done)/\(total)" + (fin ? " xong" : "") + (bad > 0 ? " (\(bad) lỗi)" : ""), for: .normal)
+                s.goBtn.setTitle((fin ? "✓ " : "⏳ ") + "\(done)/\(total)" + (bad > 0 ? " ⚠\(bad)" : "") + (fin ? "\n" + s.hm(now) : ""), for: .normal)
                 if !fin && Date().timeIntervalSince(t0) < 240 { DispatchQueue.main.asyncAfter(deadline: .now() + 1) { tick() } }
             }
         }
@@ -47,10 +61,16 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
     var xitems: [String: [String: Any]] = [:]
 
     func pick() {
-        let t = PickVC(ids: ids, labels: ids.map { (xitems[$0]?["label"] as? String) ?? $0 }, chosen: chosen) { [weak self] sel in
+        let labels: [String] = ids.map { id in
+            let lb = (xitems[id]?["label"] as? String) ?? id
+            let tm = ud.double(forKey: "tm_" + id)
+            if tm > 0 { return lb + "   " + (ud.string(forKey: "st_" + id) == "bad" ? "✕ lỗi " : "✓ ") + hm(tm) }
+            return lb
+        }
+        let t = PickVC(ids: ids, labels: labels, chosen: chosen) { [weak self] sel in
             guard let s = self else { return }
             s.chosen = Set(sel)
-            s.pickBtn.setTitle(sel.isEmpty ? "▼ Chọn ĐP" : "▼ Đã chọn \(sel.count)", for: .normal)
+            s.pickBtn.setTitle(sel.isEmpty ? "▼ Chọn" : "▼ Chọn \(sel.count)", for: .normal)
         }
         present(UINavigationController(rootViewController: t), animated: true)
     }
@@ -77,7 +97,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
     }
     var cfg: [String: Any] = [:]
     let ud = UserDefaults.standard
-    let BATCH = "(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{const B=window.__dpBatch;if(B){for(const ov of document.body.querySelectorAll(':scope>div')){if(/inset:\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}}let y=14;const R=window.__dpRes=window.__dpRes||{};for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;const l=b.dataset.dplbl,bg=b.style.background||'';if(l){if(/15,\s*138,\s*60|0f8a3c/i.test(bg))R[l]='ok';else if(/165,\s*13,\s*38|a50d26/i.test(bg))R[l]='bad'}if(B){b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}}},250)})();"
+    let BATCH = #"(()=>{if(window.__dpB)return;window.__dpB=1;const st=document.createElement('style');st.textContent='[data-dplbl]::before{content:attr(data-dplbl);display:block;font-weight:800;color:#ffd27a;margin-bottom:2px}';document.head.appendChild(st);const boxes=()=>[...document.body.children].filter(e=>e.style&&e.style.right==='14px'&&e.style.zIndex==='2147483647');setInterval(()=>{const B=window.__dpBatch;if(B){for(const ov of document.body.querySelectorAll(':scope>div')){if(/inset:\s*0/.test(ov.style.cssText)){const ok=ov.querySelector('[data-ok]');if(ok&&!ov.dataset.dpa){ov.dataset.dpa=1;ov.style.display='none';ok.click()}}}}let y=14;const R=window.__dpRes=window.__dpRes||{};for(const b of boxes()){if(!b.dataset.dplbl&&window.__dpCur)b.dataset.dplbl=window.__dpCur;const l=b.dataset.dplbl,bg=b.style.background||'';const tx=(b.textContent||'').trim();if(l){if(/^✓/.test(tx))R[l]='ok';else if(/^[✕⚠]/.test(tx))R[l]='bad';else if(/15,\s*138,\s*60|0f8a3c/i.test(bg))R[l]='ok';else if(/165,\s*13,\s*38|a50d26/i.test(bg))R[l]='bad'}if(B){b.style.top=y+'px';b.style.maxWidth='300px';b.style.padding='6px 10px';b.style.fontSize='12px';y+=b.offsetHeight+6}}},250)})();"#
     let PRE = "(()=>{window.prompt=()=>null;window.confirm=()=>true;})();"
 
     func readAsset(_ rel: String) -> String? {
@@ -94,11 +114,13 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         b.titleLabel?.font = UIFont.boldSystemFont(ofSize: size)
         b.titleLabel?.adjustsFontSizeToFitWidth = true
         b.titleLabel?.minimumScaleFactor = 0.7
+        b.titleLabel?.numberOfLines = 2
+        b.titleLabel?.textAlignment = .center
         b.layer.cornerRadius = 9
         b.layer.borderWidth = 1
         b.layer.borderColor = UIColor(white: 1, alpha: 0.2).cgColor
         b.addAction(UIAction { _ in act() }, for: .touchUpInside)
-        b.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 50).isActive = true
         return b
     }
 
@@ -125,10 +147,10 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let dark = UIColor(red: 0.059, green: 0.227, blue: 0.431, alpha: 1)
         let orange = UIColor(red: 0.91, green: 0.514, blue: 0.102, alpha: 1)
         let blue = UIColor(red: 0.18, green: 0.42, blue: 0.69, alpha: 1)
-        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 12)
-        let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 9); author.adjustsFontSizeToFitWidth = true
+        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 16)
+        let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng\nPhòng CĐS-CY VPTU Lào Cai"; author.numberOfLines = 2; author.textColor = UIColor(red: 1, green: 0.824, blue: 0.478, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 13)
 
-        pickBtn = btn("▼ Chọn ĐP", orange, .white, 11) { [weak self] in self?.pick() }
+        pickBtn = btn("▼ Chọn", orange, .white, 11) { [weak self] in self?.pick() }
         goBtn = btn("▶ Chạy", greenC, .white, 11) { [weak self] in guard let s = self else { return }; s.runSelected(s.ids.filter { s.chosen.contains($0) }) }
         let ctl = hrow([
             btn("⟳  Tải lại", blue, .white, 11) { [weak self] in self?.web.reload() },
@@ -239,6 +261,18 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         }
     }
 
+    /* Máy chủ gqtthc (dcs.vn) và cổng SSO (dancuquocgia.gov.vn) thiếu chứng chỉ trung gian: tin cậy riêng các tên miền này */
+    func isTrusted(_ h: String) -> Bool {
+        return h == "dcs.vn" || h.hasSuffix(".dcs.vn") || h == "dancuquocgia.gov.vn" || h.hasSuffix(".dancuquocgia.gov.vn")
+    }
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        let ps = challenge.protectionSpace
+        if ps.authenticationMethod == NSURLAuthenticationMethodServerTrust, let trust = ps.serverTrust, isTrusted(ps.host) {
+            completionHandler(.useCredential, URLCredential(trust: trust))
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
+    }
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
         let a = UIAlertController(title: nil, message: message, preferredStyle: .alert)
         a.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
