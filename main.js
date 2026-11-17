@@ -120,7 +120,7 @@ ipcMain.on('pop:run',(e,id)=>{popClose();try{win.webContents.send('pop:run',id)}
 ipcMain.on('pop:close',()=>popClose());
 function createWindow(){
   win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),backgroundThrottling:false}});
-  win.setTitle(WIN_TITLE);win.on('close',e=>{try{const s=readSched();if(!quitting&&process.platform==='win32'&&(s.enabled||s.everyOn)){e.preventDefault();win.hide();setupTray();notify('Đồng bộ đảng phí','Ứng dụng vẫn chạy nền để tự động lấy số liệu. Bấm biểu tượng ở khay hệ thống (góc phải thanh tác vụ) để mở lại hoặc thoát hẳn.')}}catch(_){}});win.on('page-title-updated',e=>e.preventDefault());win.on('resize',()=>popClose());win.on('minimize',()=>popClose());
+  win.setTitle(WIN_TITLE);win.on('close',e=>{try{const s=readSched();if(!quitting&&process.platform==='win32'){e.preventDefault();win.hide();setupTray();if(!trayTold){trayTold=true;notify('Đồng bộ đảng phí','Ứng dụng vẫn chạy nền ở khay hệ thống (góc phải thanh tác vụ, bấm mũi tên ^ nếu không thấy). Bấm biểu tượng để mở lại hoặc chọn Thoát hẳn.')}}}catch(_){}});win.on('page-title-updated',e=>e.preventDefault());win.on('resize',()=>popClose());win.on('minimize',()=>popClose());
   win.loadFile('toolbar.html');
   /* mở lên phía trước và hiện giao diện (kể cả khi vừa tự khởi động lại sau cập nhật) */
   win.once('ready-to-show',()=>{try{if(win.isMinimized())win.restore();win.show();win.setAlwaysOnTop(true);win.focus();setTimeout(()=>{try{win.setAlwaysOnTop(false)}catch(_){}},1500)}catch(e){}});
@@ -379,9 +379,9 @@ async function syncRemoteCfg(){try{
 }catch(_){}}
 setTimeout(syncRemoteCfg,25e3);setInterval(syncRemoteCfg,3*3600e3);
 /* chạy nền ở khay hệ thống khi đang bật hẹn giờ / tự động */
-let tray=null,quitting=false;app.on('before-quit',()=>{quitting=true});
+let tray=null,quitting=false,trayTold=false;app.on('before-quit',()=>{quitting=true});
 const showWin=()=>{try{win.show();win.restore();win.focus()}catch(_){}};
-function setupTray(){if(tray)return;app.getFileIcon(process.execPath).then(img=>{tray=new Tray(img);tray.setToolTip('Đồng bộ đảng phí — đang chạy nền');
+function setupTray(){if(tray)return;app.getFileIcon(process.execPath).then(img=>{tray=new Tray(img);tray.setToolTip('Đồng bộ đảng phí — đang chạy nền (bấm để mở)');
   tray.setContextMenu(Menu.buildFromTemplate([{label:'Mở cửa sổ',click:showWin},{label:'Thoát hẳn',click:()=>{quitting=true;app.quit()}}]));tray.on('click',showWin)}).catch(()=>{})}
 ipcMain.handle('runWait',(e,{id,month,code,api})=>runWaitCore(id,month,code,api));
 
@@ -604,5 +604,7 @@ function fixShortcuts(){
   }catch(e){}
 }
 function reportUpdLog(){try{const f=path.join(os.tmpdir(),'dp-update.log');if(!fs.existsSync(f))return;const t=fs.readFileSync(f,'utf8');fs.unlinkSync(f);log('Nhật ký cập nhật: '+t.replace(/\r?\n/g,' | ').slice(0,500));if(/THAT BAI/.test(t))setTimeout(()=>say('⚠ Cập nhật lần trước KHÔNG chép được file mới ('+(t.split('\n').filter(x=>/lan /.test(x)).pop()||'').slice(0,120)+'). Hãy cài đè bằng DP-DangPhi-Setup.exe.'),3000)}catch(_){}}
+if(!app.requestSingleInstanceLock()){app.quit()}else{app.on('second-instance',()=>showWin());
 app.whenReady().then(()=>{createWindow();announceUpdated();reportUpdLog();fixShortcuts();applySched();setInterval(tickSched,30000);armUpd();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());
+}
