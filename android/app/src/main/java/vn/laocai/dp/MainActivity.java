@@ -95,6 +95,10 @@ public class MainActivity extends Activity {
         pickBtn = btn("▼ Chọn", 0xFFE8831A, Color.WHITE, v -> pick());
         row.addView(pickBtn, eq());
         goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
+        goBtn.setSingleLine(false);
+        goBtn.setMaxLines(2);
+        goBtn.setTextSize(10);
+        goBtn.setGravity(Gravity.CENTER);
         row.addView(goBtn, eq());
         /* Thanh cập nhật: chỉ hiện khi trên GitHub có bản mới hơn bản đang cài */
         updBtn = btn("⟳ Kiểm tra cập nhật · " + verTxt, 0xFF2E6BB0, Color.WHITE, v -> { if (newCode > installedCode()) startUpdate(); else checkUpdate(true); });
@@ -372,7 +376,7 @@ public class MainActivity extends Activity {
                     boolean fin = done >= total;
                     boolean timeout = System.currentTimeMillis() - t0 > 240000;
                     if (fin) sp.edit().putLong("tm_all", System.currentTimeMillis()).apply();
-                    goBtn.setText((fin ? "✓ " : "⏳ ") + done + "/" + total + (fin ? " " + hm(System.currentTimeMillis()) : "") + (bad > 0 ? " (" + bad + " lỗi)" : ""));
+                    goBtn.setText((fin ? "✓ " : "⏳ ") + done + "/" + total + (bad > 0 ? " ⚠" + bad : "") + (fin ? "\n" + hm(System.currentTimeMillis()) : ""));
                     if (!fin && !timeout) hh.postDelayed(this, 1000);
                 });
             }
