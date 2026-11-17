@@ -210,9 +210,9 @@ async function runWaitCore0(id,month,code,api,wc,noReset){
 
 /* ===== Chế độ chạy nhiều đơn vị: lần lượt (mặc định) hoặc song song ===== */
 const rmFile=()=>path.join(app.getPath('userData'),'che-do-chay.json');
-const readRM=()=>{let o={};try{o=JSON.parse(fs.readFileSync(rmFile(),'utf8'))||{}}catch(_){}return{mode:o.mode==='par'?'par':'seq',conc:Math.min(5,Math.max(2,parseInt(o.conc)||3))}};
+const readRM=()=>{let o={};try{o=JSON.parse(fs.readFileSync(rmFile(),'utf8'))||{}}catch(_){}return{mode:'seq',conc:Math.min(5,Math.max(2,parseInt(o.conc)||3))}};
 ipcMain.handle('rm:get',()=>readRM());
-ipcMain.handle('rm:set',(e,o)=>{const v={mode:o&&o.mode==='par'?'par':'seq',conc:Math.min(5,Math.max(2,parseInt(o&&o.conc)||3))};try{fs.writeFileSync(rmFile(),JSON.stringify(v))}catch(_){}return v});
+ipcMain.handle('rm:set',(e,o)=>{const v={mode:'seq',conc:Math.min(5,Math.max(2,parseInt(o&&o.conc)||3))};try{fs.writeFileSync(rmFile(),JSON.stringify(v))}catch(_){}return v});
 /* cửa sổ ẩn dùng chung phiên đăng nhập gqtthc: mỗi cửa sổ có hộp tiến độ riêng nên chạy song song không đè lên nhau */
 async function openWorker(){
   const w=new BrowserWindow({show:false,width:1200,height:800,webPreferences:{partition:'persist:gqtthc',contextIsolation:true,backgroundThrottling:false}});
