@@ -1,4 +1,7 @@
+/* Lõi chung của mọi nút ĐP xã (apiBookmarklet). Khác biệt giữa các xã nằm ở tham số C trong config.json:
+   col = màu hộp thông báo, skip0 = bỏ đơn vị 0/0, cap = bắt header khi gateway trả 401, kids = lấy chi bộ con của các Đảng bộ trường. */
 function apiBookmarklet(C){
+  const COL=C.col||'#12315f';
   let AM=0;
   /* Nhãn góc trái dưới: đang tự động lặp, lần cuối lúc nào; bấm để tắt */
   const badge=t=>{let b=document.getElementById('__dpBmBadge');if(!window.__dpBmTimer){if(b)b.remove();return}
@@ -8,10 +11,10 @@ function apiBookmarklet(C){
   const hm=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
   const go=async(auto)=>{
     const box=document.createElement('div');
-    box.style.cssText='position:fixed;z-index:2147483647;top:14px;right:14px;max-width:380px;padding:12px 16px;border-radius:12px;background:#2d5e1f;color:#fff;font:600 14px/1.45 system-ui,sans-serif;white-space:pre-line;box-shadow:0 8px 28px rgba(0,0,0,.35)';
+    box.style.cssText='position:fixed;z-index:2147483647;top:14px;right:14px;max-width:380px;padding:12px 16px;border-radius:12px;background:'+COL+';color:#fff;font:600 14px/1.45 system-ui,sans-serif;white-space:pre-line;box-shadow:0 8px 28px rgba(0,0,0,.35)';
     let T0=performance.now(),curMsg='',curBad=false,curOk=false,tick=null,dead=false;const acs=new Set();
     const f1=ms=>(ms/1000).toFixed(1).replace('.',',')+'s';
-    const paint=()=>{if(dead)return;box.textContent=curMsg+(tick?'   ⏱ '+f1(performance.now()-T0):'');box.style.background=curBad?'#a50d26':curOk?'#0f8a3c':'#2d5e1f';if(!box.parentNode)document.body.appendChild(box)};
+    const paint=()=>{if(dead)return;box.textContent=curMsg+(tick?'   ⏱ '+f1(performance.now()-T0):'');box.style.background=curBad?'#a50d26':curOk?'#0f8a3c':COL;if(!box.parentNode)document.body.appendChild(box)};
     const say=(m,bad,run,good)=>{curMsg=m;curBad=!!bad;curOk=!!good;if(run){if(!tick)tick=setInterval(paint,100)}else if(tick){clearInterval(tick);tick=null}paint()};
     const jp=(u,ms)=>new Promise(res=>{const cb='__apibm'+Date.now()+Math.random().toString(36).slice(2),sc=document.createElement('script');const t=setTimeout(()=>{delete window[cb];sc.remove();res(null)},ms||9000);window[cb]=v=>{clearTimeout(t);delete window[cb];sc.remove();res(v)};sc.onerror=()=>{clearTimeout(t);res(null)};sc.src=u+(u.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(sc)});
     try{
@@ -28,7 +31,7 @@ function apiBookmarklet(C){
         const ov=document.createElement('div');
         ov.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif';
         let o='';for(let i=0;i<12;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1),y=d.getFullYear(),m=d.getMonth()+1;o+='<option value="'+y+'-'+m+'"'+(i?'':' selected')+'>Tháng '+m+'/'+y+(i?'':' (hiện tại)')+'</option>'}
-        ov.innerHTML='<div style="background:#fff;color:#2d5e1f;padding:20px 24px;border-radius:12px;min-width:300px;box-shadow:0 8px 28px rgba(0,0,0,.35)"><div style="font-weight:700;font-size:16px">Lấy số liệu đảng phí</div><div data-n style="font-size:13px;color:#555;margin-top:2px"></div><select style="width:100%;margin:14px 0;padding:8px;font-size:14px;border:1px solid #bbb;border-radius:8px">'+o+'</select><div data-amst style="font-size:13px;font-weight:700;margin:0 0 8px;color:#6b7280"></div><div style="font-size:13px;color:#2d5e1f;margin:0 0 6px">Tự động lặp lại (tháng hiện tại)</div><select data-am style="width:100%;margin:0 0 14px;padding:8px;font-size:14px;border:1px solid #bbb;border-radius:8px"><option value="0" selected>Không — chỉ lấy một lần</option><option value="2">Mỗi 2 phút</option><option value="5">Mỗi 5 phút</option><option value="10">Mỗi 10 phút</option><option value="15">Mỗi 15 phút</option><option value="30">Mỗi 30 phút</option></select><div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" data-x style="padding:7px 14px;border:1px solid #bbb;background:#fff;border-radius:8px;cursor:pointer">Hủy</button><button type="button" data-ok style="padding:7px 16px;border:0;background:#b3261e;color:#fff;font-weight:700;border-radius:8px;cursor:pointer">Lấy dữ liệu</button></div></div>';
+        ov.innerHTML='<div style="background:#fff;color:'+COL+';padding:20px 24px;border-radius:12px;min-width:300px;box-shadow:0 8px 28px rgba(0,0,0,.35)"><div style="font-weight:700;font-size:16px">Lấy số liệu đảng phí</div><div data-n style="font-size:13px;color:#555;margin-top:2px"></div><select style="width:100%;margin:14px 0;padding:8px;font-size:14px;border:1px solid #bbb;border-radius:8px">'+o+'</select><div data-amst style="font-size:13px;font-weight:700;margin:0 0 8px;color:#6b7280"></div><div style="font-size:13px;color:'+COL+';margin:0 0 6px">Tự động lặp lại (tháng hiện tại)</div><select data-am style="width:100%;margin:0 0 14px;padding:8px;font-size:14px;border:1px solid #bbb;border-radius:8px"><option value="0" selected>Không — chỉ lấy một lần</option><option value="2">Mỗi 2 phút</option><option value="5">Mỗi 5 phút</option><option value="10">Mỗi 10 phút</option><option value="15">Mỗi 15 phút</option><option value="30">Mỗi 30 phút</option></select><div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" data-x style="padding:7px 14px;border:1px solid #bbb;background:#fff;border-radius:8px;cursor:pointer">Hủy</button><button type="button" data-ok style="padding:7px 16px;border:0;background:#b3261e;color:#fff;font-weight:700;border-radius:8px;cursor:pointer">Lấy dữ liệu</button></div></div>';
         ov.querySelector('[data-n]').textContent=C.name;
         {const st=ov.querySelector('[data-amst]'),am=ov.querySelector('[data-am]');if(window.__dpBmTimer&&window.__dpBmAM){am.value=String(window.__dpBmAM);st.textContent='⏱ Đang chạy tự động: '+window.__dpBmAM+' phút';st.style.color='#0f8a3c'}else st.textContent='Hiện chưa chạy tự động'}
         const sel=ov.querySelector('select'),done=v=>{if(v)AM=+ov.querySelector('[data-am]').value||0;ov.remove();document.removeEventListener('keydown',kd,true);res(v)};
@@ -48,15 +51,33 @@ function apiBookmarklet(C){
       const tA=performance.now();
       const p2=n=>String(n).padStart(2,'0'),mm=p2(SM),yy=cy;
       const kS='01/'+mm+'/'+yy,kE=new Date(yy,SM,0).getDate()+'/'+mm+'/'+yy;
+      let HD={Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'};
+      /* khi gateway trả 401: chờ người dùng bấm "Tìm kiếm" một lần trên trang, bắt đúng header mà chính trang gqtthc gửi rồi dùng lại */
+      const capHd=()=>new Promise(res=>{
+        const GW=/gateway-gqtthc\.dcs\.vn/,of=window.fetch,xo=XMLHttpRequest.prototype.open,xs=XMLHttpRequest.prototype.setRequestHeader;
+        let fin=false;const done=h=>{if(fin)return;fin=true;window.fetch=of;XMLHttpRequest.prototype.open=xo;XMLHttpRequest.prototype.setRequestHeader=xs;clearTimeout(to);res(h)};
+        const to=setTimeout(()=>done(null),90000);
+        const take=h=>{const o={};h.forEach((v,k)=>{o[k]=v});if(o.authorization||o.Authorization)done(o)};
+        window.fetch=function(u,o){try{if(GW.test(String(u&&u.url||u)))take(new Headers((o&&o.headers)||(u&&u.headers)||{}))}catch(e){}return of.apply(this,arguments)};
+        XMLHttpRequest.prototype.open=function(m,u){this.__gw=GW.test(String(u));this.__h=new Headers();return xo.apply(this,arguments)};
+        XMLHttpRequest.prototype.setRequestHeader=function(k,v){try{if(this.__gw){this.__h.set(k,v);if(/^authorization$/i.test(k))take(this.__h)}}catch(e){}return xs.apply(this,arguments)};
+      });
+      let capTried=false;
       const getL=async pid=>{
         let r=null;
         for(let at=1;at<=3&&!r;at++){/* chờ tối đa 90 giây mỗi lần; chậm hoặc lỗi máy chủ thì tự thử lại tối đa 3 lần */
           if(dead)throw new Error('Đã hủy');const ac=new AbortController();acs.add(ac);const to=setTimeout(()=>ac.abort(),90000);
           try{
             if(at>1)say('API phản hồi chậm, đang thử lại lần '+at+'…',false,true);
-            const rr=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{signal:ac.signal,method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({kyNopStart:kS,kyNopEnd:kE,parentId:pid,hasChildren:true,page:1,size:1000})});
+            const rr=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{signal:ac.signal,method:'POST',headers:HD,body:JSON.stringify({kyNopStart:kS,kyNopEnd:kE,parentId:pid,hasChildren:true,page:1,size:1000})});
             clearTimeout(to);
             if(rr.status>=500&&at<3){say('Máy chủ gqtthc đang bận (lỗi '+rr.status+'), tự thử lại lần '+(at+1)+' sau 5 giây…',false,true);await new Promise(z=>setTimeout(z,5000));continue}
+            if(rr.status===401&&C.cap&&!capTried){
+              capTried=true;
+              say('API từ chối mã đăng nhập (401).\nHãy bấm nút TÌM KIẾM trên trang gqtthc MỘT LẦN, nút sẽ tự lấy phiên đang dùng và chạy tiếp (chờ tối đa 90 giây).',false,true);
+              const h=await capHd();
+              if(h){HD=Object.assign({},h,{'content-type':'application/json'});say('Đã lấy phiên của trang, đang thử lại…',false,true);at--;continue}
+            }
             r=rr;
           }catch(e){clearTimeout(to);if(at>=3)throw e}
         }
@@ -86,7 +107,27 @@ function apiBookmarklet(C){
         if(!found)throw new Error('Không lấy được danh sách con của '+C.name+'. donVi='+JSON.stringify(me.donVi)+'; đã thử: '+cand.join(', '));
         R=found;
       }
-      const raw=R.raw,tC=performance.now(),j=null,list=C.max?R.list.slice(0,C.max):R.list;/* chỉ lấy C.max đơn vị đầu (số 1–33) */
+      let raw=R.raw,tC=performance.now(),j=null,list=(C.max?R.list.slice(0,C.max):R.list).filter(x=>!C.skip0||Number(x.tongSoLuongDangVien)||Number(x.tongSoHoSoDaDuyetDaNop)||Number(x.tongSoTienDaNop)||Number(x.tongSoTienDaKhaiBao));/* chỉ lấy C.max đơn vị đầu (số 1–33) */
+      /* các Đảng bộ trường học: lấy thêm danh sách chi bộ con (nếu gqtthc có số liệu ở cấp này) */
+      if(C.kids)try{
+        const fold=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/\s+/g,' ').trim();
+        const top=new Set(list.map(x=>fold(x.tenDonVi)));const kid=new Map();let kn=0;
+        const idsOf=o=>{const out=[],seen=new Set(),add=v=>{if(v==null||typeof v==='object')return;const t=String(v).trim();if(t&&!seen.has(t)&&(/^\d{5,}$/.test(t)||/^[A-Za-z0-9._-]{3,}$/.test(t))){seen.add(t);out.push(/^\d+$/.test(t)?Number(t):t)}};
+          const walk=(q,d)=>{if(!q||typeof q!=='object'||d>2)return;for(const k in q){const v=q[k];if(v&&typeof v==='object')walk(v,d+1);else if(/id|ma|donVi|code/i.test(k)&&!/soLuong|tongSo|tien|ty|muc|ky/i.test(k))add(v)}};
+          if(o.donVi&&typeof o.donVi==='object')walk(o.donVi,0);else add(o.donVi);walk(o,0);return out};
+        for(const x of list){
+          if(!/^đảng bộ trường/i.test(String(x.tenDonVi||'').trim()))continue;
+          say('Đang lấy các chi bộ của '+x.tenDonVi+'…',false,true);
+          const ck2=(C.k||'dp')+'_kid_'+fold(x.tenDonVi).replace(/\W+/g,'_');let tried=[];
+          const sv=localStorage.getItem(ck2);const cands=(sv?[sv]:[]).concat(idsOf(x).slice(0,8));
+          for(const c of cands){let X;try{X=await getL(c)}catch(e){continue}
+            const L=X.list||[];
+            if(L.length&&!L.some(y=>fold(y.tenDonVi)===fold(x.tenDonVi)||/tinh lao cai/.test(fold(y.tenDonVi)))&&L.every(y=>!top.has(fold(y.tenDonVi))||/^chi bo truong/.test(fold(y.tenDonVi)))){
+              try{localStorage.setItem(ck2,String(c))}catch(e){}
+              L.forEach(y=>{const z=Object.assign({},y,{tenDonVi:String(x.tenDonVi).trim()+' › '+String(y.tenDonVi).trim()});kid.set(fold(z.tenDonVi),z);kn++});break}}
+        }
+        if(kid.size){const keep=list.filter(x=>!/^chi bộ trường/i.test(String(x.tenDonVi||'').trim()));list=keep.concat([...kid.values()]);say('Đã lấy thêm '+kid.size+' chi bộ trực thuộc các Đảng bộ trường.',false,true)}
+      }catch(e){}
       if(!list.length)throw new Error('API không trả đơn vị nào.');
       if(list.some(x=>/tỉnh Lào Cai/i.test(String(x.tenDonVi||''))||String(x.tenDonVi||'').trim()===C.name))throw new Error('Dữ liệu KHÔNG phải của các chi bộ/đảng bộ trực thuộc '+C.name+' (nhận '+list.length+' đơn vị, đầu tiên: '+(list[0]&&list[0].tenDonVi)+'). Đã dừng, chưa ghi vào Google Sheet.');
       const n=x=>Number(x)||0;

@@ -27,6 +27,7 @@
     },
     "files": [
       "main.js",
+      "lib/**",
       "preload.js",
       "preload-pop.js",
       "toolbar.html",

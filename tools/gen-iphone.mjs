@@ -6,7 +6,7 @@ const out = process.argv[2] || 'iphone-data.js';
 const cfg = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const list = [];
 for (const x of cfg.xa) {
-  const src = fs.readFileSync(x.file, 'utf8');
+  const src = fs.readFileSync(x.fn === 'apiBookmarklet' ? 'bm/core.js' : x.file, 'utf8');
   const r = await minify(src, { compress: true, mangle: true, format: { comments: false } });
   const code = (r.code || src).replace(/\r?\n/g, ' ');
   list.push({ id: x.id, label: x.label, fn: x.fn, key: x.key, arg: x.arg, code });

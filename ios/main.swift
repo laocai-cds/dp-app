@@ -196,7 +196,8 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
 
     func run(_ x: [String: Any]) {
         guard let id = x["id"] as? String, let fn = x["fn"] as? String,
-              let key = x["key"] as? String, let file = x["file"] as? String else { return }
+              let key = x["key"] as? String, let cfgFile = x["file"] as? String else { return }
+        let file = (fn == "apiBookmarklet") ? "bm/core.js" : cfgFile  // mọi xã dùng chung lõi bm/core.js
         let arg = x["arg"]
         let needApi = (fn == "dpBookmarklet")
         guard let url = web.url?.absoluteString, url.hasPrefix("https://gqtthc.dcs.vn/") else {

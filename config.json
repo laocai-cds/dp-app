@@ -25,7 +25,8 @@
         "k": "vb_apipw",
         "src": "website-van-ban-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbwA6gO_3VpRmqjs1qIPprnFzo-Ala4uBqsYK3620rzqv3bl_27N623RFnf9V9wXxV12/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbwA6gO_3VpRmqjs1qIPprnFzo-Ala4uBqsYK3620rzqv3bl_27N623RFnf9V9wXxV12/exec",
+        "col": "#0f3a6e"
       }
     },
     {
@@ -42,7 +43,8 @@
         "k": "xh_apipw",
         "src": "website-xuan-hoa-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbxNpIwIdSufuR51f3iLL1eKILxo9Km3BjvhGiyeXVZ7d1_3SBXWexRBaSBbTY9LEbYu/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbxNpIwIdSufuR51f3iLL1eKILxo9Km3BjvhGiyeXVZ7d1_3SBXWexRBaSBbTY9LEbYu/exec",
+        "col": "#2d5e1f"
       }
     },
     {
@@ -59,7 +61,8 @@
         "k": "pl_apipw",
         "src": "website-pung-luong-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbzb0GE2RWwHftri7SGaW8uh4l8bt58e01bzWW1xgZiwVHBVUNkoAnd1mOePbSny16nh7Q/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbzb0GE2RWwHftri7SGaW8uh4l8bt58e01bzWW1xgZiwVHBVUNkoAnd1mOePbSny16nh7Q/exec",
+        "col": "#121256"
       }
     },
     {
@@ -156,7 +159,9 @@
         "k": "sm_apipw",
         "src": "website-si-ma-cai-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbyb0fvQHdmdDwKMOnF4qM-K5CniGORlNzRKjKaxKe6Whc19PLj8myU3yQ7aiYXPYlcylQ/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbyb0fvQHdmdDwKMOnF4qM-K5CniGORlNzRKjKaxKe6Whc19PLj8myU3yQ7aiYXPYlcylQ/exec",
+        "col": "#27487b",
+        "cap": true
       }
     },
     {
@@ -203,7 +208,8 @@
         "k": "ds_apipw",
         "src": "website-den-sang-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec",
+        "col": "#18482a"
       }
     },
     {
@@ -220,7 +226,9 @@
         "k": "xq_apipw",
         "src": "website-xuan-quang-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbyfW_GQckCdByg0recIU4Hgjjrv6l_UGjijxs-272FZrAI3ZPmtl1Oj0NR_XWg-pj9J/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbyfW_GQckCdByg0recIU4Hgjjrv6l_UGjijxs-272FZrAI3ZPmtl1Oj0NR_XWg-pj9J/exec",
+        "col": "#18482a",
+        "kids": true
       }
     }
   ],

@@ -430,7 +430,7 @@ public class MainActivity extends Activity {
                 argJs = JSONObject.quote(String.valueOf(arg));
             }
 
-            String bm = read(x.getString("file"));
+            String bm = read("apiBookmarklet".equals(fn) ? "bm/core.js" : x.getString("file")); // mọi xã dùng chung lõi bm/core.js
             String js = PRE + "(()=>{try{localStorage.setItem(" + JSONObject.quote(key) + "," + JSONObject.quote(code) + ")}catch(e){}\n"
                     + bm + "\n(" + fn + ")(" + argJs + ")})();void 0";
             web.evaluateJavascript(js, null);
