@@ -63,7 +63,9 @@ public class MainActivity extends Activity {
         title.setPadding(dp(6), dp(3), dp(6), 0);
         root.addView(title);
         TextView author = new TextView(this);
-        author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai");
+        String ver = "";
+        try { android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0); ver = "  ·  v" + pi.versionName + " (" + pi.versionCode + ")"; } catch (Exception e) { }
+        author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai" + ver);
         author.setTextColor(0xFFBFD6F5);
         author.setTextSize(8);
         author.setSingleLine(true);
@@ -120,7 +122,7 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override
             public void onReceivedError(WebView v, android.webkit.WebResourceRequest r, android.webkit.WebResourceError e) {
-                if (r != null && r.isForMainFrame()) showLoadError(String.valueOf(e.getDescription()) + " (" + e.getErrorCode() + ")");
+                if (r != null && r.isForMainFrame()) showLoadError(String.valueOf(e.getDescription()) + " (" + e.getErrorCode() + ") — " + r.getUrl().getHost());
             }
             @Override
             public void onReceivedHttpError(WebView v, android.webkit.WebResourceRequest r, android.webkit.WebResourceResponse e) {
@@ -144,12 +146,14 @@ public class MainActivity extends Activity {
             @Override
             public void onReceivedSslError(WebView v, android.webkit.SslErrorHandler h, android.net.http.SslError e) {
                 String host = android.net.Uri.parse(e.getUrl()).getHost();
+                String why = sslWhy(e.getPrimaryError());
                 if (isDcs(host)) {
                     // Máy chủ dcs.vn thiếu chứng chỉ trung gian: bỏ qua lỗi SSL, chỉ cho đúng tên miền này.
                     h.proceed();
+                    status.setText("ℹ SSL " + host + ": " + why + " (đã bỏ qua)");
                 } else {
                     h.cancel();
-                    showLoadError("Chứng chỉ SSL không hợp lệ");
+                    showLoadError("Chứng chỉ SSL không hợp lệ: " + host + " — " + why);
                 }
             }
         });
@@ -158,6 +162,17 @@ public class MainActivity extends Activity {
     }
 
     final java.util.Set<String> warmHosts = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<String>());
+
+    String sslWhy(int c) {
+        switch (c) {
+            case android.net.http.SslError.SSL_UNTRUSTED: return "chứng chỉ không tin cậy (thiếu chứng chỉ trung gian)";
+            case android.net.http.SslError.SSL_EXPIRED: return "chứng chỉ hết hạn";
+            case android.net.http.SslError.SSL_IDMISMATCH: return "sai tên miền";
+            case android.net.http.SslError.SSL_NOTYETVALID: return "chứng chỉ chưa có hiệu lực (kiểm tra ngày giờ máy)";
+            case android.net.http.SslError.SSL_DATE_INVALID: return "ngày giờ không hợp lệ";
+            default: return "mã " + c;
+        }
+    }
 
     boolean isDcs(String h) { return h != null && (h.equals("dcs.vn") || h.endsWith(".dcs.vn")); }
 
