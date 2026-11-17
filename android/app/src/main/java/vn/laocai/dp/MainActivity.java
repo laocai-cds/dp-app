@@ -265,7 +265,16 @@ public class MainActivity extends Activity {
         box.addView(all);
         for (final String id : items.keySet()) {
             final CheckBox c = new CheckBox(this);
-            c.setText(items.get(id).optString("label"));
+            String lb = items.get(id).optString("label");
+            long tm = sp.getLong("tm_" + id, 0);
+            if (tm > 0) {
+                boolean bad = "bad".equals(sp.getString("st_" + id, "ok"));
+                String tail = "   " + (bad ? "✕ lỗi " : "✓ ") + hm(tm);
+                android.text.SpannableString ss = new android.text.SpannableString(lb + tail);
+                ss.setSpan(new android.text.style.RelativeSizeSpan(0.75f), lb.length(), ss.length(), 0);
+                ss.setSpan(new android.text.style.ForegroundColorSpan(bad ? 0xFFB3261E : 0xFF0F8A3C), lb.length(), ss.length(), 0);
+                c.setText(ss);
+            } else c.setText(lb);
             c.setTextSize(15);
             c.setTag(id);
             c.setChecked(chosen.contains(id));
@@ -300,10 +309,19 @@ public class MainActivity extends Activity {
     Button pickBtn, goBtn;
     int runGen = 0;
 
+    /* Giờ hoàn thành: hôm nay chỉ hiện giờ:phút, ngày khác kèm ngày/tháng */
+    String hm(long t) {
+        java.util.Calendar a = java.util.Calendar.getInstance(), b = java.util.Calendar.getInstance();
+        b.setTimeInMillis(t);
+        boolean today = a.get(java.util.Calendar.YEAR) == b.get(java.util.Calendar.YEAR) && a.get(java.util.Calendar.DAY_OF_YEAR) == b.get(java.util.Calendar.DAY_OF_YEAR);
+        return new java.text.SimpleDateFormat(today ? "HH:mm" : "HH:mm dd/MM", java.util.Locale.US).format(new java.util.Date(t));
+    }
+
     void track(final java.util.ArrayList<String> ids) {
         final int gen = ++runGen;
         final int total = ids.size();
         final long t0 = System.currentTimeMillis();
+        final java.util.HashSet<String> stamped = new java.util.HashSet<>();
         goBtn.setText("⏳ 0/" + total);
         final android.os.Handler hh = new android.os.Handler();
         hh.postDelayed(new Runnable() {
@@ -316,12 +334,17 @@ public class MainActivity extends Activity {
                         JSONObject r = new JSONObject(new org.json.JSONTokener(v).nextValue().toString());
                         for (String id : ids) {
                             String st = r.optString(items.get(id).optString("label"), "");
-                            if (!st.isEmpty()) { done++; if (st.equals("bad")) bad++; }
+                            if (!st.isEmpty()) {
+                                done++;
+                                if (st.equals("bad")) bad++;
+                                if (stamped.add(id)) sp.edit().putLong("tm_" + id, System.currentTimeMillis()).putString("st_" + id, st).apply();
+                            }
                         }
                     } catch (Exception e) { }
                     boolean fin = done >= total;
                     boolean timeout = System.currentTimeMillis() - t0 > 240000;
-                    goBtn.setText((fin ? "✓ " : "⏳ ") + done + "/" + total + (fin ? " xong" : "") + (bad > 0 ? " (" + bad + " lỗi)" : ""));
+                    if (fin) sp.edit().putLong("tm_all", System.currentTimeMillis()).apply();
+                    goBtn.setText((fin ? "✓ " : "⏳ ") + done + "/" + total + (fin ? " " + hm(System.currentTimeMillis()) : "") + (bad > 0 ? " (" + bad + " lỗi)" : ""));
                     if (!fin && !timeout) hh.postDelayed(this, 1000);
                 });
             }
