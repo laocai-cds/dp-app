@@ -64,7 +64,7 @@ public class MainActivity extends Activity {
         root.addView(title);
         TextView author = new TextView(this);
         String ver = "";
-        try { android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0); ver = "  ·  v" + pi.versionName + " (" + pi.versionCode + ")"; } catch (Exception e) { }
+        try { android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0); verTxt = "v" + pi.versionName + " (" + pi.versionCode + ")"; ver = "  ·  " + verTxt; } catch (Exception e) { }
         author.setText("Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai" + ver);
         author.setTextColor(0xFFBFD6F5);
         author.setTextSize(8);
@@ -97,11 +97,10 @@ public class MainActivity extends Activity {
         goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
         row.addView(goBtn, eq());
         /* Thanh cập nhật: chỉ hiện khi trên GitHub có bản mới hơn bản đang cài */
-        updBtn = btn("", 0xFFD97706, Color.WHITE, v -> startUpdate());
+        updBtn = btn("⟳ Kiểm tra cập nhật · " + verTxt, 0xFF2E6BB0, Color.WHITE, v -> { if (newCode > installedCode()) startUpdate(); else checkUpdate(true); });
         updBtn.setTextSize(11);
         LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(34));
         ulp.setMargins(dp(6), dp(2), dp(6), dp(4));
-        updBtn.setVisibility(View.GONE);
         root.addView(updBtn, ulp);
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
@@ -402,6 +401,7 @@ public class MainActivity extends Activity {
     /* ===== Cập nhật phiên bản mới (APK trên GitHub Releases, tag android-latest) ===== */
     static final String UPD_BASE = "https://github.com/laocai-cds/dp-app/releases/download/android-latest/";
     Button updBtn;
+    String verTxt = "";
     String newName = "";
     int newCode = 0;
     boolean downloading = false;
@@ -414,7 +414,7 @@ public class MainActivity extends Activity {
     /* manual = true: người dùng bấm vào dòng phiên bản để kiểm tra, có báo kết quả */
     void checkUpdate(final boolean manual) {
         if (downloading) return;
-        if (manual) say("Đang kiểm tra bản mới…");
+        if (manual) { say("Đang kiểm tra bản mới…"); updBtn.setText("⏳ Đang kiểm tra…"); }
         new Thread(() -> {
             try {
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(UPD_BASE + "android.json").openConnection();
@@ -435,13 +435,15 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     if (has) {
                         updBtn.setText("⬆ Có bản mới " + newName + " (" + newCode + ") — bấm để cập nhật");
-                        updBtn.setVisibility(View.VISIBLE);
+                        updBtn.setBackground(shape(0xFFD97706, 0xFFB45309));
                     } else {
-                        updBtn.setVisibility(View.GONE);
+                        updBtn.setText("✓ Đã là bản mới nhất · " + verTxt + " — bấm để kiểm tra lại");
+                        updBtn.setBackground(shape(0xFF1E8E3E, 0xFF166B2F));
                         if (manual) say("Đang là bản mới nhất");
                     }
                 });
             } catch (Exception e) {
+                runOnUiThread(() -> updBtn.setText("⟳ Kiểm tra cập nhật · " + verTxt));
                 if (manual) say("Không kiểm tra được bản mới (kiểm tra mạng)");
             }
         }).start();
