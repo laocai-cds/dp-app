@@ -21,6 +21,8 @@ function mergeNewCfg(){try{const nf=path.join(exeDir,'config.new.json'),cf=path.
   if(ch)fs.writeFileSync(cf,JSON.stringify(c,null,2));fs.unlinkSync(nf)}catch(e){}}
 mergeNewCfg();
 const cfg=loadCfg();let BAR=cfg.only?110:178;
+/* Nút "Đồng bộ 03" (03 thủ tục của 103 đơn vị → Sheet "Theo dõi 03 thủ tục"): chỉ có trong app máy tính, dùng mã truy cập riêng (không dùng Mã chung) */
+if(!cfg.xa.some(x=>x.id==='dong03'))cfg.xa.push({id:'dong03',label:'Đồng bộ 03',fn:'run03Bookmarklet',file:'bm/dong03.js',key:'tthc03.code',arg:{},own:true});
 /* ===== Xã thêm bằng cách kéo nút "ĐP" từ website xã vào app (lưu trên máy này) ===== */
 const extraFile=()=>path.join(app.getPath('userData'),'extra-xa.json');
 const readExtra=()=>{try{const a=JSON.parse(fs.readFileSync(extraFile(),'utf8'));return Array.isArray(a)?a:[]}catch(e){return[]}};
@@ -158,12 +160,12 @@ async function doRun(id,code,api,month,wc){
   const needApi=x.fn==='dpBookmarklet';
   const apiUrl=needApi?(codes[id+'_api']||(typeof x.arg==='string'?x.arg:'')):'';
   if(needApi&&!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(apiUrl))return{need:'api'};
-  if(!x.extra&&!needApi&&!codes[id]&&codes.__all)codes[id]=codes.__all;
+  if(!x.extra&&!x.own&&!needApi&&!codes[id]&&codes.__all)codes[id]=codes.__all;
   if(!needApi&&!codes[id])return{need:'code'};
   const url=wc.getURL();
   if(!/^https:\/\/gqtthc\.dcs\.vn\//.test(url))return{err:'Hãy mở và đăng nhập trang gqtthc.dcs.vn trước.'};
   let BM;try{BM=fs.readFileSync(path.join(__dirname,x.file),'utf8')}catch(err){return{err:'Thiếu file '+x.file}}
-  const useChung=!!(!x.extra&&cfg.chung&&codes.__all&&await chungOk()&&(!needApi||_chT));
+  const useChung=!!(!x.extra&&!x.own&&cfg.chung&&codes.__all&&await chungOk()&&(!needApi||_chT));
   if(useChung)codes[id]=codes.__all;
   if(!codes[id])return{need:'code'}; /* ĐP Tỉnh (tthc) chạy trực tiếp cần mật khẩu riêng của tthc, không dùng mã chung */
   /* ĐP Tỉnh Lào Cai (dpBookmarklet): qua DP-CHUNG thì thay địa chỉ Apps Script bằng DP-CHUNG, mật khẩu = mã chung */
@@ -182,7 +184,9 @@ ipcMain.handle('stop',()=>{batchStop=true;return true});
 let lastActive=0;
 /* Dừng hẳn mọi việc còn dang dở trong trang gqtthc (tải lại trang) để lần chạy bị lỗi/hủy không chạy ngầm tiếp */
 async function killRun(wc){wc=wc||view.webContents;try{await new Promise(r=>{wc.once('did-finish-load',r);wc.reload();setTimeout(r,15000)});await new Promise(r=>setTimeout(r,800))}catch(_){}}
-async function runWaitCore(id,month,code,api,wc,noReset){const r=await runWaitCore0(id,month,code,api,wc,noReset);recRes(id,r);if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun(wc)}return r}
+async function runWaitCore(id,month,code,api,wc,noReset){const r=await runWaitCore0(id,month,code,api,wc,noReset);recRes(id,r);
+  /* mã truy cập bị máy chủ từ chối: xóa mã đã lưu để lần bấm sau hỏi nhập lại */
+  if(r&&r.result==='fail'&&/Mã truy cập/i.test(String(r.msg||''))){try{const c=readCodes();if(c[id]){delete c[id];writeCodes(c)}}catch(_){}}if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun(wc)}return r}
 async function runWaitCore0(id,month,code,api,wc,noReset){
   wc=wc||view.webContents;
   lastActive=Date.now();
