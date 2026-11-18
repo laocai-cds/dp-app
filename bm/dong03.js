@@ -98,11 +98,11 @@ function run03Bookmarklet(C){'use strict';
         let done = 0; const ks = {}; months.forEach(m => { ks[m] = { d: 0, t: 0, last: '', wait: true }; });
         const kline = () => months.filter(m => ks[m]).map(m => '   · T' + (+m.slice(0, 2)) + ': ' + (ks[m].wait ? 'đang tải danh sách đơn vị…' : ks[m].d >= ks[m].t ? '✓ ' + ks[m].t + '/' + ks[m].t + ' đơn vị' : ks[m].d + '/' + ks[m].t + ' đơn vị' + (ks[m].last ? ' — vừa xong: ' + String(ks[m].last).replace(/^đảng bộ\s*/i, '').slice(0, 40) : ''))).join('\n');
         kShows[id] = () => '⏳ ' + done + '/' + months.length + ' tháng\n' + kline();
-        await Promise.all(months.map(async mo => {
+        for (const mo of months) { /* chạy lần lượt từng tháng (xong tháng này mới sang tháng kế) */
           let rows = await monthTop(id, mo);
           { const k = ks[mo]; k.t = rows.length; k.wait = false; rows = await kidsMonth(rows, mo, nm => { k.d++; k.last = nm; st[id] = '⏳ ' + done + '/' + months.length + ' tháng\n' + kline(); }, id); }
           byMonth[id][mo] = rows; done++; st[id] = '⏳ ' + done + '/' + months.length + ' tháng\n' + kline(); show();
-        }));
+        }
         if ((kidFail[id] || 0) > 25) throw new Error('lấy đơn vị con lỗi ' + kidFail[id] + ' đơn vị (' + lastErr[id] + ')');
         st[id] = '✓'; show(); return true;
       } catch (e2) { st[id] = '✕'; errs[id] = String(e2 && e2.message || e2).slice(0, 160); show(); return null; } };
