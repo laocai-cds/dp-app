@@ -119,7 +119,7 @@ function apiBookmarklet(C){
           else errs.push(nmx)};
         let qi=0;await Promise.all(Array.from({length:3},async()=>{while(qi<schools.length){if(dead)return;await one(schools[qi++])}}));
         if(subRows.length&&!dead){
-          const hd=['Đảng bộ cha','Kỳ','STT'].concat(h2.slice(1));
+          const hd=['Đảng bộ cha','Kỳ','STT','Tên đơn vị'].concat(h2.slice(2));
           await fetch(C.chung||C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Chi bộ trường',headers:hd,rows:subRows,token:pw,source:C.src,sentAt:new Date().toISOString()})});
           subMsg='\nChi bộ trực thuộc đảng bộ trường: '+nSub+' chi bộ của '+nSch+'/'+schools.length+' đảng bộ'+(errs.length?' (chưa thấy chi bộ con: '+errs.length+' đảng bộ)':'');
         }else subMsg='\nChi bộ trực thuộc đảng bộ trường: chưa lấy được chi bộ con nào ('+schools.length+' đảng bộ trường)';
