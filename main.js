@@ -138,7 +138,7 @@ function createWindow(){
   view.webContents.loadURL(cfg.home);
   view.webContents.on('did-fail-load',(e,c,d)=>{if(c!==-3)win.webContents.send('status','Không mở được trang: '+d)});
 }
-ipcMain.handle('init',()=>({ver:app.getVersion(),admin:!cfg.only,title:cfg.title,xa:xaList().map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id],extra:!!x.extra}))}));
+ipcMain.handle('init',()=>({ver:app.getVersion(),admin:!cfg.only,title:cfg.title,xa:xaList().filter(x=>!x.own).map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id],extra:!!x.extra})),solo:xaList().filter(x=>x.own).map(x=>({id:x.id,label:x.label}))}));
 ipcMain.handle('nav',(e,a)=>{if(a==='home')view.webContents.loadURL(cfg.home);else if(a==='reload')view.webContents.reload()});
 ipcMain.handle('reset',(e,id)=>{const c=readCodes();delete c[id];writeCodes(c);return true});
 let _chOk=null,_chAt=0,_chT=false;
