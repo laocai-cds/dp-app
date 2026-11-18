@@ -22,7 +22,7 @@ function mergeNewCfg(){try{const nf=path.join(exeDir,'config.new.json'),cf=path.
 mergeNewCfg();
 const cfg=loadCfg();let BAR=cfg.only?110:178;
 /* Nút "Đồng bộ 03" (03 thủ tục của 103 đơn vị → Sheet "Theo dõi 03 thủ tục"): chỉ có trong app máy tính, dùng mã truy cập riêng (không dùng Mã chung) */
-if(!cfg.xa.some(x=>x.id==='dong03'))cfg.xa.push({id:'dong03',label:'Đồng bộ 03',fn:'run03Bookmarklet',file:'bm/dong03.js',key:'tthc03.code',arg:{},own:true});
+if(!cfg.xa.some(x=>x.id==='dong03'))cfg.xa.push({id:'dong03',label:'Đồng bộ 03',fn:'run03Bookmarklet',file:'bm/dong03.js',key:'tthc03.code',arg:{},own:true,waitMin:90});
 /* ===== Xã thêm bằng cách kéo nút "ĐP" từ website xã vào app (lưu trên máy này) ===== */
 const extraFile=()=>path.join(app.getPath('userData'),'extra-xa.json');
 const readExtra=()=>{try{const a=JSON.parse(fs.readFileSync(extraFile(),'utf8'));return Array.isArray(a)?a:[]}catch(e){return[]}};
@@ -195,7 +195,8 @@ async function runWaitCore0(id,month,code,api,wc,noReset){
   const r=await doRun(id,code||null,api||null,month,wc);
   if(!r.ok)return r;
   const t0=Date.now();let seen=false,lostAt=0;
-  while(Date.now()-t0<8*60*1000){
+  const waitMin=Math.max(8,+((cfg.xa.find(v=>v.id===id)||{}).waitMin)||8);
+  while(Date.now()-t0<waitMin*60*1000){
     await new Promise(z=>setTimeout(z,2000));lastActive=Date.now();
     if(batchStop){try{log('Dừng lô ('+id+'): người dùng bấm Dừng; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'stop'}}
     let st=null;try{st=await wc.executeJavaScript(BOXJS)}catch(_){}
@@ -209,7 +210,7 @@ async function runWaitCore0(id,month,code,api,wc,noReset){
     else{if(!lostAt)lostAt=Date.now();else if(Date.now()-lostAt>90000)return{result:'fail',msg:'Mất khung tiến độ quá 90 giây (trang gqtthc tải lại?)'}}
     /* khung tạm thời biến mất (thu nhỏ cửa sổ, tải lại trang…): cứ chờ tiếp */
   }
-  return{result:'fail',msg:'Quá thời gian chờ (8 phút)'};
+  return{result:'fail',msg:'Quá thời gian chờ ('+waitMin+' phút)'};
 }
 
 /* ===== Chế độ chạy nhiều đơn vị: lần lượt (mặc định) hoặc song song ===== */
