@@ -114,7 +114,7 @@ public class MainActivity extends Activity {
             row2.setOrientation(LinearLayout.HORIZONTAL);
             row2.setPadding(dp(4), 0, dp(4), dp(2));
             root.addView(row2, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            row2.addView(btn("🔄 Đồng bộ 03 thủ tục", 0xFF169A4A, Color.WHITE, v -> run(dong03)), eq());
+            row2.addView(btn("🔄 Đồng bộ 03 thủ tục", 0xFF169A4A, Color.WHITE, v -> pickMonth03()), eq());
         }
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
@@ -542,6 +542,27 @@ public class MainActivity extends Activity {
             i.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION | android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
         } catch (Exception e) { say("Không mở được trình cài đặt"); }
+    }
+
+    /* Chọn tháng/năm để Đồng bộ 03 thủ tục: tháng hiện tại làm đầy đủ (có lũy kế); tháng đã qua chỉ ghi vào tab tháng đó.
+       Script chỉ nhận các tháng trong năm hiện tại (từ 10/2026 trở đi, các năm sau từ tháng 1). */
+    void pickMonth03() {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        final int y = c.get(java.util.Calendar.YEAR), cm = c.get(java.util.Calendar.MONTH) + 1;
+        int first = y == 2026 ? 10 : 1;
+        final java.util.ArrayList<String> labels = new java.util.ArrayList<>(), vals = new java.util.ArrayList<>();
+        for (int m = cm; m >= first; m--) {
+            labels.add("Tháng " + m + "/" + y + (m == cm ? "  (hiện tại · có lũy kế)" : "  (chỉ ghi tab tháng)"));
+            vals.add(y + "-" + (m < 10 ? "0" + m : "" + m));
+        }
+        new AlertDialog.Builder(this)
+            .setTitle("Đồng bộ 03 thủ tục — chọn tháng/năm")
+            .setItems(labels.toArray(new String[0]), (d, i) -> {
+                web.evaluateJavascript("window.__dpMonth=" + JSONObject.quote(vals.get(i)) + ";void 0", null);
+                run(dong03);
+            })
+            .setNegativeButton("Hủy", null)
+            .show();
     }
 
     void say(final String m) { runOnUiThread(() -> android.widget.Toast.makeText(this, m, android.widget.Toast.LENGTH_SHORT).show()); }
