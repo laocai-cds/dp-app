@@ -93,6 +93,15 @@ public class MainActivity extends Activity {
         row.addView(pickBtn, eq());
         goBtn = btn("▶ Chạy", 0xFF1E8E3E, Color.WHITE, v -> runSelected(new java.util.ArrayList<>(chosen)));
         row.addView(goBtn, eq());
+        /* Nút riêng "Đồng bộ 03 thủ tục" (03 thủ tục của 103 đơn vị → Sheet): chạy riêng, mã truy cập riêng, không nằm trong danh sách ĐP */
+        try { dong03 = new JSONObject("{\"id\":\"dong03\",\"label\":\"Đồng bộ 03\",\"fn\":\"run03Bookmarklet\",\"file\":\"bm/dong03.js\",\"key\":\"tthc03.code\",\"arg\":{},\"own\":true}"); } catch (Exception e) { dong03 = null; }
+        if (dong03 != null) {
+            LinearLayout row2 = new LinearLayout(this);
+            row2.setOrientation(LinearLayout.HORIZONTAL);
+            row2.setPadding(dp(4), 0, dp(4), dp(2));
+            root.addView(row2, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            row2.addView(btn("🔄 Đồng bộ 03 thủ tục", 0xFF169A4A, Color.WHITE, v -> run(dong03)), eq());
+        }
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
             for (int i = 0; i < xa.length(); i++) {
@@ -373,8 +382,11 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    JSONObject dong03;
+
     void run(final JSONObject x) {
         try {
+            final boolean own = x.optBoolean("own", false);
             final String id = x.getString("id");
             final String fn = x.getString("fn");
             final String key = x.getString("key");
@@ -405,10 +417,10 @@ public class MainActivity extends Activity {
             }
 
             String code = sp.getString("code_" + id, "");
-            if (code.isEmpty() && !all.isEmpty() && (!needApi || viaChung)) code = all;
+            if (code.isEmpty() && !all.isEmpty() && !own && (!needApi || viaChung)) code = all;
             if (viaChung) code = all;
             if (code.isEmpty()) {
-                ask("Nhập mã đồng bộ của " + x.optString("label") + " (chỉ 1 lần)", true, "", v -> {
+                ask(own ? "Nhập mã truy cập Đồng bộ 03 thủ tục (chỉ 1 lần)" : "Nhập mã đồng bộ của " + x.optString("label") + " (chỉ 1 lần)", true, "", v -> {
                     sp.edit().putString("code_" + id, v).apply();
                     run(x);
                 });
@@ -416,7 +428,7 @@ public class MainActivity extends Activity {
             }
 
             String chung = cfg.optString("chung", "");
-            boolean useChung = !needApi && !all.isEmpty() && !chung.isEmpty();
+            boolean useChung = !needApi && !own && !all.isEmpty() && !chung.isEmpty();
             if (useChung) code = all;
 
             String argJs;
