@@ -33,7 +33,7 @@ function run03Bookmarklet(C){'use strict';
       else txt.split(/[,;\s]+/).filter(Boolean).forEach(part => { const mm = /^(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?$/.exec(part); if (!mm) return; const a = +mm[1], b = mm[2] ? +mm[2] : a; for (let m = Math.min(a, b); m <= Math.max(a, b); m++) if (m >= first && m <= cm) sel.add(p2(m) + '/' + y); });
       if (!sel.size) { say('Không có tháng hợp lệ (' + first + '–' + cm + ').', 'bad'); setTimeout(() => box.remove(), 6000); return; }
       /* CHẾ ĐỘ CHỈ-THÁNG: chọn tháng đã qua (không gồm tháng hiện tại) thì chỉ lấy đúng tháng đó và chỉ ghi vào tab tháng ("03 THANG mm-yyyy"), không đụng tab cộng dồn → nhanh hơn nhiều. Cần Apps Script Tthc03.gs bản có monthsOnly. */
-      const monthsOnly = !sel.has(curMo);
+      const monthsOnly = !sel.has(curMo) || window.__dpNoCum === true; /* __dpNoCum: app chọn tháng → luôn chỉ ghi tab tháng, kể cả tháng hiện tại (không lũy kế) */
       if (monthsOnly) { months = months.filter(m => sel.has(m)); per = months[0]; den = months[months.length - 1]; }
       const dropped = {};
       const st = { 10001: '⏳', 10002: '⏳', 10003: '⏳' };

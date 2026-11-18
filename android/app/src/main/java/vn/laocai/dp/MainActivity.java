@@ -552,13 +552,13 @@ public class MainActivity extends Activity {
         int first = y == 2026 ? 10 : 1;
         final java.util.ArrayList<String> labels = new java.util.ArrayList<>(), vals = new java.util.ArrayList<>();
         for (int m = cm; m >= first; m--) {
-            labels.add("Tháng " + m + "/" + y + (m == cm ? "  (hiện tại · có lũy kế)" : "  (chỉ ghi tab tháng)"));
+            labels.add("Tháng " + m + "/" + y + (m == cm ? "  (hiện tại · không lũy kế)" : "  (không lũy kế)"));
             vals.add(y + "-" + (m < 10 ? "0" + m : "" + m));
         }
         new AlertDialog.Builder(this)
             .setTitle("Đồng bộ 03 thủ tục — chọn tháng/năm")
             .setItems(labels.toArray(new String[0]), (d, i) -> {
-                web.evaluateJavascript("window.__dpMonth=" + JSONObject.quote(vals.get(i)) + ";void 0", null);
+                web.evaluateJavascript("window.__dpNoCum=true;window.__dpMonth=" + JSONObject.quote(vals.get(i)) + ";void 0", null);
                 run(dong03);
             })
             .setNegativeButton("Hủy", null)
