@@ -168,7 +168,8 @@ public class MainActivity extends Activity {
 
     final java.util.Set<String> warmHosts = java.util.Collections.synchronizedSet(new java.util.LinkedHashSet<String>());
 
-    boolean isDcs(String h) { return h != null && (h.equals("dcs.vn") || h.endsWith(".dcs.vn")); }
+    /* gồm cả máy chủ đăng nhập SSO dân cư quốc gia (cũng thiếu chứng chỉ trung gian như dcs.vn): chỉ đúng tên miền này, không mở rộng ra tên miền khác */
+    boolean isDcs(String h) { return h != null && (h.equals("dcs.vn") || h.endsWith(".dcs.vn") || h.equals("sso.dancuquocgia.gov.vn")); }
 
     /* Máy chủ dcs.vn thiếu chứng chỉ trung gian. WebView chỉ nhớ "bỏ qua lỗi SSL" theo từng tên miền và chỉ khi tên miền đó
        được mở trực tiếp; lệnh gọi API (fetch/XHR) của trang tới tên miền khác (vd gateway-gqtthc.dcs.vn: đăng nhập, lấy số liệu)
@@ -202,6 +203,7 @@ public class MainActivity extends Activity {
     void warmThenLoad(final String home) {
         final java.util.LinkedHashSet<String> hs = new java.util.LinkedHashSet<>();
         hs.add("gateway-gqtthc.dcs.vn");
+        hs.add("sso.dancuquocgia.gov.vn");
         hs.addAll(sp.getStringSet("warm", new java.util.HashSet<String>()));
         warmHosts.addAll(hs);
         final int[] left = {hs.size()};
