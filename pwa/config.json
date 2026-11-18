@@ -25,6 +25,7 @@
         "k": "vb_apipw",
         "src": "website-van-ban-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbwA6gO_3VpRmqjs1qIPprnFzo-Ala4uBqsYK3620rzqv3bl_27N623RFnf9V9wXxV12/exec"
       }
     },
