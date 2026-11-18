@@ -23,8 +23,8 @@ function run03Bookmarklet(C){'use strict';
       /* Lấy số liệu THEO TỪNG THÁNG (từ tháng bắt đầu có hồ sơ). Tháng đã qua nhớ trong trình duyệt 7 ngày; tổng lũy kế = cộng các tháng.
          Nhận xét nơi cư trú: mỗi đơn vị cộng cả đơn vị con (nhiều cấp); đơn vị không có con dùng luôn số lần hỏi đầu. */
       const now = new Date(), y = now.getFullYear(), cm = now.getMonth() + 1, first = y === 2026 ? 10 : 1;
-      const months = []; for (let m = first; m <= cm; m++) months.push(p2(m) + '/' + y);
-      const per = months[0], den = months[months.length - 1], curMo = p2(cm) + '/' + y;
+      let months = []; for (let m = first; m <= cm; m++) months.push(p2(m) + '/' + y);
+      let per = months[0], den = months[months.length - 1]; const curMo = p2(cm) + '/' + y;
       /* Chọn tháng cần LẤY MỚI (các tháng còn lại dùng số đã nhớ trong trình duyệt, chưa có thì tự lấy). Ví dụ: 11 · 10-11 · 10,11 · * (tất cả). Mặc định: tháng hiện tại. */
       const lastSel = (() => { try { return localStorage.getItem('tthc03.sel') || ''; } catch (e) { return ''; } })();
       const ans = (() => { const mm = /^(\d{4})-(\d{1,2})$/.exec(String(window.__dpMonth || '')); return mm && +mm[1] === y && +mm[2] >= first && +mm[2] <= cm ? String(+mm[2]) : String(cm); })();
@@ -32,6 +32,9 @@ function run03Bookmarklet(C){'use strict';
       if (txt === '*') months.forEach(m => sel.add(m));
       else txt.split(/[,;\s]+/).filter(Boolean).forEach(part => { const mm = /^(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?$/.exec(part); if (!mm) return; const a = +mm[1], b = mm[2] ? +mm[2] : a; for (let m = Math.min(a, b); m <= Math.max(a, b); m++) if (m >= first && m <= cm) sel.add(p2(m) + '/' + y); });
       if (!sel.size) { say('Không có tháng hợp lệ (' + first + '–' + cm + ').', 'bad'); setTimeout(() => box.remove(), 6000); return; }
+      /* CHẾ ĐỘ CHỈ-THÁNG: chọn tháng đã qua (không gồm tháng hiện tại) thì chỉ lấy đúng tháng đó và chỉ ghi vào tab tháng ("03 THANG mm-yyyy"), không đụng tab cộng dồn → nhanh hơn nhiều. Cần Apps Script Tthc03.gs bản có monthsOnly. */
+      const monthsOnly = !sel.has(curMo);
+      if (monthsOnly) { months = months.filter(m => sel.has(m)); per = months[0]; den = months[months.length - 1]; }
       const dropped = {};
       const st = { 10001: '⏳', 10002: '⏳', 10003: '⏳' };
       const show = () => say('Đang lấy số liệu 03 thủ tục · làm mới tháng ' + [...sel].map(m => +m.slice(0, 2)).join(', ') + modeTxt + '\n' + [10002, 10003, 10001].map(id => { const q = String(kShows[id] && /^⏳/.test(st[id]) ? kShows[id]() : st[id]).split('\n'); return q[0] + ' ' + NAMES[id] + (q.length > 1 ? '\n' + q.slice(1).join('\n') : ''); }).join('\n'));
@@ -116,7 +119,7 @@ function run03Bookmarklet(C){'use strict';
       });
       say('Đang ghi lên Google Sheet…');
       const sync = 's3' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      await fetch(API03, { method: 'POST', mode: 'no-cors', body: new URLSearchParams({ payload: JSON.stringify({ action: 'tthc03', accessCode: code, syncId: sync, period: per + ' - ' + den, tthc03: t03, months03: m03, errors: errs }) }) });
+      await fetch(API03, { method: 'POST', mode: 'no-cors', body: new URLSearchParams({ payload: JSON.stringify(Object.assign({ action: 'tthc03', accessCode: code, syncId: sync, period: per + ' - ' + den, months03: m03, errors: errs }, monthsOnly ? { monthsOnly: true } : { tthc03: t03 })) }) });
       let ok = null;
       for (let k = 0; k < 45 && !ok; k++) {
         ok = await new Promise(res => {
@@ -132,6 +135,10 @@ function run03Bookmarklet(C){'use strict';
       }
       if (!ok) { say('✓ Đã gửi, chưa xác nhận được. Kiểm tra Sheet "Theo dõi 03 thủ tục" (cần triển khai Apps Script bản mới).', 'bad'); setTimeout(() => box.remove(), 20000); return; }
       try { if (ok.last03.ok !== false) localStorage.setItem(K_03, code); } catch (e) {}
+      if (monthsOnly) { const Lm = ok.last03, mt = [...sel].map(m => +m.slice(0, 2)).join(', '); const errT = Object.keys(errs).length ? '\nLỗi lấy số: ' + Object.keys(errs).map(i => NAMES[i] + ' — ' + errs[i]).join('; ') : '';
+        if (!Lm.monthsOnly) { say('Apps Script chưa là bản mới (chưa có chế độ chỉ-tháng): cần dán Tthc03.gs mới và Triển khai phiên bản mới.' + (Lm.error ? '\nLý do: ' + String(Lm.error).slice(0, 160) : ''), 'bad'); setTimeout(() => box.remove(), 30000); return; }
+        const good = Lm.ok !== false && (Lm.months || 0) > 0 && !errT;
+        say((good ? '✅ HOÀN THÀNH tháng ' + mt + ' — đã ghi ' + Lm.months + ' dòng vào tab tháng (tab cộng dồn giữ nguyên)' : 'THẤT BẠI tháng ' + mt + (Lm.error ? ' — ' + String(Lm.error).slice(0, 160) : ' — chưa ghi được dòng nào') + errT) + '\n' + f1(performance.now() - T0) + ' · chi tiết xem tab NHAT KY 03', good ? 'ok' : 'bad'); setTimeout(() => box.remove(), good ? 25000 : 40000); return; }
       const L = ok.last03; Object.keys(L.tabs || {}).forEach(id => { const t = L.tabs[id]; if (t && t.ok === undefined) t.ok = !t.error && (t.hit || 0) > 0; if (t && t.total === undefined) t.total = (t.hit || 0) + (t.miss || 0); }); const line = id => { const t = (L.tabs || {})[id]; return t ? (t.ok ? '✅ ' + NAMES[id] + ': ' + t.hit + '/' + t.total + ' đơn vị' + (t.miss ? ' (không khớp ' + t.miss + ')' : '') : '❌ ' + NAMES[id] + ': ' + t.error) : '❔ ' + NAMES[id] + ': chưa rõ'; };
       const nOk = [10002, 10003, 10001].filter(id => (L.tabs || {})[id] && L.tabs[id].ok).length;
       const errTxt = (L.ok === false && L.error ? '\nLý do: ' + String(L.error).slice(0, 200) : '') + (Object.keys(errs).length ? '\nLỗi lấy số: ' + Object.keys(errs).map(i => NAMES[i] + ' — ' + errs[i]).join('; ') : '');
