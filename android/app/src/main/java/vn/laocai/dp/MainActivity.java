@@ -107,6 +107,15 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(50));
         ulp.setMargins(dp(6), dp(4), dp(6), dp(8));
         root.addView(updBtn, ulp);
+        /* Nút riêng "Đồng bộ 03 thủ tục" (03 thủ tục của 103 đơn vị → Sheet): chạy riêng, mã truy cập riêng, không nằm trong danh sách ĐP */
+        try { dong03 = new JSONObject("{\"id\":\"dong03\",\"label\":\"Đồng bộ 03\",\"fn\":\"run03Bookmarklet\",\"file\":\"bm/dong03.js\",\"key\":\"tthc03.code\",\"arg\":{},\"own\":true}"); } catch (Exception e) { dong03 = null; }
+        if (dong03 != null) {
+            LinearLayout row2 = new LinearLayout(this);
+            row2.setOrientation(LinearLayout.HORIZONTAL);
+            row2.setPadding(dp(4), 0, dp(4), dp(2));
+            root.addView(row2, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            row2.addView(btn("🔄 Đồng bộ 03 thủ tục", 0xFF169A4A, Color.WHITE, v -> run(dong03)), eq());
+        }
         JSONArray xa = cfg.optJSONArray("xa");
         if (xa != null) {
             for (int i = 0; i < xa.length(); i++) {
@@ -187,10 +196,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    boolean isDcs(String h) {
-        /* dcs.vn: máy chủ gqtthc; dancuquocgia.gov.vn: cổng đăng nhập SSO (sso.dancuquocgia.gov.vn) - cả hai thiếu chứng chỉ trung gian */
-        return h != null && (h.equals("dcs.vn") || h.endsWith(".dcs.vn") || h.equals("dancuquocgia.gov.vn") || h.endsWith(".dancuquocgia.gov.vn"));
-    }
+
+    /* gồm cả máy chủ đăng nhập SSO dân cư quốc gia (cũng thiếu chứng chỉ trung gian như dcs.vn): chỉ đúng tên miền này, không mở rộng ra tên miền khác */
+    boolean isDcs(String h) { return h != null && (h.equals("dcs.vn") || h.endsWith(".dcs.vn") || h.equals("sso.dancuquocgia.gov.vn")); }
 
     /* Máy chủ dcs.vn thiếu chứng chỉ trung gian. WebView chỉ nhớ "bỏ qua lỗi SSL" theo từng tên miền và chỉ khi tên miền đó
        được mở trực tiếp; lệnh gọi API (fetch/XHR) của trang tới tên miền khác (vd gateway-gqtthc.dcs.vn: đăng nhập, lấy số liệu)
@@ -561,8 +569,11 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    JSONObject dong03;
+
     void run(final JSONObject x) {
         try {
+            final boolean own = x.optBoolean("own", false);
             final String id = x.getString("id");
             final String fn = x.getString("fn");
             final String key = x.getString("key");
@@ -593,10 +604,10 @@ public class MainActivity extends Activity {
             }
 
             String code = sp.getString("code_" + id, "");
-            if (code.isEmpty() && !all.isEmpty() && (!needApi || viaChung)) code = all;
+            if (code.isEmpty() && !all.isEmpty() && !own && (!needApi || viaChung)) code = all;
             if (viaChung) code = all;
             if (code.isEmpty()) {
-                ask("Nhập mã đồng bộ của " + x.optString("label") + " (chỉ 1 lần)", true, "", v -> {
+                ask(own ? "Nhập mã truy cập Đồng bộ 03 thủ tục (chỉ 1 lần)" : "Nhập mã đồng bộ của " + x.optString("label") + " (chỉ 1 lần)", true, "", v -> {
                     sp.edit().putString("code_" + id, v).apply();
                     run(x);
                 });
@@ -604,7 +615,7 @@ public class MainActivity extends Activity {
             }
 
             String chung = cfg.optString("chung", "");
-            boolean useChung = !needApi && !all.isEmpty() && !chung.isEmpty();
+            boolean useChung = !needApi && !own && !all.isEmpty() && !chung.isEmpty();
             if (useChung) code = all;
 
             String argJs;
