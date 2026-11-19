@@ -223,6 +223,23 @@
         "m": true,
         "ep": "https://script.google.com/macros/s/AKfycbyfW_GQckCdByg0recIU4Hgjjrv6l_UGjijxs-272FZrAI3ZPmtl1Oj0NR_XWg-pj9J/exec"
       }
+    },
+    {
+      "id": "baoyen",
+      "label": "ĐP Bảo Yên",
+      "fn": "apiBookmarklet",
+      "file": "bm/baoyen.js",
+      "key": "by_apipw",
+      "arg": {
+        "pid": 2122408,
+        "cid": 2124809,
+        "name": "Đảng bộ xã Bảo Yên",
+        "max": 0,
+        "k": "by_apipw",
+        "src": "website-bao-yen-api",
+        "m": true,
+        "ep": "https://script.google.com/macros/s/AKfycbx7DepxIeL4cMMPNnH_aHMpSf8n3FWwzodoXaHG6yBjlVOYzmInEX2UstUbHIN7T_ep/exec"
+      }
     }
   ],
   "chung": "https://script.google.com/macros/s/AKfycbz_v6ANKDhIBofzmmCkG3WProojbstCCKk-zBUAEQP_B-ge-JVezdeQsevj_mQ-b8FO/exec"

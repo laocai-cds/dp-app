@@ -29,6 +29,7 @@ const XA = {
   'website-vo-lao-api': 'https://script.google.com/macros/s/AKfycbyZuNu5E1HxfD7kAL195eZ2JpTaElgViDjGDHTauIhXpC7lnqjPixHd49VpuhsIbXmh/exec', // ĐP Võ Lao
   'website-den-sang-api': 'https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec', // ĐP Dền Sáng
   'website-xuan-quang-api': 'https://script.google.com/macros/s/AKfycbyfW_GQckCdByg0recIU4Hgjjrv6l_UGjijxs-272FZrAI3ZPmtl1Oj0NR_XWg-pj9J/exec', // ĐP Xuân Quang
+  'website-bao-yen-api': 'https://script.google.com/macros/s/AKfycbx7DepxIeL4cMMPNnH_aHMpSf8n3FWwzodoXaHG6yBjlVOYzmInEX2UstUbHIN7T_ep/exec', // ĐP Bảo Yên
 };
 
 // ĐP Tỉnh Lào Cai (tthc): Apps Script riêng, nhận dữ liệu dạng form (payload=...) và trả trạng thái qua JSONP
@@ -51,6 +52,7 @@ function datMa() {
     'website-vo-lao-api': '', // ĐP Võ Lao
     'website-den-sang-api': '', // ĐP Dền Sáng
     'website-xuan-quang-api': '', // ĐP Xuân Quang
+    'website-bao-yen-api': '', // ĐP Bảo Yên
     'tthc': '', // ĐP Tỉnh Lào Cai (mật khẩu đồng bộ riêng của tthc)
   };
   const P = PropertiesService.getScriptProperties();
