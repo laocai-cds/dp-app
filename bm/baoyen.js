@@ -11,7 +11,7 @@ function apiBookmarklet(C){
     box.style.cssText='position:fixed;z-index:2147483647;top:14px;right:14px;max-width:380px;padding:12px 16px;border-radius:12px;background:#0f3a6e;color:#fff;font:600 14px/1.45 system-ui,sans-serif;white-space:pre-line;box-shadow:0 8px 28px rgba(0,0,0,.35)';
     let T0=performance.now(),curMsg='',curBad=false,curOk=false,tick=null,dead=false;const acs=new Set();
     const f1=ms=>(ms/1000).toFixed(1).replace('.',',')+'s';
-    const paint=()=>{if(dead)return;box.textContent=curMsg+(tick?'   ⏱ '+f1(performance.now()-T0):'');box.style.background=curBad?'#a50d26':curOk?'#0f8a3c':'#0f3a6e';const xb=document.createElement('span');xb.textContent='✕';xb.title='Tắt / hủy lấy số liệu';xb.style.cssText='position:absolute;top:3px;right:9px;cursor:pointer;font-size:17px;line-height:1;opacity:.85';xb.onclick=e=>{e.stopPropagation();dead=true;if(tick){clearInterval(tick);tick=null}acs.forEach(a=>{try{a.abort()}catch(_){}});box.remove()};box.style.paddingRight='34px';box.appendChild(xb);if(!box.parentNode)document.body.appendChild(box)};
+    const paint=()=>{if(dead)return;box.textContent=curMsg+(tick?'   ⏱ '+f1(performance.now()-T0):'');box.style.background=curBad?'#a50d26':curOk?'#0f8a3c':'#0f3a6e';if(!box.parentNode)document.body.appendChild(box)};
     const say=(m,bad,run,good)=>{curMsg=m;curBad=!!bad;curOk=!!good;if(run){if(!tick)tick=setInterval(paint,100)}else if(tick){clearInterval(tick);tick=null}paint()};
     const jp=(u,ms)=>new Promise(res=>{const cb='__apibm'+Date.now()+Math.random().toString(36).slice(2),sc=document.createElement('script');const t=setTimeout(()=>{delete window[cb];sc.remove();res(null)},ms||9000);window[cb]=v=>{clearTimeout(t);delete window[cb];sc.remove();res(v)};sc.onerror=()=>{clearTimeout(t);res(null)};sc.src=u+(u.includes('?')?'&':'?')+'callback='+cb+'&t='+Date.now();document.head.appendChild(sc)});
     try{
@@ -96,7 +96,7 @@ function apiBookmarklet(C){
       if(dead)throw new Error('Đã hủy');say('Đang gửi '+list.length+' đơn vị lên Google Sheet…',false,true);
       const tD=performance.now();
       const b0=await b0P,before=b0&&b0.ok?(b0.lastSync||''):null;
-      await fetch(C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign(T?{tab:T}:{},{headers:h1,rows:rows,token:pw,source:C.src,sentAt:new Date().toISOString()}))});
+      await fetch(C.chung||C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign(T?{tab:T}:{},{headers:h1,rows:rows,token:pw,source:C.src,sentAt:new Date().toISOString()}))});
       const tE=performance.now();
       say('Đang xác nhận kết quả trên Google Sheet…',false,true);
       let ok=null;
@@ -120,7 +120,7 @@ function apiBookmarklet(C){
         let qi=0;await Promise.all(Array.from({length:3},async()=>{while(qi<schools.length){if(dead)return;await one(schools[qi++])}}));
         if(subRows.length&&!dead){
           const hd=['Đảng bộ cha','Kỳ','STT','Tên đơn vị'].concat(h2.slice(2));
-          await fetch(C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Chi bộ trường',headers:hd,rows:subRows,token:pw,source:C.src,sentAt:new Date().toISOString()})});
+          await fetch(C.chung||C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Chi bộ trường',headers:hd,rows:subRows,token:pw,source:C.src,sentAt:new Date().toISOString()})});
           subMsg='\nChi bộ trực thuộc đảng bộ trường: '+nSub+' chi bộ của '+nSch+'/'+schools.length+' đảng bộ'+(errs.length?' (chưa thấy chi bộ con: '+errs.length+' đảng bộ)':'');
         }else subMsg='\nChi bộ trực thuộc đảng bộ trường: chưa lấy được chi bộ con nào ('+schools.length+' đảng bộ trường)';
       }catch(e3){subMsg='\n⚠ Chưa lấy được chi bộ con của đảng bộ trường ('+(e3&&e3.message||e3)+') — đồng bộ chính vẫn xong.'}}
@@ -129,7 +129,7 @@ function apiBookmarklet(C){
         const x=await jp(C.ep+'?action=read&tab='+encodeURIComponent('Thu theo tháng'),9000);
         if(x&&x.ok){const map={};(x.rows||[]).forEach(r=>{const k=String(r&&r[0]||'').trim();if(/^\d{4}-\d{2}$/.test(k))map[k]=[k,Number(String(r[1]).replace(/[^\d]/g,''))||0,r[2]||'']});
           map[MK]=[MK,paid,'Nút API lúc '+new Date().toLocaleString('vi-VN',{hour12:false})];
-          await fetch(C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Thu theo tháng',headers:['Tháng','Đã nộp trong kỳ (₫)','Ghi nhận'],rows:Object.keys(map).sort().map(k=>map[k]),token:pw,source:C.src+'-monthly',sentAt:new Date().toISOString()})})}}
+          await fetch(C.chung||C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Thu theo tháng',headers:['Tháng','Đã nộp trong kỳ (₫)','Ghi nhận'],rows:Object.keys(map).sort().map(k=>map[k]),token:pw,source:C.src+'-monthly',sentAt:new Date().toISOString()})})}}
       if(ok){try{localStorage.setItem(C.k,pw)}catch(e){}}else{try{localStorage.removeItem(C.k)}catch(e){}}
       const apiT=tC-tA,nc=navigator.connection||{};
       const speed=apiT<2500?'🟢 Nhanh':apiT<6000?'🟡 Bình thường':'🔴 Chậm';
