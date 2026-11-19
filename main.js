@@ -187,7 +187,10 @@ ipcMain.handle('stop',()=>{batchStop=true;return true});
 let lastActive=0;
 /* Dừng hẳn mọi việc còn dang dở trong trang gqtthc (tải lại trang) để lần chạy bị lỗi/hủy không chạy ngầm tiếp */
 async function killRun(wc){wc=wc||view.webContents;try{await new Promise(r=>{wc.once('did-finish-load',r);wc.reload();setTimeout(r,15000)});await new Promise(r=>setTimeout(r,800))}catch(_){}}
-async function runWaitCore(id,month,code,api,wc,noReset){const r=await runWaitCore0(id,month,code,api,wc,noReset);recRes(id,r);
+async function runWaitCore(id,month,code,api,wc,noReset){let r=await runWaitCore0(id,month,code,api,wc,noReset);
+  /* 1.1.90: mất khung tiến độ (trang gqtthc tải lại/đơ) → dọn trang rồi tự chạy lại đúng 1 lần */
+  if(r&&r.result==='fail'&&/Mất khung/.test(String(r.msg||''))&&!batchStop){try{log('Tự thử lại 1 lần ('+id+'): mất khung tiến độ')}catch(_){}await killRun(wc);if(!batchStop)r=await runWaitCore0(id,month,code,api,wc,true)}
+  recRes(id,r);
   /* mã truy cập bị máy chủ từ chối: xóa mã đã lưu để lần bấm sau hỏi nhập lại */
   if(r&&r.result==='fail'&&/Mã truy cập/i.test(String(r.msg||''))){try{const c=readCodes();if(c[id]){delete c[id];writeCodes(c)}}catch(_){}}if(r&&r.result&&r.result!=='done'){try{log('Dọn lần chạy dở ('+id+', '+r.result+'): tải lại trang gqtthc')}catch(_){}await killRun(wc)}return r}
 async function runWaitCore0(id,month,code,api,wc,noReset){
