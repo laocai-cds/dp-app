@@ -336,7 +336,7 @@ public class MainActivity extends Activity {
                                 web.evaluateJavascript("delete (window.__dpRes||{})[" + JSONObject.quote(lbl) + "];window.__dpBatch=true;void 0", null);
                                 hh.postDelayed(() -> {
                                     web.evaluateJavascript("window.__dpCur=" + JSONObject.quote(lbl) + ";void 0", null);
-                                    run(items.get(fid));
+                                    MainActivity.this.run(items.get(fid));
                                     hh.postDelayed(() -> web.evaluateJavascript("window.__dpBatch=false;void 0", null), 10000);
                                 }, 3000);
                                 continue;
