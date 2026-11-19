@@ -41,9 +41,9 @@ function run03Bookmarklet(C){'use strict';
       const retry = async (fn, n) => { let le; for (let a = 0; a < n; a++) { try { return await fn(); } catch (e) { le = e; if (a < n - 1) await new Promise(r => setTimeout(r, 800 + 1500 * a * a)); } } throw le; };
       const cget = k => { try { const c = JSON.parse(localStorage.getItem(k) || 'null'); if (c && c.t && Date.now() - c.t < 6048e5) return c.d; } catch (e) {} return null; };
       const cset = (k, d) => { try { localStorage.setItem(k, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {} };
-      let gAct = 0; const gQ = []; const gSlot = () => new Promise(res => { const go = () => { if (gAct < 14) { gAct++; res(); } else gQ.push(go); }; go(); }); const gFree = () => { gAct--; const n = gQ.shift(); if (n) n(); };
+      let gAct = 0, gLim = 20; const gDown = () => { gLim = Math.max(8, gLim - 4); }; const gQ = []; const gSlot = () => new Promise(res => { const go = () => { if (gAct < gLim) { gAct++; res(); } else gQ.push(go); }; go(); }); const gFree = () => { gAct--; const n = gQ.shift(); if (n) n(); };
       const post = (id, uid, mo) => gSlot().then(() => fetch(G3, { method: 'POST', headers: { Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ dvcId: id, coQuanId: uid, page: 0, size: 300, tuThang: mo, denThang: mo }) })
-        .then(rr => { if (!rr.ok) throw new Error('HTTP ' + rr.status); return rr.json(); }).then(jj => (jj.data && jj.data.data) || [])).finally(gFree);
+        .then(rr => { if (!rr.ok) throw new Error('HTTP ' + rr.status); return rr.json(); }).then(jj => (jj.data && jj.data.data) || [])).catch(e => { gDown(); throw e; }).finally(gFree);
       const topRows = (id, mo) => post(id, 2122408, mo).then(list => { const seen = {}; const rows = list.filter(x => { const n = String(x.coQuanTen || '').trim(); if (Number(x.coQuanId) === 2122408 || !/^đảng bộ\s/i.test(n) || seen[n.toLowerCase()]) { dropped[n || '(trống)'] = 1; return false; } seen[n.toLowerCase()] = 1; return true; }).map(x => [x.coQuanTen, num(x.dangXuLy), num(x.daTuChoi), num(x.daXuLyXong), x.coQuanId, x.coCapCon === false ? 0 : 1]); if (rows.length < 50) throw new Error('trả thiếu đơn vị (' + rows.length + ') tháng ' + mo); return rows; });
       const monthTop = async (id, mo) => { const k = 'tthc03.m.' + id + '.' + mo; if (mo !== curMo && !sel.has(mo)) { const c = cget(k); if (c) return c; } let rows;
         try { rows = await retry(() => topRows(id, mo), 7); }
@@ -63,7 +63,7 @@ function run03Bookmarklet(C){'use strict';
       const G3T = 'https://gateway-gqtthc.dcs.vn/report/api/v1/thong-ke-ho-so/theo-tthc';
       let FAST = false, modeTxt = '';
       const postT = (uid, mo) => gSlot().then(() => fetch(G3T, { method: 'POST', headers: { Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ tuThang: mo, denThang: mo, coQuanId: uid, page: 0, size: 1000 }) })
-        .then(rr => { if (!rr.ok) throw new Error('HTTP ' + rr.status); return rr.json(); }).then(jj => (jj.data && jj.data.data) || [])).finally(gFree);
+        .then(rr => { if (!rr.ok) throw new Error('HTTP ' + rr.status); return rr.json(); }).then(jj => (jj.data && jj.data.data) || [])).catch(e => { gDown(); throw e; }).finally(gFree);
       const fm = {};
       const fastRows = (uid, mo) => { const k = uid + '|' + mo; if (!fm[k]) { fm[k] = retry(() => postT(uid, mo), 4).then(list => { const o = {}; list.forEach(x => { const d = Number(x.dvcId); if (d === 10001 || d === 10002 || d === 10003) o[d] = [num(x.dangXuLy), num(x.daTuChoi), num(x.daXuLyXong)]; }); return o; }); fm[k].catch(() => { delete fm[k]; }); } return fm[k]; };
       const fastAgg = async (uid, mo, pid, acc) => { const o = await fastRows(uid, mo); const v = o[pid] || [0, 0, 0]; acc[0] = v[0]; acc[1] = v[1]; acc[2] = v[2]; };
