@@ -1,4 +1,4 @@
-const {app,BrowserWindow,WebContentsView,ipcMain,shell,net,powerSaveBlocker,Notification,Tray,Menu,dialog}=require('electron');
+const {app,BrowserWindow,WebContentsView,ipcMain,shell,net,powerSaveBlocker,Notification,Tray,Menu,dialog,safeStorage}=require('electron');
 const {spawn}=require('child_process');
 const os=require('os');
 const path=require('path'),fs=require('fs');
@@ -76,8 +76,11 @@ ipcMain.handle('xa:restore',(e,pass)=>{
   writeHidden([]);log('Khôi phục các nút đã ẩn');setTimeout(()=>{app.relaunch();app.exit(0)},600);return{ok:true}});
 const xaList=()=>cfg.xa.filter(x=>!cfg.only||x.id===cfg.only);
 const codesFile=()=>path.join(app.getPath('userData'),'codes.json');
-const readCodes=()=>{try{return JSON.parse(fs.readFileSync(codesFile(),'utf8'))}catch(e){return{}}};
-const writeCodes=o=>fs.writeFileSync(codesFile(),JSON.stringify(o));
+/* Mã đồng bộ lưu mã hoá bằng khoá của Windows (safeStorage); file cũ dạng chữ thường vẫn đọc được và tự chuyển sang mã hoá ở lần ghi kế tiếp. */
+const encOk=()=>{try{return safeStorage.isEncryptionAvailable()}catch(e){return false}};
+const readCodes=()=>{try{const j=JSON.parse(fs.readFileSync(codesFile(),'utf8'));if(j&&typeof j.enc==='string'&&Object.keys(j).length===1){if(!encOk())return{};return JSON.parse(safeStorage.decryptString(Buffer.from(j.enc,'base64')))}return j}catch(e){return{}}};
+const writeCodes=o=>{const t=JSON.stringify(o);fs.writeFileSync(codesFile(),encOk()?JSON.stringify({enc:safeStorage.encryptString(t).toString('base64')}):t)};
+try{app.whenReady().then(()=>{const c=readCodes();if(Object.keys(c).length)writeCodes(c)})}catch(_){}
 const PRE=`(()=>{
 if(!window.__dpCancelInit){window.__dpCancelInit=1;window.__dpCancelled=false;window.__dpAC=new Set();
  const of=window.fetch;window.fetch=function(u,i){if(window.__dpCancelled&&/dcs\\.vn|script\\.google|googleusercontent/.test(String(u&&u.url||u)))return Promise.reject(new DOMException('Đã hủy','AbortError'));
