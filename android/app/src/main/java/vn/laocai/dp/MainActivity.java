@@ -315,6 +315,7 @@ public class MainActivity extends Activity {
         final int gen = ++runGen;
         final int total = ids.size();
         final long t0 = System.currentTimeMillis();
+        final java.util.HashSet<String> retried = new java.util.HashSet<>();
         goBtn.setText("⏳ 0/" + total);
         final android.os.Handler hh = new android.os.Handler();
         hh.postDelayed(new Runnable() {
@@ -326,12 +327,25 @@ public class MainActivity extends Activity {
                     try {
                         JSONObject r = new JSONObject(new org.json.JSONTokener(v).nextValue().toString());
                         for (String id : ids) {
-                            String st = r.optString(items.get(id).optString("label"), "");
+                            String lbl = items.get(id).optString("label");
+                            String st = r.optString(lbl, "");
+                            if (st.equals("bad") && !retried.contains(id)) {
+                                // Lỗi lần đầu: tự chạy lại đúng 1 lần (chưa tính là xong)
+                                retried.add(id);
+                                final String fid = id;
+                                web.evaluateJavascript("delete (window.__dpRes||{})[" + JSONObject.quote(lbl) + "];window.__dpBatch=true;void 0", null);
+                                hh.postDelayed(() -> {
+                                    web.evaluateJavascript("window.__dpCur=" + JSONObject.quote(lbl) + ";void 0", null);
+                                    run(items.get(fid));
+                                    hh.postDelayed(() -> web.evaluateJavascript("window.__dpBatch=false;void 0", null), 10000);
+                                }, 3000);
+                                continue;
+                            }
                             if (!st.isEmpty()) { done++; if (st.equals("bad")) bad++; }
                         }
                     } catch (Exception e) { }
                     boolean fin = done >= total;
-                    boolean timeout = System.currentTimeMillis() - t0 > 240000;
+                    boolean timeout = System.currentTimeMillis() - t0 > 400000;
                     goBtn.setText((fin ? "✓ " : "⏳ ") + done + "/" + total + (fin ? " xong" : "") + (bad > 0 ? " (" + bad + " lỗi)" : ""));
                     if (!fin && !timeout) hh.postDelayed(this, 1000);
                 });
