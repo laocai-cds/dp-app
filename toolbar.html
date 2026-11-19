@@ -82,8 +82,10 @@ $('ok').onclick=()=>{const v=$('code').value.trim();if(!v)return;if(mode==='del'
 $('no').onclick=()=>{$('ask').style.display='none';st('Đã hủy')};
 $('help').onclick=()=>api.help();$('home').onclick=()=>api.nav('home');$('rl').onclick=()=>api.nav('reload');api.onStatus(st);new ResizeObserver(()=>api.bar(document.body.getBoundingClientRect().height)).observe(document.body);
 let upBtn=null;
-api.onUpdate(u=>{if(upBtn)upBtn.remove();upBtn=document.createElement('button');upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;upBtn.style.cssText='background:#169a4a;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);';
+api.onUpdate(u=>{window.__latestUpd=u;if(upBtn)upBtn.remove();upBtn=document.createElement('button');upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;upBtn.style.cssText='background:#169a4a;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);';
  upBtn.onclick=async()=>{upBtn.disabled=true;window.__upB=upBtn;window.__upV=u.ver;upBtn.textContent='⏳ Đang tải bản '+u.ver+'… 0%';const r=await api.updInstall();if(r&&r.err){window.__upB=null;st('⚠ '+r.err);upBtn.disabled=false;upBtn.textContent='⬇ Cập nhật lên bản '+u.ver;if(confirm('Không cập nhật tự động được. Mở trang tải về trên GitHub?'))api.open(u.url)}};$('upd').before(upBtn)});
 $('upd').onclick=async()=>{const b=$('upd'),o='Kiểm tra cập nhật';b.disabled=true;b.textContent='⏳ Đang kiểm tra…';st('Đang kiểm tra bản mới trên GitHub…');let r;try{r=await api.updCheck()}catch(e){r={r:'err',why:String(e&&e.message||e).slice(0,40)}}
- const msg=r.r==='new'?'⬇ Có bản mới — bấm nút xanh':r.r==='same'?'✓ Đã là bản mới nhất':'✕ Không kiểm tra được'+(r.why?' ('+r.why+')':'');b.textContent=msg;st(msg);setTimeout(()=>{b.textContent=o;b.disabled=false},4000)};
+ const DL='https://github.com/laocai-cds/dp-app/releases/latest/download/DP-DangPhi-Setup.exe';
+ if(r.r==='new'){const v=(window.__latestUpd&&window.__latestUpd.ver)||'';const t='⬇ Tải bản '+v+' về máy';b.textContent=t;b.disabled=false;b.title='Bấm để tải bộ cài bản mới nhất (DP-DangPhi-Setup.exe) về máy';st('⬇ Có bản '+v+' — bấm nút xanh để tự cập nhật, hoặc bấm "'+t+'" để tải bộ cài về máy');b.onclick=()=>{api.open(DL);st('Đang mở trang tải bộ cài bản '+v+'…')};return}
+ const msg=r.r==='same'?'✓ Đã là bản mới nhất':'✕ Không kiểm tra được'+(r.why?' ('+r.why+')':'');b.textContent=msg;st(msg);setTimeout(()=>{b.textContent=o;b.disabled=false},4000)};
 </script>
