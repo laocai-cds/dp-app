@@ -157,6 +157,7 @@
         "k": "sm_apipw",
         "src": "website-si-ma-cai-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbyb0fvQHdmdDwKMOnF4qM-K5CniGORlNzRKjKaxKe6Whc19PLj8myU3yQ7aiYXPYlcylQ/exec"
       }
     },
