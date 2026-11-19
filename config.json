@@ -238,6 +238,7 @@
         "k": "by_apipw",
         "src": "website-bao-yen-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbx7DepxIeL4cMMPNnH_aHMpSf8n3FWwzodoXaHG6yBjlVOYzmInEX2UstUbHIN7T_ep/exec"
       }
     }
