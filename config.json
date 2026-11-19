@@ -43,6 +43,7 @@
         "k": "xh_apipw",
         "src": "website-xuan-hoa-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbxNpIwIdSufuR51f3iLL1eKILxo9Km3BjvhGiyeXVZ7d1_3SBXWexRBaSBbTY9LEbYu/exec"
       }
     },
@@ -75,6 +76,7 @@
         "k": "bt_apipw",
         "src": "website-bao-thang-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbxAaE46jDGIDki4cYGffdymtqMqJDfnutoP7QsVgLM8kyMu-3gpBxfdEZGn8HMsWrR1/exec"
       }
     },
@@ -90,6 +92,7 @@
         "k": "lt_apipw",
         "src": "website-luong-thinh-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbw8NhU4T_iEjgoQebNAGVbjTs9rcaTIzkeDTtztpdFEkMwgNc1gRqk7jsmsBMgNxI6MKA/exec"
       }
     },
@@ -107,6 +110,7 @@
         "k": "nd_apipw",
         "src": "website-nghia-do-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbyA58Z6sF1diN5q_xLTRW8Eb7z6RHBB6sODiluiw3dqWDDIORLV84BD4VMm07c2YHs6gg/exec"
       }
     },
@@ -122,6 +126,7 @@
         "k": "ph_apipw",
         "src": "website-phinh-ho-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbxVbYRtH1aYVo3gkA7lMPpfu7gCShvAvozkh71d7kJTkjXHltAvfVp8O2yW1CS31pc1UQ/exec"
       }
     },
@@ -139,6 +144,7 @@
         "k": "pk_apipw",
         "src": "website-phuc-khanh-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbzmZKP2MNQ8Hgeh4Qc1QjZp98ddQLyjqrIohVUrbaRaHO0sJg4_KMxJLF9Znhem876dmQ/exec"
       }
     },
@@ -173,6 +179,7 @@
         "k": "tmt_apipw",
         "src": "website-tram-tau-api",
         "m": true,
+        "sub": "^đảng bộ\\s+trường\\b",
         "ep": "https://script.google.com/macros/s/AKfycbyDJxQWv3T9ESqRZAPYhyP-HyKEIgJa3oxiYmG4qcs-RR-ha9gZb1374VxhAm3iWq_W/exec"
       }
     },
