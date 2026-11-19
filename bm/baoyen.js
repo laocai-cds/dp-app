@@ -112,12 +112,14 @@ function apiBookmarklet(C){
           const w2=(o,d)=>{if(!o||typeof o!=='object'||d>2)return;for(const k in o){const vv=o[k];if(vv&&typeof vv==='object')w2(vv,d+1);else if(/id|ma|donVi|code/i.test(k)&&!/soLuong|tongSo|tien|ty|muc|ky/i.test(k))add(vv)}};
           if(x.donVi&&typeof x.donVi==='object')w2(x.donVi,0);else add(x.donVi);w2(x,0);return cand.filter(c=>String(c)!==String(C.pid)&&String(c)!==String(C.cid)).slice(0,6)};
         const one=async x=>{const nmx=String(x.tenDonVi||'').trim();let got=null;
-          for(const c of candIds(x)){let X;try{X=await getL(c)}catch(e){continue}
-            if(X.list.length&&!X.list.some(y=>/tỉnh Lào Cai/i.test(String(y.tenDonVi||''))||String(y.tenDonVi||'').trim()===C.name||String(y.tenDonVi||'').trim()===nmx)){got=X.list;break}}
+          const sck='dp_sc_'+(C.k||'dp')+'_'+nmx;let svc=null;try{svc=localStorage.getItem(sck)}catch(e){}
+          const cands=candIds(x);if(svc){const sv=/^\d+$/.test(svc)?Number(svc):svc;const ix=cands.findIndex(z=>String(z)===String(sv));if(ix>0)cands.splice(ix,1);if(ix!==0)cands.unshift(sv)}/* mã đã dùng được lần trước: thử trước, khỏi dò lần lượt */
+          for(const c of cands){let X;try{X=await getL(c)}catch(e){continue}
+            if(X.list.length&&!X.list.some(y=>/tỉnh Lào Cai/i.test(String(y.tenDonVi||''))||String(y.tenDonVi||'').trim()===C.name||String(y.tenDonVi||'').trim()===nmx)){got=X.list;try{localStorage.setItem(sck,String(c))}catch(e){}break}}
           done++;say('Đang lấy chi bộ trực thuộc đảng bộ trường… '+done+'/'+schools.length+'\n'+nmx.replace(/^đảng bộ\s*/i,''),false,true);
           if(got){nSch++;const seenN=new Set();got.filter(y=>{const t=String(y.tenDonVi||'').trim().toLowerCase();if(!t||seenN.has(t)||!(+y.tongSoLuongDangVien>0))return false;seenN.add(t);return true}).forEach(y=>{nSub++;subRows.push([nmx,cy+'-'+p2(SM),subRows.length+1,y.tenDonVi,n(y.tongSoLuongDangVien),n(y.soLuongDangVienChinhThuc),n(y.soLuongDangVienTamThoi),n(y.soLuongChuyenTamThoi),n(y.soLuongDangVienMienGiam),n(y.tongSoHoSoChuaDuyet),n(y.tongSoHoSoDaDuyetChuaNop),n(y.tongSoHoSoDaDuyetDaNop),n(y.soLuongHoSoChuaKhaiBao),n(y.tongSoTienDaKhaiBao),n(y.tongSoTienDaNop),Math.round(n(y.mucDoThucHien)*100)/10000])})}
           else errs.push(nmx)};
-        let qi=0;await Promise.all(Array.from({length:3},async()=>{while(qi<schools.length){if(dead)return;await one(schools[qi++])}}));
+        let qi=0;await Promise.all(Array.from({length:5},async()=>{while(qi<schools.length){if(dead)return;await one(schools[qi++])}}));
         if(subRows.length&&!dead){
           const hd=['Đảng bộ cha','Kỳ','STT','Tên đơn vị'].concat(h2.slice(2));
           await fetch(C.chung||C.ep,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({tab:'Chi bộ trường',headers:hd,rows:subRows,token:pw,source:C.src,sentAt:new Date().toISOString()})});
