@@ -51,11 +51,12 @@ function run03Bookmarklet(C){'use strict';
           /* gqtthc không trả nổi truy vấn gốc của nhận xét: lấy danh sách đơn vị từ chính thức rồi hỏi từng đơn vị một */
           const base = await retry(() => topRows(10002, mo), 5); rows = base.map(r => [r[0], 0, 0, 0, r[4], 1]); fallbackMo[mo] = 1; }
         if (mo !== curMo && !fallbackMo[mo]) cset(k, rows); return rows; };
-      const kidFail = {}, lastErr = {}, kShows = {}; const fallbackMo = {};
+      const PEND = {}; const kidFail = {}, lastErr = {}, kShows = {}; const fallbackMo = {};
       const walk = async (uid, seen, acc, depth, mo, pid) => {
         const rows = await retry(() => post(pid, uid, mo), 5);
         rows.forEach(r => { if (seen[r.coQuanId]) return; seen[r.coQuanId] = 1; acc[0] += num(r.dangXuLy); acc[1] += num(r.daTuChoi); acc[2] += num(r.daXuLyXong); });
-        if (depth < 5) for (const r of rows) if (r.coCapCon && Number(r.coQuanId) !== Number(uid) && !seen['x' + r.coQuanId]) { seen['x' + r.coQuanId] = 1; await walk(r.coQuanId, seen, acc, depth + 1, mo, pid); }
+        /* Các nhánh con chạy SONG SONG (đã có hạn mức 14 yêu cầu cùng lúc ở gSlot), trước đây chạy nối tiếp nên đơn vị có nhiều đơn vị con bị kẹt rất lâu ở 102/103 */
+        if (depth < 5) { const kids = []; for (const r of rows) if (r.coCapCon && Number(r.coQuanId) !== Number(uid) && !seen['x' + r.coQuanId]) { seen['x' + r.coQuanId] = 1; kids.push(r.coQuanId); } await Promise.all(kids.map(id => walk(id, seen, acc, depth + 1, mo, pid))); }
       };
       /* ĐƯỜNG NHANH: API theo-tthc trả luôn số của cả 3 thủ tục (đã cộng đơn vị con nếu gqtthc làm vậy) trong MỘT lần gọi cho mỗi đơn vị.
          Chỉ dùng khi kiểm tra thấy khớp 100% với cách cộng từng đơn vị con; không khớp / lỗi thì tự dùng cách cũ. */
@@ -82,11 +83,12 @@ function run03Bookmarklet(C){'use strict';
       } catch (e) { fastWhy = 'lỗi khi thử: ' + String(e && e.message || e).slice(0, 80); return false; } };
       const kidsMonth = async (rows, mo, prog, pid) => {
         const k = pid === 10001 ? 'tthc03.k.' + mo : 'tthc03.k.' + pid + '.' + mo, memo = mo !== curMo && !sel.has(mo) ? (cget(k) || {}) : {}, added = {}, out = rows.map(r => r.slice()), failed = []; let next = 0;
-        const worker = async () => { while (next < out.length) { const r = out[next++];
+        const pk = pid + '|' + mo; PEND[pk] = PEND[pk] || new Set();
+        const worker = async () => { while (next < out.length) { const r = out[next++]; PEND[pk].add(r[0]);
           if (r[5] !== 0) {
             if (memo[r[4]]) { r[1] = memo[r[4]][0]; r[2] = memo[r[4]][1]; r[3] = memo[r[4]][2]; }
             else try { const acc = [0, 0, 0]; await aggOf(r[4], mo, pid, acc); r[1] = acc[0]; r[2] = acc[1]; r[3] = acc[2]; added[r[4]] = acc; } catch (e) { failed.push(r); lastErr[pid] = String(e && e.message || e).slice(0, 80); }
-          } prog(r[0]); } };
+          } PEND[pk].delete(r[0]); prog(r[0]); } };
         await Promise.all(Array.from({ length: 10 }, worker));
         for (let pass = 0; pass < 2 && failed.length; pass++) { const again = failed.splice(0); let j = 0; await Promise.all(Array.from({ length: 3 }, async () => { while (j < again.length) { const r = again[j++]; try { const acc = [0, 0, 0]; await aggOf(r[4], mo, pid, acc); r[1] = acc[0]; r[2] = acc[1]; r[3] = acc[2]; added[r[4]] = acc; } catch (e) { failed.push(r); lastErr[pid] = String(e && e.message || e).slice(0, 80); } } })); }
         kidFail[pid] = (kidFail[pid] || 0) + failed.length;
@@ -96,7 +98,7 @@ function run03Bookmarklet(C){'use strict';
       const errs = {}, byMonth = { 10001: {}, 10002: {}, 10003: {} };
       const get = async id => { try {
         let done = 0; const ks = {}; months.forEach(m => { ks[m] = { d: 0, t: 0, last: '', wait: true }; });
-        const kline = () => months.filter(m => ks[m]).map(m => '   · T' + (+m.slice(0, 2)) + ': ' + (ks[m].wait ? 'đang tải danh sách đơn vị…' : ks[m].d >= ks[m].t ? '✓ ' + ks[m].t + '/' + ks[m].t + ' đơn vị' : ks[m].d + '/' + ks[m].t + ' đơn vị' + (ks[m].last ? ' — vừa xong: ' + String(ks[m].last).replace(/^đảng bộ\s*/i, '').slice(0, 40) : ''))).join('\n');
+        const kline = () => months.filter(m => ks[m]).map(m => '   · T' + (+m.slice(0, 2)) + ': ' + (ks[m].wait ? 'đang tải danh sách đơn vị…' : ks[m].d >= ks[m].t ? '✓ ' + ks[m].t + '/' + ks[m].t + ' đơn vị' : ks[m].d + '/' + ks[m].t + ' đơn vị' + (ks[m].last ? ' — vừa xong: ' + String(ks[m].last).replace(/^đảng bộ\s*/i, '').slice(0, 40) : '') + (PEND[id + '|' + m] && PEND[id + '|' + m].size && ks[m].d >= ks[m].t - 3 ? ' — đang chờ: ' + [...PEND[id + '|' + m]].slice(0, 3).map(n => String(n).replace(/^đảng bộ\s*/i, '').slice(0, 30)).join('; ') : ''))).join('\n');
         kShows[id] = () => '⏳ ' + done + '/' + months.length + ' tháng\n' + kline();
         await Promise.all(months.map(async mo => {
           let rows = await monthTop(id, mo);
