@@ -1,6 +1,6 @@
 {
   "name": "dp-gqtthc",
-  "version": "1.1.80",
+  "version": "1.1.81",
   "description": "Đồng bộ đảng phí gqtthc",
   "main": "main.js",
   "scripts": {
@@ -61,6 +61,7 @@
     },
     "nsis": {
       "oneClick": true,
+      "include": "build/installer.nsh",
       "perMachine": false,
       "runAfterFinish": true,
       "createDesktopShortcut": "always",
