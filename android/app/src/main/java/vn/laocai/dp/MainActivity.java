@@ -1064,7 +1064,7 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this).setTitle(str).setView(editText).setPositiveButton("Lưu và chạy", new DialogInterface.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda20
             @Override // android.content.DialogInterface.OnClickListener
             public final void onClick(DialogInterface dialogInterface, int i) {
-                MainActivity.Done.this.ok(editText.getText().toString().trim());
+                done.ok(editText.getText().toString().trim());
             }
         }).setNegativeButton("Hủy", (DialogInterface.OnClickListener) null).show();
     }
