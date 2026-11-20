@@ -15,3 +15,7 @@ CÀI BẰNG MỘT FILE: tải DP-DangPhi-Setup.exe từ trang Releases, bấm đ
 THÊM XÃ MỚI NHANH (từ bản 1.1.42): mở website của xã trong trình duyệt, KÉO nút "ĐP" thả vào thanh nút của app (hoặc bấm "➕ Thêm xã" rồi dán mã dấu trang). App tự tạo nút "ĐP <tên xã>"; lần đầu bấm sẽ hỏi mã đồng bộ riêng của xã. Chuột phải vào nút để gỡ.
 
 XÓA NÚT XÃ (từ bản 1.1.44): ở dòng "Quản trị", tích ô vuông cạnh các nút cần xóa → bấm "🗑 Xóa nút đã tích" → nhập mật khẩu (chính là Mã chung đã lưu trong app). Nút có sẵn chỉ bị ẩn trên máy này, bấm "↩ Khôi phục nút" (nhập lại mật khẩu) để hiện lại.
+
+ĐỒNG BỘ 03 THỦ TỤC (từ bản 1.1.90): bấm "🔄 Đồng bộ 03 thủ tục" (đã đăng nhập gqtthc, chọn đúng tháng) để lấy số hồ sơ chuyển SH chính thức, chuyển SH tạm thời, nhận xét nơi cư trú của 103 đơn vị vào Google Sheet "Theo dõi 03 thủ tục". Số một đảng bộ đã cộng cả đơn vị cấp con. Tiến độ mỗi thủ tục = 5% + 5% + 90% x hoàn thành / phải xử lý.
+ĐỔI MÃ ĐỒNG BỘ 03 (từ bản 1.1.91): bấm "🔑 Đổi mã" cạnh nút Đồng bộ 03, gõ mã mới (hiện rõ chữ, dùng bộ gõ tiếng Anh) rồi "Lưu và chạy" hoặc "Chỉ lưu mã". Báo "Mã truy cập không hợp lệ" thì ứng dụng tự xóa mã sai, bấm lại để nhập.
+TẢI BẢN MỚI: github.com/laocai-cds/dp-app/releases/latest (DP-DangPhi-Setup.exe).
