@@ -204,6 +204,37 @@ public class MainActivity extends Activity {
                     MainActivity.this.m10lambda$onCreate$7$vnlaocaidpMainActivity(view);
                 }
             }), eq());
+            linearLayout3.addView(btn("🔑 Đổi mã", -10066330, -1, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    final EditText et = new EditText(MainActivity.this);
+                    et.setHint("Mã truy cập Đồng bộ 03 thủ tục");
+                    et.setInputType(1);
+                    et.setText(MainActivity.this.sp.getString("code_dong03", ""));
+                    new AlertDialog.Builder(MainActivity.this).setTitle("Đổi mã truy cập Đồng bộ 03").setView(et)
+                        .setPositiveButton("Chỉ lưu mã", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int i) {
+                                String c = et.getText().toString().trim();
+                                if (!c.isEmpty()) {
+                                    MainActivity.this.sp.edit().putString("code_dong03", c).apply();
+                                    MainActivity.this.say("✅ Đã lưu mã Đồng bộ 03");
+                                }
+                            }
+                        })
+                        .setNeutralButton("Lưu và chạy", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int i) {
+                                String c = et.getText().toString().trim();
+                                if (!c.isEmpty()) {
+                                    MainActivity.this.sp.edit().putString("code_dong03", c).apply();
+                                    MainActivity.this.run(MainActivity.this.dong03);
+                                }
+                            }
+                        })
+                        .setNegativeButton("Hủy", (DialogInterface.OnClickListener) null).show();
+                }
+            }), eq());
         }
         JSONArray optJSONArray = this.cfg.optJSONArray("xa");
         if (optJSONArray != null) {
