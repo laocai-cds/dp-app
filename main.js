@@ -401,12 +401,12 @@ ipcMain.handle('runWait',(e,{id,month,code,api})=>runWaitCore(id,month,code,api)
 
 /* ===== Hẹn giờ tự chạy hằng ngày ===== */
 const schedFile=()=>path.join(app.getPath('userData'),'schedule.json');
-const readSched=()=>{try{return Object.assign({enabled:false,time:'06:00',ids:[],openAtLogin:false,last:'',everyOn:false,everyMins:60,lastEvery:0},JSON.parse(fs.readFileSync(schedFile(),'utf8')))}catch(e){return{enabled:false,time:'06:00',ids:[],openAtLogin:false,last:'',everyOn:false,everyMins:60,lastEvery:0}}};
+const readSched=()=>{try{return Object.assign({enabled:false,time:'06:00',ids:[],openAtLogin:false,last:'',everyOn:false,everyMins:60,lastEvery:0,every03On:false,every03Mins:180,lastEvery03:0},JSON.parse(fs.readFileSync(schedFile(),'utf8')))}catch(e){return{enabled:false,time:'06:00',ids:[],openAtLogin:false,last:'',everyOn:false,everyMins:60,lastEvery:0,every03On:false,every03Mins:180,lastEvery03:0}}};
 const writeSched=o=>fs.writeFileSync(schedFile(),JSON.stringify(o));
 let blockId=null,schedBusy=false;
 function applySched(){const s=readSched();
-  if((s.enabled||s.everyOn)&&blockId===null)blockId=powerSaveBlocker.start('prevent-app-suspension');
-  if(!s.enabled&&!s.everyOn&&blockId!==null){powerSaveBlocker.stop(blockId);blockId=null}
+  if((s.enabled||s.everyOn||s.every03On)&&blockId===null)blockId=powerSaveBlocker.start('prevent-app-suspension');
+  if(!s.enabled&&!s.everyOn&&!s.every03On&&blockId!==null){powerSaveBlocker.stop(blockId);blockId=null}
   try{app.setLoginItemSettings({openAtLogin:!!s.openAtLogin})}catch(e){}}
 const say=t=>{try{win.webContents.send('status',t)}catch(e){}};
 const logFile=()=>path.join(app.getPath('userData'),'lich-chay.log');
@@ -439,6 +439,10 @@ async function runBatchMain(ids,label){
 }
 function tickSched(){
   const s=readSched();
+  /* tự động Đồng bộ 03 thủ tục (tháng hiện tại): cứ mỗi N phút */
+  if(s.every03On&&!schedBusy&&Date.now()-lastActive>180000&&Date.now()-(s.lastEvery03||0)>=Math.max(30,+s.every03Mins||180)*60000){
+    s.lastEvery03=Date.now();writeSched(s);schedBusy=true;
+    runBatchMain(['dong03'],'🔁 Tự động 03').finally(()=>{schedBusy=false});return}
   /* tự động lấy dữ liệu định kỳ: cứ mỗi N phút chạy các xã đã tích */
   if(s.everyOn&&!schedBusy&&s.ids.length&&Date.now()-lastActive>180000&&Date.now()-(s.lastEvery||0)>=Math.max(5,+s.everyMins||60)*60000){
     s.lastEvery=Date.now();writeSched(s);schedBusy=true;
@@ -450,7 +454,7 @@ function tickSched(){
   runBatchMain(s.ids,'⏰ Tự chạy').finally(()=>{schedBusy=false});
 }
 ipcMain.handle('sched:get',()=>readSched());
-ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin,everyOn:!!o.everyOn,everyMins:Math.min(1440,Math.max(5,parseInt(o.everyMins)||60))});if(!old.everyOn&&s.everyOn)s.lastEvery=Date.now();if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
+ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin,everyOn:!!o.everyOn,everyMins:Math.min(1440,Math.max(5,parseInt(o.everyMins)||60)),every03On:!!o.every03On,every03Mins:Math.min(1440,Math.max(30,parseInt(o.every03Mins)||180))});if(!old.every03On&&s.every03On)s.lastEvery03=Date.now();if(!old.everyOn&&s.everyOn)s.lastEvery=Date.now();if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
 ipcMain.handle('sched:runnow',async()=>{const s=readSched();if(schedBusy||!s.ids.length)return false;schedBusy=true;try{await runBatchMain(s.ids,'⏰ Chạy thử')}finally{schedBusy=false}return true});
 ipcMain.handle('log:add',(e,t)=>{log(String(t).slice(0,600));return true});
 ipcMain.handle('sched:openlog',async()=>{const f=logFile();try{if(!fs.existsSync(f))fs.writeFileSync(f,'Nhật ký chạy ĐP (chưa có lần chạy nào)\n')}catch(err){}return await shell.openPath(f)||f});
