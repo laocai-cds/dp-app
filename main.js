@@ -181,6 +181,7 @@ let batchStop=false;
 ipcMain.handle('run',(e,{id,code,api})=>doRun(id,code,api,''));
 ipcMain.handle('code:all',(e,c)=>{const o=readCodes();if(c){o.__all=String(c).trim()}else delete o.__all;writeCodes(o);return !!o.__all});
 ipcMain.handle('code:get',()=>readCodes().__all||'');
+ipcMain.handle('code:set',(e,id,c)=>{if(id!=='dong03'||!c)return{ok:false};const o=readCodes();o[id]=String(c).trim();writeCodes(o);return{ok:true}});
 ipcMain.handle('code:hasAll',()=>!!readCodes().__all);
 ipcMain.handle('stop',()=>{batchStop=true;return true});
 /* chạy một xã ở chế độ lô: chờ tới khi có kết quả (✅ xong / ✕ lỗi / bị hủy) */
