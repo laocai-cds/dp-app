@@ -348,7 +348,7 @@ setTimeout(staleCheck,3*60e3);setInterval(staleCheck,60*60e3);
 /* ===== Giữ phiên gqtthc "sống": cứ 10 phút gọi một API nhẹ như người đang thao tác; hiện hạn token còn lại ===== */
 const keepFile=()=>path.join(app.getPath('userData'),'giu-phien.json');
 const readKeep=()=>{try{return Object.assign({on:true},JSON.parse(fs.readFileSync(keepFile(),'utf8')))}catch(_){return{on:true}}};
-let lastReload=0,sessInfo={text:'Phiên gqtthc: chưa kiểm tra',bad:false},lastExpWarn=0,lastKeepLog=0,lastKeepStatus=null;
+let wasIn=false,lastReload=0,sessInfo={text:'Phiên gqtthc: chưa kiểm tra',bad:false},lastExpWarn=0,lastKeepLog=0,lastKeepStatus=null;
 const KEEPJS="(async()=>{const tk=localStorage.getItem('token');if(!tk)return{s:0,exp:0};let exp=0;try{exp=JSON.parse(atob(tk.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp||0}catch(e){}"+
  /* gqtthc có đồng hồ 'không hoạt động' 30 phút (ng2-idle): giả lập thao tác chuột/bàn phím để reset; gọi API đơn thuần không reset được */
  "const ex=()=>Number(localStorage.getItem('ng2Idle.main.expiry'))||0;const i0=ex();"+
@@ -362,7 +362,8 @@ async function keepAlive(manual){
     const r=await view.webContents.executeJavaScript(KEEPJS);
     const hm=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
     let text,bad=false;
-    if(!r||r.s===0){text='Phiên gqtthc: chưa đăng nhập';bad=true}
+    if(!r||r.s===0){text='Phiên gqtthc: chưa đăng nhập';bad=true;
+      if(wasIn&&Date.now()-lastExpWarn>30*60e3){lastExpWarn=Date.now();notify('gqtthc đã mất phiên đăng nhập','Ứng dụng bị đăng xuất khỏi gqtthc. Hãy mở ứng dụng và đăng nhập lại (VNeID) để các lượt tự động lấy được dữ liệu.');hookPost('⚠ gqtthc đã mất phiên đăng nhập');log('Giữ phiên: MẤT PHIÊN (token biến mất) — lần giữ phiên trước còn đăng nhập')}}
     else if(r.s===401||r.s===403){text='Phiên gqtthc: ĐÃ HẾT HẠN — hãy đăng nhập lại';bad=true;
       if(Date.now()-lastExpWarn>3*3600e3){lastExpWarn=Date.now();notify('gqtthc đã hết phiên đăng nhập','Hãy mở ứng dụng và đăng nhập lại để các lượt tự động lấy được dữ liệu.');hookPost('⚠ gqtthc đã hết phiên đăng nhập');}}
     else{const left=r.exp?r.exp*1000-Date.now():0;
@@ -373,6 +374,7 @@ async function keepAlive(manual){
       lastReload=Date.now();log('Giữ phiên: token sắp hết hạn → tải lại trang gqtthc để làm mới token');
       try{await new Promise(z=>{view.webContents.once('did-finish-load',z);view.webContents.reload();setTimeout(z,20000)})}catch(_){}
       setTimeout(()=>keepAlive(true),6000)}
+    wasIn=!!(r&&r.s!==0);
     sessInfo={text,bad};try{win.webContents.send('sess',sessInfo)}catch(_){}
     if(Date.now()-lastKeepLog>3600e3||lastKeepStatus!==(r&&r.s)){lastKeepLog=Date.now();lastKeepStatus=r&&r.s;log('Giữ phiên: HTTP '+(r&&r.s)+(r&&r.exp?' · token hết hạn lúc '+new Date(r.exp*1000).toLocaleString('vi-VN'):'')+(r&&r.i1?' · đồng hồ không-hoạt động '+(r.i1>r.i0?'đã reset':'KHÔNG reset')+' (còn '+Math.round((r.i1-Date.now())/60000)+' phút)':''))}
   }catch(_){}
