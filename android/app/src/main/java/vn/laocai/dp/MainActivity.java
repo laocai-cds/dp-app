@@ -283,7 +283,7 @@ public class MainActivity extends Activity {
         this.goBtn = btn2;
         btn2.setSingleLine(false);
         this.goBtn.setMaxLines(2);
-        this.goBtn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 11.0f);
+        this.goBtn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12.0f);
         this.goBtn.setGravity(17);
         linearLayout2.addView(this.goBtn, eq());
         Button btn3 = btn("⟳ Kiểm tra cập nhật · " + this.verTxt, -13734992, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda10
@@ -293,7 +293,7 @@ public class MainActivity extends Activity {
             }
         });
         this.updBtn = btn3;
-        btn3.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12.0f);
+        btn3.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 13.0f);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(-1, dp(50));
         layoutParams.setMargins(dp(6), dp(4), dp(6), dp(8));
         linearLayout.addView(this.updBtn, layoutParams);
@@ -701,7 +701,7 @@ public class MainActivity extends Activity {
         Button button = new Button(this);
         button.setText(str);
         button.setAllCaps(false);
-        button.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12.0f);
+        button.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 13.0f);
         button.setSingleLine(true);
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setTextColor(i2);
