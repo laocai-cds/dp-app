@@ -259,7 +259,7 @@ public class MainActivity extends Activity {
         monRow.setGravity(16);
         monRow.setPadding(dp(10), 0, dp(10), dp(4));
         TextView monLb = new TextView(this);
-        monLb.setText("📅 Kỳ đảng phí:");
+        monLb.setText("📅 Chọn tháng:");
         monLb.setTextColor(-1);
         monLb.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 13.0f);
         monLb.setTypeface(Typeface.DEFAULT_BOLD);
