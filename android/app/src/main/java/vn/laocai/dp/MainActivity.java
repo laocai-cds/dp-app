@@ -254,19 +254,19 @@ public class MainActivity extends Activity {
         linearLayout2.setOrientation(0);
         linearLayout2.setPadding(dp(4), dp(8), dp(4), dp(4));
         linearLayout.addView(linearLayout2, new LinearLayout.LayoutParams(-1, -2));
-        linearLayout2.addView(btn("⟳ Tải lại", -13734992, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda6
+        linearLayout2.addView(btn("⟳ Tải lại", 0xFF1E6FD9, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda6
             @Override // android.view.View.OnClickListener
             public final void onClick(View view) {
                 MainActivity.this.m4lambda$onCreate$1$vnlaocaidpMainActivity(view);
             }
         }), eq());
-        linearLayout2.addView(btn("🔑 Mã", -13734992, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda7
+        linearLayout2.addView(btn("🔑 Mã", 0xFF7B3FBF, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda7
             @Override // android.view.View.OnClickListener
             public final void onClick(View view) {
                 MainActivity.this.m6lambda$onCreate$3$vnlaocaidpMainActivity(view);
             }
         }), eq());
-        Button btn = btn("▼ Chọn", -1539302, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda8
+        Button btn = btn("▼ Chọn", 0xFFE07B00, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda8
             @Override // android.view.View.OnClickListener
             public final void onClick(View view) {
                 MainActivity.this.m7lambda$onCreate$4$vnlaocaidpMainActivity(view);
@@ -274,7 +274,7 @@ public class MainActivity extends Activity {
         });
         this.pickBtn = btn;
         linearLayout2.addView(btn, eq());
-        Button btn2 = btn("▶ Chạy", -14774722, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda9
+        Button btn2 = btn("▶ Chạy", 0xFF169A4A, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda9
             @Override // android.view.View.OnClickListener
             public final void onClick(View view) {
                 MainActivity.this.m8lambda$onCreate$5$vnlaocaidpMainActivity(view);
@@ -286,7 +286,7 @@ public class MainActivity extends Activity {
         this.goBtn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12.0f);
         this.goBtn.setGravity(17);
         linearLayout2.addView(this.goBtn, eq());
-        Button btn3 = btn("⟳ Kiểm tra cập nhật · " + this.verTxt, -13734992, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda10
+        Button btn3 = btn("⟳ Kiểm tra cập nhật · " + this.verTxt, 0xFF0097A7, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda10
             @Override // android.view.View.OnClickListener
             public final void onClick(View view) {
                 MainActivity.this.m9lambda$onCreate$6$vnlaocaidpMainActivity(view);
@@ -358,13 +358,13 @@ public class MainActivity extends Activity {
                     lastH.postDelayed(this, 4000L);
                 }
             }, 4000L);
-            linearLayout3.addView(btn("🔄 Đồng bộ 03 thủ tục", -15295926, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda12
+            linearLayout3.addView(btn("🔄 Đồng bộ 03 thủ tục", 0xFFD81B60, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda12
                 @Override // android.view.View.OnClickListener
                 public final void onClick(View view) {
                     MainActivity.this.m10lambda$onCreate$7$vnlaocaidpMainActivity(view);
                 }
             }), eq());
-            linearLayout3.addView(btn("🔑 Đổi mã", -10066330, -1, new View.OnClickListener() {
+            linearLayout3.addView(btn("🔑 Đổi mã", 0xFF8D6E00, -1, new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     final EditText et = new EditText(MainActivity.this);
