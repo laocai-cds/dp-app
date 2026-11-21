@@ -72,6 +72,49 @@ public class MainActivity extends Activity {
     JSONObject cfg;
     JSONObject dong03;
     Spinner monSp;
+    TextView last03Tv;
+
+    void updLast03() {
+        if (this.last03Tv == null) {
+            return;
+        }
+        long t = this.sp.getLong("last03_t", 0L);
+        if (t <= 0) {
+            this.last03Tv.setText("Lần cuối: chưa có");
+            this.last03Tv.setTextColor(-1);
+            return;
+        }
+        boolean ok = this.sp.getBoolean("last03_ok", true);
+        String f = new java.text.SimpleDateFormat("HH:mm dd/MM", Locale.getDefault()).format(new Date(t));
+        this.last03Tv.setText((ok ? "✅ Lần cuối: " : "⚠ Lần cuối (lỗi): ") + f);
+        this.last03Tv.setTextColor(ok ? -8586330 : -11654);
+    }
+
+    void pollLast03() {
+        if (this.web != null) {
+            this.web.evaluateJavascript("(function(){try{return localStorage.getItem('tthc03.last')||''}catch(e){return ''}})()", new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String v) {
+                    try {
+                        if (v == null || v.equals("null")) {
+                            return;
+                        }
+                        Object o = new org.json.JSONTokener(v).nextValue();
+                        if (!(o instanceof String) || ((String) o).isEmpty()) {
+                            return;
+                        }
+                        JSONObject j = new JSONObject((String) o);
+                        long t = j.optLong("t", 0L);
+                        if (t > MainActivity.this.sp.getLong("last03_t", 0L)) {
+                            MainActivity.this.sp.edit().putLong("last03_t", t).putBoolean("last03_ok", j.optBoolean("ok", true)).apply();
+                            MainActivity.this.updLast03();
+                        }
+                    } catch (Exception unused) {
+                    }
+                }
+            });
+        }
+    }
     String monKey = "";
     String selMonth = "";
     ArrayList<String> monVals = new ArrayList<>();
@@ -301,6 +344,20 @@ public class MainActivity extends Activity {
             linearLayout3.setOrientation(0);
             linearLayout3.setPadding(dp(4), 0, dp(4), dp(2));
             linearLayout.addView(linearLayout3, new LinearLayout.LayoutParams(-1, -2));
+            this.last03Tv = new TextView(this);
+            this.last03Tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12.0f);
+            this.last03Tv.setTypeface(Typeface.DEFAULT_BOLD);
+            this.last03Tv.setPadding(dp(10), 0, dp(10), dp(4));
+            linearLayout.addView(this.last03Tv, new LinearLayout.LayoutParams(-1, -2));
+            updLast03();
+            final Handler lastH = new Handler();
+            lastH.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity.this.pollLast03();
+                    lastH.postDelayed(this, 4000L);
+                }
+            }, 4000L);
             linearLayout3.addView(btn("🔄 Đồng bộ 03 thủ tục", -15295926, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda12
                 @Override // android.view.View.OnClickListener
                 public final void onClick(View view) {
