@@ -148,7 +148,7 @@ public class MainActivity extends Activity {
             public View getView(int pos, View cv, android.view.ViewGroup parent) {
                 TextView t = (TextView) super.getView(pos, cv, parent);
                 t.setTextColor(-15649441);
-                t.setTextSize(13.0f);
+                t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 13.0f);
                 t.setTypeface(Typeface.DEFAULT_BOLD);
                 return t;
             }
@@ -157,7 +157,7 @@ public class MainActivity extends Activity {
             public View getDropDownView(int pos, View cv, android.view.ViewGroup parent) {
                 TextView t = (TextView) super.getDropDownView(pos, cv, parent);
                 t.setTextColor(-15649441);
-                t.setTextSize(13.0f);
+                t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 13.0f);
                 t.setPadding(dp(12), dp(10), dp(12), dp(10));
                 return t;
             }
