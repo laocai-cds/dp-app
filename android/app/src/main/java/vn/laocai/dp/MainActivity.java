@@ -30,12 +30,15 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.ByteArrayOutputStream;
@@ -68,6 +71,69 @@ public class MainActivity extends Activity {
     static final String UPD_BASE = "https://github.com/laocai-cds/dp-app/releases/download/android-latest/";
     JSONObject cfg;
     JSONObject dong03;
+    Spinner monSp;
+    String monKey = "";
+    String selMonth = "";
+    ArrayList<String> monVals = new ArrayList<>();
+    static final String MONOBS = "(()=>{if(window.__dpMo)return;window.__dpMo=1;new MutationObserver(()=>{const m=window.__dpMonth;if(!m)return;const ov=[...document.querySelectorAll('div')].find(d=>d.querySelector&&d.querySelector('select')&&d.querySelector('[data-ok]'));if(ov&&!ov.__mo){ov.__mo=1;const s=ov.querySelector('select');const o=[...s.options].find(x=>x.value===m);if(o)s.value=o.value}}).observe(document.documentElement,{childList:true,subtree:true})})();";
+
+    /* Ô chọn kỳ (tháng/năm): 12 tháng gần nhất, tự thêm tháng mới / năm mới khi sang kỳ mới */
+    void fillMonths() {
+        if (this.monSp == null) {
+            return;
+        }
+        Calendar now = Calendar.getInstance();
+        String k = now.get(Calendar.YEAR) + "-" + (now.get(Calendar.MONTH) + 1);
+        if (k.equals(this.monKey)) {
+            return;
+        }
+        boolean wasCur = this.selMonth.isEmpty() || this.selMonth.equals(this.monKey);
+        this.monKey = k;
+        this.monVals.clear();
+        ArrayList<String> labels = new ArrayList<>();
+        for (int i = 0; i < 12; i++) {
+            Calendar d = Calendar.getInstance();
+            d.set(Calendar.DAY_OF_MONTH, 1);
+            d.add(Calendar.MONTH, -i);
+            int y = d.get(Calendar.YEAR);
+            int m = d.get(Calendar.MONTH) + 1;
+            this.monVals.add(y + "-" + m);
+            labels.add("Tháng " + m + "/" + y + (i == 0 ? " (hiện tại)" : ""));
+        }
+        ArrayAdapter<String> ad = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, labels) {
+            @Override
+            public View getView(int pos, View cv, android.view.ViewGroup parent) {
+                TextView t = (TextView) super.getView(pos, cv, parent);
+                t.setTextColor(-15649441);
+                t.setTextSize(15.0f);
+                t.setTypeface(Typeface.DEFAULT_BOLD);
+                return t;
+            }
+
+            @Override
+            public View getDropDownView(int pos, View cv, android.view.ViewGroup parent) {
+                TextView t = (TextView) super.getDropDownView(pos, cv, parent);
+                t.setTextColor(-15649441);
+                t.setTextSize(15.0f);
+                t.setPadding(dp(12), dp(10), dp(12), dp(10));
+                return t;
+            }
+        };
+        ad.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        this.monSp.setAdapter((android.widget.SpinnerAdapter) ad);
+        int idx = wasCur ? 0 : this.monVals.indexOf(this.selMonth);
+        if (idx < 0) {
+            idx = 0;
+        }
+        this.monSp.setSelection(idx);
+        this.selMonth = this.monVals.get(idx);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fillMonths();
+    }
     Button goBtn;
     Button pickBtn;
     SharedPreferences sp;
@@ -188,6 +254,43 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(-1, dp(50));
         layoutParams.setMargins(dp(6), dp(4), dp(6), dp(8));
         linearLayout.addView(this.updBtn, layoutParams);
+        LinearLayout monRow = new LinearLayout(this);
+        monRow.setOrientation(0);
+        monRow.setGravity(16);
+        monRow.setPadding(dp(10), 0, dp(10), dp(4));
+        TextView monLb = new TextView(this);
+        monLb.setText("📅 Kỳ đảng phí:");
+        monLb.setTextColor(-1);
+        monLb.setTextSize(13.0f);
+        monLb.setTypeface(Typeface.DEFAULT_BOLD);
+        monRow.addView(monLb);
+        this.monSp = new Spinner(this);
+        this.monSp.setBackgroundColor(-1);
+        LinearLayout.LayoutParams monLp = new LinearLayout.LayoutParams(0, dp(40), 1.0f);
+        monLp.setMargins(dp(8), 0, 0, 0);
+        monRow.addView(this.monSp, monLp);
+        linearLayout.addView(monRow, new LinearLayout.LayoutParams(-1, -2));
+        this.monSp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int pos, long id) {
+                if (pos >= 0 && pos < MainActivity.this.monVals.size()) {
+                    MainActivity.this.selMonth = MainActivity.this.monVals.get(pos);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        fillMonths();
+        final Handler monH = new Handler();
+        monH.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                MainActivity.this.fillMonths();
+                monH.postDelayed(this, 60000L);
+            }
+        }, 60000L);
         try {
             this.dong03 = new JSONObject("{\"id\":\"dong03\",\"label\":\"Đồng bộ 03\",\"fn\":\"run03Bookmarklet\",\"file\":\"bm/dong03.js\",\"key\":\"tthc03.code\",\"arg\":{},\"own\":true}");
         } catch (Exception unused3) {
@@ -1159,7 +1262,7 @@ public class MainActivity extends Activity {
             }
 
             String bm = read(x.getString("file"));
-            String js = PRE + "(()=>{try{localStorage.setItem(" + JSONObject.quote(key) + "," + JSONObject.quote(code) + ")}catch(e){}\n"
+            String js = PRE + MONOBS + "window.__dpMonth=" + JSONObject.quote(this.selMonth) + ";(()=>{try{localStorage.setItem(" + JSONObject.quote(key) + "," + JSONObject.quote(code) + ")}catch(e){}\n"
                     + bm + "\n(" + fn + ")(" + argJs + ")})();void 0";
             web.evaluateJavascript(js, null);
         } catch (Exception e) {
