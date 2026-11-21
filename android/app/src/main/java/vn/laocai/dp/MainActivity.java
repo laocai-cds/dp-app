@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
         this.goBtn = btn2;
         btn2.setSingleLine(false);
         this.goBtn.setMaxLines(2);
-        this.goBtn.setTextSize(10.0f);
+        this.goBtn.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 9.0f);
         this.goBtn.setGravity(17);
         linearLayout2.addView(this.goBtn, eq());
         Button btn3 = btn("⟳ Kiểm tra cập nhật · " + this.verTxt, -13734992, -1, new View.OnClickListener() { // from class: vn.laocai.dp.MainActivity$$ExternalSyntheticLambda10
@@ -250,7 +250,7 @@ public class MainActivity extends Activity {
             }
         });
         this.updBtn = btn3;
-        btn3.setTextSize(11.0f);
+        btn3.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 9.5f);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(-1, dp(50));
         layoutParams.setMargins(dp(6), dp(4), dp(6), dp(8));
         linearLayout.addView(this.updBtn, layoutParams);
@@ -261,7 +261,7 @@ public class MainActivity extends Activity {
         TextView monLb = new TextView(this);
         monLb.setText("📅 Kỳ đảng phí:");
         monLb.setTextColor(-1);
-        monLb.setTextSize(13.0f);
+        monLb.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 11.0f);
         monLb.setTypeface(Typeface.DEFAULT_BOLD);
         monRow.addView(monLb);
         this.monSp = new Spinner(this);
@@ -644,7 +644,7 @@ public class MainActivity extends Activity {
         Button button = new Button(this);
         button.setText(str);
         button.setAllCaps(false);
-        button.setTextSize(11.0f);
+        button.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 10.0f);
         button.setSingleLine(true);
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setTextColor(i2);
