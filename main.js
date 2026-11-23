@@ -142,7 +142,7 @@ function createWindow(){
   view.webContents.on('did-fail-load',(e,c,d)=>{if(c!==-3)win.webContents.send('status','Không mở được trang: '+d)});
 }
 ipcMain.handle('init',()=>({ver:app.getVersion(),admin:!cfg.only,title:cfg.title,xa:xaList().filter(x=>!x.own).map(x=>({id:x.id,label:x.label,has:!!readCodes()[x.id],extra:!!x.extra})),solo:xaList().filter(x=>x.own).map(x=>({id:x.id,label:x.label}))}));
-ipcMain.handle('nav',(e,a)=>{if(a==='home')view.webContents.loadURL(cfg.home);else if(a==='reload')view.webContents.reload()});
+ipcMain.handle('nav',async(e,a)=>{if(a==='home')view.webContents.loadURL(cfg.home);else if(a==='reload')view.webContents.reload();else if(a==='incognito'){try{const s=view.webContents.session;await s.clearStorageData();await s.clearCache();try{win.webContents.send('sess',null)}catch(_){}try{win.webContents.send('status','🕶 Đã xóa phiên gqtthc trên máy này — hãy đăng nhập VNeID lại')}catch(_){}view.webContents.loadURL(cfg.home)}catch(err){try{win.webContents.send('status','⚠ Không xóa được phiên: '+String(err&&err.message||err))}catch(_){}}}});
 ipcMain.handle('reset',(e,id)=>{const c=readCodes();delete c[id];writeCodes(c);return true});
 let _chOk=null,_chAt=0,_chT=false;
 async function chungOk(){
