@@ -116,8 +116,10 @@ function apiBookmarklet(C){
           const pj=await pr.json().catch(()=>null),me2=((pj&&pj.data)||[]).find(x=>String(x.tenDonVi||'').trim()===C.name);
           if(!me2)tt0('⚠ TTHC: không thấy '+C.name+' trong danh sách cấp tỉnh (HTTP '+pr.status+').');
           else{
-            const trow=[0,String(me2.tenDonVi).trim(),n(me2.tongSoLuongDangVien),n(me2.soLuongDangVienChinhThuc),n(me2.soLuongDangVienTamThoi),n(me2.soLuongChuyenTamThoi),n(me2.soLuongDangVienMienGiam),n(me2.tongSoHoSoChuaDuyet),n(me2.tongSoHoSoDaDuyetChuaNop),n(me2.tongSoHoSoDaDuyetDaNop),n(me2.soLuongHoSoChuaKhaiBao),n(me2.tongSoTienDaKhaiBao),n(me2.tongSoTienDaNop),n(me2.mucDoThucHien)];
-            await fetch(C.tt,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:tpw,source:'unit-row',month:tm,syncId:'unit-'+Date.now(),unit:{row:trow}})});
+            const pr2=[me2.tongSoLuongDangVien,me2.soLuongDangVienChinhThuc,me2.soLuongDangVienTamThoi,me2.soLuongChuyenTamThoi,me2.soLuongDangVienMienGiam,me2.tongSoHoSoChuaDuyet,me2.tongSoHoSoDaDuyetChuaNop,me2.tongSoHoSoDaDuyetDaNop,me2.soLuongHoSoChuaKhaiBao,me2.tongSoTienDaKhaiBao,me2.tongSoTienDaNop].map(n),vis=pr2.map(()=>0),seenV=new Set();
+            rows.slice(1).forEach(r=>{const k=String(r[1]||'').normalize('NFC').replace(/\s+/g,' ').trim().toLowerCase();if(!k||seenV.has(k))return;seenV.add(k);for(let q=0;q<11;q++)vis[q]+=n(r[2+q])});/* số các đơn vị hiển thị trên site xã */
+            const needV=Math.max(0,vis[1]+vis[2]-vis[3]-vis[4]),trow=[0,String(me2.tenDonVi).trim()].concat(vis,[needV?Math.round(vis[7]/needV*10000)/100:0]),dlt=pr2.map((x,q)=>x-vis[q]);
+            await fetch(C.tt,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:tpw,source:'unit-row',month:tm,syncId:'unit-'+Date.now(),unit:{row:trow,delta:dlt}})});
             let tok=null;
             for(let k=0;k<8&&!tok;k++){await new Promise(r2=>setTimeout(r2,1000));const x=await jp(C.tt+'?action=unit&month='+tm+'&name='+encodeURIComponent(C.name),9000);if(x&&x.ok&&x.row&&Number(x.row[9])===trow[9]&&Number(x.row[12])===trow[12])tok=x}
             if(tok){tt0('TTHC: đã cập nhật hàng '+C.name+' ('+trow[9]+' đã nộp / '+Math.max(0,trow[3]+trow[4]-trow[5]-trow[6])+' phải nộp).');if(fresh){try{localStorage.setItem('dangphi.token',tpw)}catch(e){}}}
