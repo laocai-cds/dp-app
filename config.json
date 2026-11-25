@@ -26,7 +26,8 @@
         "src": "website-van-ban-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbwA6gO_3VpRmqjs1qIPprnFzo-Ala4uBqsYK3620rzqv3bl_27N623RFnf9V9wXxV12/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbwA6gO_3VpRmqjs1qIPprnFzo-Ala4uBqsYK3620rzqv3bl_27N623RFnf9V9wXxV12/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -44,7 +45,8 @@
         "src": "website-xuan-hoa-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbxNpIwIdSufuR51f3iLL1eKILxo9Km3BjvhGiyeXVZ7d1_3SBXWexRBaSBbTY9LEbYu/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbxNpIwIdSufuR51f3iLL1eKILxo9Km3BjvhGiyeXVZ7d1_3SBXWexRBaSBbTY9LEbYu/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -61,7 +63,8 @@
         "k": "pl_apipw",
         "src": "website-pung-luong-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbzb0GE2RWwHftri7SGaW8uh4l8bt58e01bzWW1xgZiwVHBVUNkoAnd1mOePbSny16nh7Q/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbzb0GE2RWwHftri7SGaW8uh4l8bt58e01bzWW1xgZiwVHBVUNkoAnd1mOePbSny16nh7Q/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -77,7 +80,8 @@
         "src": "website-bao-thang-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbxAaE46jDGIDki4cYGffdymtqMqJDfnutoP7QsVgLM8kyMu-3gpBxfdEZGn8HMsWrR1/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbxAaE46jDGIDki4cYGffdymtqMqJDfnutoP7QsVgLM8kyMu-3gpBxfdEZGn8HMsWrR1/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -93,7 +97,8 @@
         "src": "website-luong-thinh-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbw8NhU4T_iEjgoQebNAGVbjTs9rcaTIzkeDTtztpdFEkMwgNc1gRqk7jsmsBMgNxI6MKA/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbw8NhU4T_iEjgoQebNAGVbjTs9rcaTIzkeDTtztpdFEkMwgNc1gRqk7jsmsBMgNxI6MKA/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -111,7 +116,8 @@
         "src": "website-nghia-do-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbyA58Z6sF1diN5q_xLTRW8Eb7z6RHBB6sODiluiw3dqWDDIORLV84BD4VMm07c2YHs6gg/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbyA58Z6sF1diN5q_xLTRW8Eb7z6RHBB6sODiluiw3dqWDDIORLV84BD4VMm07c2YHs6gg/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -127,7 +133,8 @@
         "src": "website-phinh-ho-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbxVbYRtH1aYVo3gkA7lMPpfu7gCShvAvozkh71d7kJTkjXHltAvfVp8O2yW1CS31pc1UQ/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbxVbYRtH1aYVo3gkA7lMPpfu7gCShvAvozkh71d7kJTkjXHltAvfVp8O2yW1CS31pc1UQ/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -145,7 +152,8 @@
         "src": "website-phuc-khanh-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbzmZKP2MNQ8Hgeh4Qc1QjZp98ddQLyjqrIohVUrbaRaHO0sJg4_KMxJLF9Znhem876dmQ/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbzmZKP2MNQ8Hgeh4Qc1QjZp98ddQLyjqrIohVUrbaRaHO0sJg4_KMxJLF9Znhem876dmQ/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -164,7 +172,8 @@
         "src": "website-si-ma-cai-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbyb0fvQHdmdDwKMOnF4qM-K5CniGORlNzRKjKaxKe6Whc19PLj8myU3yQ7aiYXPYlcylQ/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbyb0fvQHdmdDwKMOnF4qM-K5CniGORlNzRKjKaxKe6Whc19PLj8myU3yQ7aiYXPYlcylQ/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -180,7 +189,8 @@
         "src": "website-tram-tau-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbyDJxQWv3T9ESqRZAPYhyP-HyKEIgJa3oxiYmG4qcs-RR-ha9gZb1374VxhAm3iWq_W/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbyDJxQWv3T9ESqRZAPYhyP-HyKEIgJa3oxiYmG4qcs-RR-ha9gZb1374VxhAm3iWq_W/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -195,7 +205,8 @@
         "k": "volao_apipw",
         "src": "website-vo-lao-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbyZuNu5E1HxfD7kAL195eZ2JpTaElgViDjGDHTauIhXpC7lnqjPixHd49VpuhsIbXmh/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbyZuNu5E1HxfD7kAL195eZ2JpTaElgViDjGDHTauIhXpC7lnqjPixHd49VpuhsIbXmh/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -212,7 +223,8 @@
         "k": "ds_apipw",
         "src": "website-den-sang-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbzABnJRJPBsEx0qQ5GtEK05nRHjsbUZQHKu23adXPwTAiVG_1CZ8pFnhZf1gS6gqDVpmw/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -229,7 +241,8 @@
         "k": "xq_apipw",
         "src": "website-xuan-quang-api",
         "m": true,
-        "ep": "https://script.google.com/macros/s/AKfycbyfW_GQckCdByg0recIU4Hgjjrv6l_UGjijxs-272FZrAI3ZPmtl1Oj0NR_XWg-pj9J/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbyfW_GQckCdByg0recIU4Hgjjrv6l_UGjijxs-272FZrAI3ZPmtl1Oj0NR_XWg-pj9J/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     },
     {
@@ -247,7 +260,8 @@
         "src": "website-bao-yen-api",
         "m": true,
         "sub": "^đảng bộ\\s+trường\\b",
-        "ep": "https://script.google.com/macros/s/AKfycbx7DepxIeL4cMMPNnH_aHMpSf8n3FWwzodoXaHG6yBjlVOYzmInEX2UstUbHIN7T_ep/exec"
+        "ep": "https://script.google.com/macros/s/AKfycbx7DepxIeL4cMMPNnH_aHMpSf8n3FWwzodoXaHG6yBjlVOYzmInEX2UstUbHIN7T_ep/exec",
+        "tt": "https://script.google.com/macros/s/AKfycbzM63_09XGNRPq8S6lcItzJRnb8BjwL4f-EBN-FZA_wbIbEUBQ7MBApN7GHwAdYH82kbw/exec"
       }
     }
   ],

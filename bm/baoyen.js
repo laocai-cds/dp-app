@@ -126,6 +126,25 @@ function apiBookmarklet(C){
           subMsg='\nChi bộ trực thuộc đảng bộ trường: '+nSub+' chi bộ của '+nSch+'/'+schools.length+' đảng bộ'+(errs.length?' (chưa thấy chi bộ con: '+errs.length+' đảng bộ)':'');
         }else subMsg='\nChi bộ trực thuộc đảng bộ trường: chưa lấy được chi bộ con nào ('+schools.length+' đảng bộ trường)';
       }catch(e3){subMsg='\n⚠ Chưa lấy được chi bộ con của đảng bộ trường ('+(e3&&e3.message||e3)+') — đồng bộ chính vẫn xong.'}}
+      if(ok&&C.tt){try{/* đẩy luôn hàng của chính đơn vị sang Sheet tthc để bảng xếp hạng tthc khớp ngay */
+        const tt0=m=>{const b=document.createElement('div');b.style.cssText='position:fixed;z-index:2147483647;left:14px;bottom:14px;max-width:360px;padding:10px 14px;border-radius:10px;background:'+(/^⚠/.test(m)?'#a50d26':'#0f8a3c')+';color:#fff;font:600 13px/1.45 system-ui,sans-serif;box-shadow:0 6px 22px rgba(0,0,0,.35)';b.textContent=m;document.body.appendChild(b);setTimeout(()=>b.remove(),auto?8000:20000)};
+        let tpw='',fresh=false;try{tpw=localStorage.getItem('dangphi.token')||''}catch(e){}
+        if(!tpw&&!auto){tpw=(prompt('Mã đồng bộ của site TTHC (để cập nhật bảng xếp hạng tthc). Bỏ trống nếu chưa cần:')||'').trim();fresh=!!tpw}
+        if(tpw){
+          const tm2=String(SM).padStart(2,'0'),tm=cy+'-'+tm2;
+          const pr=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({kyNopStart:'01/'+tm2+'/'+cy,kyNopEnd:new Date(cy,SM,0).getDate()+'/'+tm2+'/'+cy,parentId:2122408,hasChildren:true,page:1,size:1000})});
+          const pj=await pr.json().catch(()=>null),me2=((pj&&pj.data)||[]).find(x=>String(x.tenDonVi||'').trim()===C.name);
+          if(!me2)tt0('⚠ TTHC: không thấy '+C.name+' trong danh sách cấp tỉnh (HTTP '+pr.status+').');
+          else{
+            const trow=[0,String(me2.tenDonVi).trim(),n(me2.tongSoLuongDangVien),n(me2.soLuongDangVienChinhThuc),n(me2.soLuongDangVienTamThoi),n(me2.soLuongChuyenTamThoi),n(me2.soLuongDangVienMienGiam),n(me2.tongSoHoSoChuaDuyet),n(me2.tongSoHoSoDaDuyetChuaNop),n(me2.tongSoHoSoDaDuyetDaNop),n(me2.soLuongHoSoChuaKhaiBao),n(me2.tongSoTienDaKhaiBao),n(me2.tongSoTienDaNop),n(me2.mucDoThucHien)];
+            await fetch(C.tt,{method:'POST',mode:'no-cors',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:tpw,source:'unit-row',month:tm,syncId:'unit-'+Date.now(),unit:{row:trow}})});
+            let tok=null;
+            for(let k=0;k<8&&!tok;k++){await new Promise(r2=>setTimeout(r2,1000));const x=await jp(C.tt+'?action=unit&month='+tm+'&name='+encodeURIComponent(C.name),9000);if(x&&x.ok&&x.row&&Number(x.row[9])===trow[9]&&Number(x.row[12])===trow[12])tok=x}
+            if(tok){tt0('TTHC: đã cập nhật hàng '+C.name+' ('+trow[9]+' đã nộp / '+Math.max(0,trow[3]+trow[4]-trow[5]-trow[6])+' phải nộp).');if(fresh){try{localStorage.setItem('dangphi.token',tpw)}catch(e){}}}
+            else tt0('⚠ TTHC: chưa xác nhận được (sai mã đồng bộ TTHC, hoặc Apps Script TTHC chưa triển khai bản mới).')
+          }
+        }
+      }catch(e4){try{console.warn('TTHC',e4)}catch(e5){}}}
       if(ok&&C.m){say('Đang cập nhật tab “Thu theo tháng”…',false,true);
         const MK=cy+'-'+String(SM).padStart(2,'0'),paid=rows.slice(1).reduce((a,r)=>a+(Number(r[12])||0),0);
         const x=await jp(C.ep+'?action=read&tab='+encodeURIComponent('Thu theo tháng'),9000);
