@@ -60,14 +60,14 @@ function apiBookmarklet(C){
         XMLHttpRequest.prototype.setRequestHeader=function(k,v){try{if(this.__gw){this.__h.set(k,v);if(/^authorization$/i.test(k))take(this.__h)}}catch(e){}return xs.apply(this,arguments)};
       });
       let capTried=false;
-      const getL=async pid=>{
-        let r;
-        for(let a=1;a<=3;a++){
-          const ac=new AbortController(),to=setTimeout(()=>ac.abort(),60000);
+      const getL=async(pid,fast)=>{
+        let r;const MAXA=fast?1:3;
+        for(let a=1;a<=MAXA;a++){
+          const ac=new AbortController(),to=setTimeout(()=>ac.abort(),fast?30000:60000);
           try{
             r=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{signal:ac.signal,method:'POST',headers:HD,body:JSON.stringify({kyNopStart:kS,kyNopEnd:kE,parentId:pid,hasChildren:true,page:1,size:1000})});
             clearTimeout(to);
-            if(r.status>=500&&a<3){say('Máy chủ gqtthc đang bận (lỗi '+r.status+'), tự thử lại lần '+(a+1)+' sau 5 giây…',false,true);await new Promise(z=>setTimeout(z,5000));continue}
+            if(r.status>=500&&a<MAXA){say('Máy chủ gqtthc đang bận (lỗi '+r.status+'), tự thử lại lần '+(a+1)+' sau 5 giây…',false,true);await new Promise(z=>setTimeout(z,5000));continue}
             if(r.status===401&&!capTried){
               capTried=true;
               say('API từ chối mã đăng nhập (401).\nHãy bấm nút TÌM KIẾM trên trang gqtthc MỘT LẦN, nút sẽ tự lấy phiên đang dùng và chạy tiếp (chờ tối đa 90 giây).',false,true);
@@ -75,7 +75,7 @@ function apiBookmarklet(C){
               if(h){HD=Object.assign({},h,{'content-type':'application/json'});say('Đã lấy phiên của trang, đang thử lại…',false,true);a--;continue}
             }
             break;
-          }catch(e){clearTimeout(to);if(a===3)throw e;say('API chậm, đang thử lại lần '+(a+1)+'/3…',false,true)}
+          }catch(e){clearTimeout(to);if(a===MAXA)throw e;say('API chậm, đang thử lại lần '+(a+1)+'/3…',false,true)}
         }
         if(!r.ok)throw new Error('API trả lỗi '+r.status+(r.status===401?' — hãy đăng xuất, đăng nhập lại gqtthc rồi bấm lại.':''));
         const raw=await r.text();let J=null;try{J=JSON.parse(raw)}catch(e){}return{raw,st:r.status,list:(J&&J.data)||[]};
@@ -130,7 +130,7 @@ function apiBookmarklet(C){
         const one=async x=>{const nmx=String(x.tenDonVi||'').trim();let got=null;
           const sck='dp_sc_'+(C.k||'dp')+'_'+nmx;let svc=null;try{svc=localStorage.getItem(sck)}catch(e){}
           const cands=candIds(x);if(svc){const sv=/^\d+$/.test(svc)?Number(svc):svc;const ix=cands.findIndex(z=>String(z)===String(sv));if(ix>0)cands.splice(ix,1);if(ix!==0)cands.unshift(sv)}/* mã đã dùng được lần trước: thử trước, khỏi dò lần lượt */
-          for(const c of cands){let X;try{X=await getL(c)}catch(e){continue}
+          for(const c of cands){let X;try{X=await getL(c,!(svc&&String(c)===String(svc)))}catch(e){continue}
             if(X.list.length&&!X.list.some(y=>/tỉnh Lào Cai/i.test(String(y.tenDonVi||''))||String(y.tenDonVi||'').trim()===C.name||String(y.tenDonVi||'').trim()===nmx)){got=X.list;try{localStorage.setItem(sck,String(c))}catch(e){}break}}
           done++;say('Đang lấy chi bộ trực thuộc đảng bộ trường… '+done+'/'+schools.length+'\n'+nmx.replace(/^đảng bộ\s*/i,''),false,true);
           if(got){nSch++;const seenN=new Set();got.filter(y=>{const t=String(y.tenDonVi||'').trim().toLowerCase();if(!t||seenN.has(t)||!(+y.tongSoLuongDangVien>0))return false;seenN.add(t);return true}).forEach(y=>{nSub++;subRows.push([nmx,cy+'-'+p2(SM),subRows.length+1,y.tenDonVi,n(y.tongSoLuongDangVien),n(y.soLuongDangVienChinhThuc),n(y.soLuongDangVienTamThoi),n(y.soLuongChuyenTamThoi),n(y.soLuongDangVienMienGiam),n(y.tongSoHoSoChuaDuyet),n(y.tongSoHoSoDaDuyetChuaNop),n(y.tongSoHoSoDaDuyetDaNop),n(y.soLuongHoSoChuaKhaiBao),n(y.tongSoTienDaKhaiBao),n(y.tongSoTienDaNop),Math.round(n(y.mucDoThucHien)*100)/10000])})}
