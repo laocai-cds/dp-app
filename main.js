@@ -176,7 +176,7 @@ async function doRun(id,code,api,month,wc){
   const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
   try{await wc.executeJavaScript(js);return{ok:true}}catch(err){return{err:String(err&&err.message||err)}}
 }
-const BOXJS="(()=>{const b=[...document.querySelectorAll('div')].find(d=>d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px');return {t:b?b.textContent.replace(/✕\\s*$/,'').trim().slice(0,160):null,c:!!window.__dpCancelled}})()";
+const BOXJS="(()=>{const b=[...document.querySelectorAll('div')].find(d=>d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px');return {t:b?b.textContent.replace(/✕\\s*$/,'').trim().slice(0,160):null,f:b?b.textContent.slice(0,1500):null,c:!!window.__dpCancelled}})()";
 let batchStop=false;
 ipcMain.handle('run',(e,{id,code,api})=>doRun(id,code,api,''));
 ipcMain.handle('code:all',(e,c)=>{const o=readCodes();if(c){o.__all=String(c).trim()}else delete o.__all;writeCodes(o);return !!o.__all});
@@ -211,7 +211,7 @@ async function runWaitCore0(id,month,code,api,wc,noReset){
     if(st.c){try{log('Hủy ('+id+'): khung tiến độ bị bấm ✕ hoặc trang gqtthc tải lại; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'cancel'}}          /* chỉ coi là hủy khi người dùng bấm ✕ */
     const t=st.t;
     if(t){seen=true;lostAt=0;
-      if(t.startsWith('✅'))return{result:'done',msg:t};
+      if(t.startsWith('✅')){try{const m=String(st.f||'').match(/Tổng[\s\S]*?Xác nhận\s*[\d.,]+\s*(?:s|giây|ms)/);log('⏱ '+id+': '+(m?m[0].replace(/\s+/g,' '):String(st.f||'').replace(/\s+/g,' ').slice(-260)))}catch(_){}return{result:'done',msg:t}}
       if(t.startsWith('✕'))return{result:'fail',msg:t};
     }else if(!seen){if(Date.now()-t0>40000)return{result:'fail',msg:'Không thấy tiến độ (chưa đăng nhập hoặc bị chặn?)'}}
     else{if(!lostAt)lostAt=Date.now();else if(Date.now()-lostAt>90000)return{result:'fail',msg:'Mất khung tiến độ quá 90 giây (trang gqtthc tải lại?)'}}
