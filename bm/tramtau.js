@@ -80,7 +80,7 @@ function apiBookmarklet(C){
       const tF=performance.now();
       let subMsg='';
       if(ok&&C.sub){try{
-      const getL=async pid=>{const r=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(Object.assign({},body,{parentId:pid}))});if(!r.ok)throw new Error('API '+r.status);const raw=await r.text();let J=null;try{J=JSON.parse(raw)}catch(e){}return{raw,st:r.status,list:(J&&J.data)||[]}};
+      const getL=async(pid,fast)=>{const ac0=new AbortController(),to0=setTimeout(()=>ac0.abort(),fast?30000:90000);let r;try{r=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{method:'POST',signal:ac0.signal,headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(Object.assign({},body,{parentId:pid}))})}finally{clearTimeout(to0)}if(!r.ok)throw new Error('API '+r.status);const raw=await r.text();let J=null;try{J=JSON.parse(raw)}catch(e){}return{raw,st:r.status,list:(J&&J.data)||[]}};
         const schools=list.filter(x=>new RegExp(C.sub,'i').test(String(x.tenDonVi||'').trim()));
         let done=0,nSub=0,nSch=0;const subRows=[],errs=[];
         const candIds=x=>{const cand=[],seen=new Set(),add=vv=>{if(vv==null||typeof vv==='object')return;const t=String(vv).trim();if(t&&!seen.has(t)&&(/^\d{5,}$/.test(t)||/^[A-Za-z0-9._-]{3,}$/.test(t))){seen.add(t);cand.push(/^\d+$/.test(t)?Number(t):t)}};
@@ -89,7 +89,7 @@ function apiBookmarklet(C){
         const one=async x=>{const nmx=String(x.tenDonVi||'').trim();let got=null;
           const sck='dp_sc_'+(C.k||'dp')+'_'+nmx;let svc=null;try{svc=localStorage.getItem(sck)}catch(e){}
           const cands=candIds(x);if(svc){const sv=/^\d+$/.test(svc)?Number(svc):svc;const ix=cands.findIndex(z=>String(z)===String(sv));if(ix>0)cands.splice(ix,1);if(ix!==0)cands.unshift(sv)}/* mã đã dùng được lần trước: thử trước, khỏi dò lần lượt */
-          for(const c of cands){let X;try{X=await getL(c)}catch(e){continue}
+          for(const c of cands){let X;try{X=await getL(c,!(svc&&String(c)===String(svc)))}catch(e){continue}
             if(X.list.length&&!X.list.some(y=>/tỉnh Lào Cai/i.test(String(y.tenDonVi||''))||String(y.tenDonVi||'').trim()===C.name||String(y.tenDonVi||'').trim()===nmx)){got=X.list;try{localStorage.setItem(sck,String(c))}catch(e){}break}}
           done++;say('Đang lấy chi bộ trực thuộc đảng bộ trường… '+done+'/'+schools.length+'\n'+nmx.replace(/^đảng bộ\s*/i,''),false,true);
           if(got){nSch++;const seenN=new Set();got.filter(y=>{const t=String(y.tenDonVi||'').trim().toLowerCase();if(!t||seenN.has(t)||!(+y.tongSoLuongDangVien>0))return false;seenN.add(t);return true}).forEach(y=>{nSub++;subRows.push([nmx,cy+'-'+p2(SM),subRows.length+1,y.tenDonVi,n(y.tongSoLuongDangVien),n(y.soLuongDangVienChinhThuc),n(y.soLuongDangVienTamThoi),n(y.soLuongChuyenTamThoi),n(y.soLuongDangVienMienGiam),n(y.tongSoHoSoChuaDuyet),n(y.tongSoHoSoDaDuyetChuaNop),n(y.tongSoHoSoDaDuyetDaNop),n(y.soLuongHoSoChuaKhaiBao),n(y.tongSoTienDaKhaiBao),n(y.tongSoTienDaNop),Math.round(n(y.mucDoThucHien)*100)/10000])})}
