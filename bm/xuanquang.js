@@ -48,17 +48,17 @@ function apiBookmarklet(C){
       const tA=performance.now();
       const p2=n=>String(n).padStart(2,'0'),mm=p2(SM),yy=cy;
       const kS='01/'+mm+'/'+yy,kE=new Date(yy,SM,0).getDate()+'/'+mm+'/'+yy;
-      const getL=async pid=>{
-        let r=null;
-        for(let at=1;at<=3&&!r;at++){/* chờ tối đa 90 giây mỗi lần; chậm hoặc lỗi máy chủ thì tự thử lại tối đa 3 lần */
-          if(dead)throw new Error('Đã hủy');const ac=new AbortController();acs.add(ac);const to=setTimeout(()=>ac.abort(),90000);
+      const getL=async(pid,fast)=>{
+        let r=null;const MAXAT=fast?1:3;
+        for(let at=1;at<=MAXAT&&!r;at++){/* chờ tối đa 90 giây mỗi lần; chậm hoặc lỗi máy chủ thì tự thử lại tối đa 3 lần */
+          if(dead)throw new Error('Đã hủy');const ac=new AbortController();acs.add(ac);const to=setTimeout(()=>ac.abort(),fast?30000:90000);
           try{
             if(at>1)say('API phản hồi chậm, đang thử lại lần '+at+'…',false,true);
             const rr=await fetch('https://gateway-gqtthc.dcs.vn/report/dashboard/danh-sach-theo-doi-dang-phi',{signal:ac.signal,method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({kyNopStart:kS,kyNopEnd:kE,parentId:pid,hasChildren:true,page:1,size:1000})});
             clearTimeout(to);
-            if(rr.status>=500&&at<3){say('Máy chủ gqtthc đang bận (lỗi '+rr.status+'), tự thử lại lần '+(at+1)+' sau 5 giây…',false,true);await new Promise(z=>setTimeout(z,5000));continue}
+            if(rr.status>=500&&at<MAXAT){say('Máy chủ gqtthc đang bận (lỗi '+rr.status+'), tự thử lại lần '+(at+1)+' sau 5 giây…',false,true);await new Promise(z=>setTimeout(z,5000));continue}
             r=rr;
-          }catch(e){clearTimeout(to);if(at>=3)throw e}
+          }catch(e){clearTimeout(to);if(at>=MAXAT)throw e}
         }
         if(!r.ok)throw new Error('API trả lỗi '+r.status+(r.status===401?' — hãy đăng nhập lại.':''));
         const raw=await r.text();let J=null;try{J=JSON.parse(raw)}catch(e){}return{raw,st:r.status,list:(J&&J.data)||[]};
@@ -94,17 +94,19 @@ function apiBookmarklet(C){
         const idsOf=o=>{const out=[],seen=new Set(),add=v=>{if(v==null||typeof v==='object')return;const t=String(v).trim();if(t&&!seen.has(t)&&(/^\d{5,}$/.test(t)||/^[A-Za-z0-9._-]{3,}$/.test(t))){seen.add(t);out.push(/^\d+$/.test(t)?Number(t):t)}};
           const walk=(q,d)=>{if(!q||typeof q!=='object'||d>2)return;for(const k in q){const v=q[k];if(v&&typeof v==='object')walk(v,d+1);else if(/id|ma|donVi|code/i.test(k)&&!/soLuong|tongSo|tien|ty|muc|ky/i.test(k))add(v)}};
           if(o.donVi&&typeof o.donVi==='object')walk(o.donVi,0);else add(o.donVi);walk(o,0);return out};
-        for(const x of list){
-          if(!/^đảng bộ trường/i.test(String(x.tenDonVi||'').trim()))continue;
+        const schoolsX=list.filter(x=>/^đảng bộ trường/i.test(String(x.tenDonVi||'').trim()));let doneX=0;
+        const oneX=async x=>{
           say('Đang lấy các chi bộ của '+x.tenDonVi+'…',false,true);
           const ck2=(C.k||'dp')+'_kid_'+fold(x.tenDonVi).replace(/\W+/g,'_');let tried=[];
           const sv=localStorage.getItem(ck2);const cands=(sv?[sv]:[]).concat(idsOf(x).slice(0,8));
-          for(const c of cands){let X;try{X=await getL(c)}catch(e){continue}
+          for(const c of cands){let X;try{X=await getL(c,!(sv&&String(c)===String(sv)))}catch(e){continue}
             const L=X.list||[];
             if(L.length&&!L.some(y=>fold(y.tenDonVi)===fold(x.tenDonVi)||/tinh lao cai/.test(fold(y.tenDonVi)))&&L.every(y=>!top.has(fold(y.tenDonVi))||/^chi bo truong/.test(fold(y.tenDonVi)))){
               try{localStorage.setItem(ck2,String(c))}catch(e){}
               L.forEach(y=>{const z=Object.assign({},y,{tenDonVi:String(x.tenDonVi).trim()+' › '+String(y.tenDonVi).trim()});kid.set(fold(z.tenDonVi),z);kn++});break}}
-        }
+          doneX++;say('Đang lấy các chi bộ trường học… '+doneX+'/'+schoolsX.length,false,true);
+        };
+        let qx=0;await Promise.all(Array.from({length:5},async()=>{while(qx<schoolsX.length){if(dead)return;await oneX(schoolsX[qx++])}}));
         if(kid.size){const keep=list.filter(x=>!/^chi bộ trường/i.test(String(x.tenDonVi||'').trim()));list=keep.concat([...kid.values()]);say('Đã lấy thêm '+kid.size+' chi bộ trực thuộc các Đảng bộ trường.',false,true)}
       }catch(e){}
       if(!list.length)throw new Error('API không trả đơn vị nào.');
