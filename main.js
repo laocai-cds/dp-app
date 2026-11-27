@@ -402,7 +402,7 @@ setTimeout(syncRemoteCfg,25e3);setInterval(syncRemoteCfg,3*3600e3);
 /* chạy nền ở khay hệ thống khi đang bật hẹn giờ / tự động */
 let tray=null,quitting=false,trayTold=false;app.on('before-quit',()=>{quitting=true});
 const showWin=()=>{try{win.show();win.restore();win.focus()}catch(_){}};
-function setupTray(){if(tray)return;app.getFileIcon(process.execPath).then(img=>{tray=new Tray(img);tray.setToolTip('Đồng bộ DVC Lào Cai — đang chạy nền (bấm để mở)');
+function setupTray(){if(tray)return;Promise.resolve().then(()=>{const im=require('electron').nativeImage.createFromPath(path.join(__dirname,'build','icon.png'));if(im.isEmpty())throw 0;return im.resize({width:32,height:32})}).catch(()=>app.getFileIcon(process.execPath)).then(img=>{tray=new Tray(img);tray.setToolTip('Đồng bộ DVC Lào Cai — đang chạy nền (bấm để mở)');
   tray.setContextMenu(Menu.buildFromTemplate([{label:'Mở cửa sổ',click:showWin},{label:'Thoát hẳn',click:()=>{quitting=true;app.quit()}}]));tray.on('click',showWin)}).catch(()=>{})}
 let fresh03=false; /* true: Đồng bộ 03 bỏ qua bộ nhớ nhánh 60 phút, lấy mới hoàn toàn */
 ipcMain.handle('runWait',async(e,{id,month,code,api,fresh})=>{fresh03=!!fresh;try{return await runWaitCore(id,month,code,api)}finally{fresh03=false}});
