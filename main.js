@@ -211,7 +211,7 @@ async function runWaitCore0(id,month,code,api,wc,noReset){
     if(st.c){try{log('Hủy ('+id+'): khung tiến độ bị bấm ✕ hoặc trang gqtthc tải lại; thu nhỏ='+win.isMinimized())}catch(_){}return{result:'cancel'}}          /* chỉ coi là hủy khi người dùng bấm ✕ */
     const t=st.t;
     if(t){seen=true;lostAt=0;
-      if(t.startsWith('✅')){try{const m=String(st.f||'').match(/Tổng[\s\S]*?Xác nhận\s*[\d.,]+\s*(?:s|giây|ms)/);log('⏱ '+id+': '+(m?m[0].replace(/\s+/g,' '):String(st.f||'').replace(/\s+/g,' ').slice(-260)))}catch(_){}return{result:'done',msg:t}}
+      if(t.startsWith('✅')){try{const m=String(st.f||'').match(/Tổng[\s\S]*?Xác nhận\s*[\d.,]+\s*(?:s|giây|ms)/);const tm=(m?m[0].replace(/\s+/g,' '):String(st.f||'').replace(/\s+/g,' ').slice(-260));if(tm!==lastTimingTxt){lastTimingTxt=tm;log('⏱ '+id+': '+tm)}}catch(_){}return{result:'done',msg:t}}
       if(t.startsWith('✕'))return{result:'fail',msg:t};
     }else if(!seen){if(Date.now()-t0>40000)return{result:'fail',msg:'Không thấy tiến độ (chưa đăng nhập hoặc bị chặn?)'}}
     else{if(!lostAt)lostAt=Date.now();else if(Date.now()-lostAt>90000)return{result:'fail',msg:'Mất khung tiến độ quá 90 giây (trang gqtthc tải lại?)'}}
@@ -348,7 +348,7 @@ setTimeout(staleCheck,3*60e3);setInterval(staleCheck,60*60e3);
 /* ===== Giữ phiên gqtthc "sống": cứ 10 phút gọi một API nhẹ như người đang thao tác; hiện hạn token còn lại ===== */
 const keepFile=()=>path.join(app.getPath('userData'),'giu-phien.json');
 const readKeep=()=>{try{return Object.assign({on:true},JSON.parse(fs.readFileSync(keepFile(),'utf8')))}catch(_){return{on:true}}};
-let lastExpSeen=0,lastIdleFailLog=0;
+let lastExpSeen=0,lastIdleFailLog=0;let lastTimingTxt='';
 let wasIn=false,lastReload=0,sessInfo={text:'Phiên gqtthc: chưa kiểm tra',bad:false},lastExpWarn=0,lastKeepLog=0,lastKeepStatus=null;
 const KEEPJS="(async()=>{const tk=localStorage.getItem('token');if(!tk)return{s:0,exp:0};let exp=0;try{exp=JSON.parse(atob(tk.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).exp||0}catch(e){}"+
  /* gqtthc có đồng hồ 'không hoạt động' 30 phút (ng2-idle): giả lập thao tác chuột/bàn phím để reset; gọi API đơn thuần không reset được */
