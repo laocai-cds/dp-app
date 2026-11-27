@@ -472,6 +472,35 @@ async function runBatchMain(ids,label,opts){
     notify('Đồng bộ đảng phí — '+okN+'/'+(res.length-(skippedN?1:0)+skippedN)+' thành công',bad.length?('Chưa xong: '+bad.join(' · ').slice(0,200)):'Tất cả đơn vị đã đồng bộ.');hookPost(t.slice(0,900)) }
   return true;
 }
+
+/* ===== Đối chiếu Sheet từng xã với sổ S02 của gqtthc (chạy tay hoặc sau lượt tự chạy hằng ngày) ===== */
+const normName=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();
+const numVN=v=>{if(typeof v==='number')return Number.isFinite(v)?v:0;const x=parseFloat(String(v==null?'':v).replace(/\./g,'').replace(',','.'));return Number.isFinite(x)?x:0};
+async function reconcileS02(label){
+  const now=new Date(),mm=now.getMonth()+1,yy=now.getFullYear(),pm=String(mm).padStart(2,'0'),lastD=new Date(yy,mm,0).getDate();
+  const targets=cfg.xa.filter(x=>x.arg&&typeof x.arg==='object'&&(x.arg.cid||x.arg.pid)&&epOf(x)).map(x=>({id:x.id,label:x.label.replace(/^ĐP\s*/,''),oid:x.arg.cid||x.arg.pid,ep:epOf(x)}));
+  let tok=false;try{tok=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(_){}
+  if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc nên chưa đối chiếu được';log(t);return t}
+  const js="(async(T,ks,ke)=>{const tk=localStorage.getItem('token');const H={Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'};const out={};for(const t of T){try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),25000);const r=await fetch('https://gateway-gqtthc.dcs.vn/report/s02/danh-sach',{method:'POST',headers:H,body:JSON.stringify({page:1,size:500,donViId:t.oid,fromDate:ks,toDate:ke}),signal:ac.signal});clearTimeout(to);if(!r.ok){out[t.id]={err:'HTTP '+r.status};continue}const j=await r.json();out[t.id]=(j.data||[]).map(z=>[z.tenToChucDang,+z.tongSoDangVien||0,+((z.dangPhiDaThuCacChiBo||{}).kyBaoCao)||0])}catch(e){out[t.id]={err:String(e&&e.message||e).slice(0,40)}}}return out})("+JSON.stringify(targets.map(t=>({id:t.id,oid:t.oid})))+",'01/"+pm+"/"+yy+"','"+lastD+"/"+pm+"/"+yy+"')";
+  let S;try{S=await view.webContents.executeJavaScript(js)||{}}catch(e){const t='⚠ '+label+': lỗi lấy S02 — '+String(e&&e.message||e).slice(0,60);log(t);return t}
+  const lines=[];let tot=0,bad=0,err=0;
+  for(const t of targets){
+    const a=S[t.id];if(!a||a.err){err++;lines.push(t.label+': không lấy được S02'+(a&&a.err?' ('+a.err+')':''));continue}
+    let sh;try{sh=await fetchJson(t.ep+'?action=read&tab=Thang'+mm+'&_='+Date.now(),25000)}catch(e){err++;lines.push(t.label+': không đọc được Sheet');continue}
+    if(!sh||!sh.ok){err++;lines.push(t.label+': Sheet không có tab Thang'+mm);continue}
+    const M=new Map();(sh.rows||[]).forEach(r=>{if(/^\d+$/.test(String(r[0]).trim())&&r[1])M.set(normName(r[1]),[numVN(r[2]),numVN(r[12]),String(r[1])])});
+    let n=0,diff=[],missing=0;
+    a.forEach(z=>{if(!(z[1]>0||z[2]>0))return;const m=M.get(normName(z[0]));if(!m){missing++;return}n++;if(m[0]!==z[1]||m[1]!==z[2])diff.push(m[2]+': Sheet '+m[0]+' ĐV/'+m[1]+'đ, S02 '+z[1]+' ĐV/'+z[2]+'đ')});
+    tot+=n;bad+=diff.length;
+    lines.push(t.label+': so '+n+' đơn vị có số S02, lệch '+diff.length+(missing?', thiếu trên Sheet '+missing:'')+(diff.length?' · vd '+diff.slice(0,2).join(' | '):''));
+  }
+  const head='🔍 '+label+' (tháng '+mm+'/'+yy+'): '+targets.length+' xã, so '+tot+' đơn vị, lệch '+bad+(err?', '+err+' xã không đọc được':'')+'. Lưu ý: S02 chỉ có số của chi bộ đã lập sổ nên có thể lệch nhẹ khi đơn vị chưa lập sổ.';
+  log(head);lines.forEach(l=>log('   '+l));
+  const txt=head+'\n'+lines.filter(l=>/lệch [1-9]|không/.test(l)).slice(0,10).join('\n');
+  if(bad||err)hookPost(txt.slice(0,900));
+  return head;
+}
+ipcMain.handle('reconcile',async()=>reconcileS02('Đối chiếu S02'));
 function tickSched(){
   const s=readSched();
   /* tự động Đồng bộ 03 thủ tục (tháng hiện tại): cứ mỗi N phút */
@@ -486,7 +515,7 @@ function tickSched(){
   const [h,mi]=s.time.split(':').map(Number);const due=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,mi);
   if(s.last===today||now<due||now-due>3*3600*1000)return; /* chỉ chạy trong 3 giờ sau giờ hẹn */
   schedBusy=true;s.last=today;writeSched(s);
-  runBatchMain(s.ids,'⏰ Tự chạy').finally(()=>{schedBusy=false});
+  runBatchMain(s.ids,'⏰ Tự chạy').then(()=>reconcileS02('Đối chiếu sau lượt tự chạy')).catch(()=>{}).finally(()=>{schedBusy=false});
 }
 ipcMain.handle('sched:get',()=>readSched());
 ipcMain.handle('sched:set',(e,o)=>{const old=readSched();const s=Object.assign({},old,{enabled:!!o.enabled,time:/^\d\d:\d\d$/.test(o.time)?o.time:'06:00',ids:Array.isArray(o.ids)?o.ids:[],openAtLogin:!!o.openAtLogin,everyOn:!!o.everyOn,everyMins:Math.min(1440,Math.max(5,parseInt(o.everyMins)||60)),every03On:!!o.every03On,every03Mins:Math.min(1440,Math.max(30,parseInt(o.every03Mins)||180))});if(!old.every03On&&s.every03On)s.lastEvery03=Date.now();if(!old.everyOn&&s.everyOn)s.lastEvery=Date.now();if((!old.enabled&&s.enabled)||old.time!==s.time)s.last='';writeSched(s);applySched();return s});
