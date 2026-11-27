@@ -402,7 +402,8 @@ setTimeout(syncRemoteCfg,25e3);setInterval(syncRemoteCfg,3*3600e3);
 /* chạy nền ở khay hệ thống khi đang bật hẹn giờ / tự động */
 let tray=null,quitting=false,trayTold=false;app.on('before-quit',()=>{quitting=true});
 const showWin=()=>{try{win.show();win.restore();win.focus()}catch(_){}};
-function setupTray(){if(tray)return;Promise.resolve().then(()=>{const im=require('electron').nativeImage.createFromPath(path.join(__dirname,'build','icon.png'));if(im.isEmpty())throw 0;return im.resize({width:32,height:32})}).catch(()=>app.getFileIcon(process.execPath)).then(img=>{tray=new Tray(img);tray.setToolTip('Đồng bộ DVC Lào Cai — đang chạy nền (bấm để mở)');
+let tipText='';function tipSet(t){tipText=String(t||'');try{if(tray)tray.setToolTip(('Đồng bộ DVC Lào Cai'+(tipText?'\n'+tipText:' — đang chạy nền (bấm để mở)')).slice(0,127))}catch(_){}}
+function setupTray(){if(tray)return;Promise.resolve().then(()=>{const im=require('electron').nativeImage.createFromPath(path.join(__dirname,'build','icon.png'));if(im.isEmpty())throw 0;return im.resize({width:32,height:32})}).catch(()=>app.getFileIcon(process.execPath)).then(img=>{tray=new Tray(img);tipSet(tipText);
   tray.setContextMenu(Menu.buildFromTemplate([{label:'Mở cửa sổ',click:showWin},{label:'Thoát hẳn',click:()=>{quitting=true;app.quit()}}]));tray.on('click',showWin)}).catch(()=>{})}
 let fresh03=false; /* true: Đồng bộ 03 bỏ qua bộ nhớ nhánh 60 phút, lấy mới hoàn toàn */
 ipcMain.handle('runWait',async(e,{id,month,code,api,fresh})=>{fresh03=!!fresh;try{return await runWaitCore(id,month,code,api)}finally{fresh03=false}});
@@ -416,7 +417,7 @@ function applySched(){const s=readSched();
   if((s.enabled||s.everyOn||s.every03On)&&blockId===null)blockId=powerSaveBlocker.start('prevent-app-suspension');
   if(!s.enabled&&!s.everyOn&&!s.every03On&&blockId!==null){powerSaveBlocker.stop(blockId);blockId=null}
   try{app.setLoginItemSettings({openAtLogin:!!s.openAtLogin})}catch(e){}}
-const say=t=>{try{win.webContents.send('status',t)}catch(e){}};
+const say=t=>{try{win.webContents.send('status',t)}catch(e){}tipSet(String(t).replace(/\s+/g,' '))};
 const logFile=()=>path.join(app.getPath('userData'),'lich-chay.log');
 const log=t=>{try{fs.appendFileSync(logFile(),new Date().toLocaleString('vi-VN')+'  '+t+'\n')}catch(e){}};
 /* ===== Chỉ lấy báo cáo nặng khi số liệu thay đổi (lượt tự động) =====
@@ -470,6 +471,7 @@ async function runBatchMain(ids,label,opts){
   if(skippedN)res.push('⏭ '+skippedN+' xã không đổi');
   const t=label+' xong: '+res.join(' · ');say(t);log(t);
   { const okN=res.filter(s=>s.startsWith('✅')).length+skippedN,bad=res.filter(s=>!s.startsWith('✅')&&!s.startsWith('⏭'));
+    {const dd=new Date(),q=n=>String(n).padStart(2,'0');tipSet(label+' xong '+q(dd.getHours())+':'+q(dd.getMinutes())+' · '+okN+'/'+(res.length-(skippedN?1:0)+skippedN)+' thành công'+(bad.length?' · '+bad.length+' lỗi':''))}
     notify('Đồng bộ DVC Lào Cai — '+okN+'/'+(res.length-(skippedN?1:0)+skippedN)+' thành công',bad.length?('Chưa xong: '+bad.join(' · ').slice(0,200)):'Tất cả đơn vị đã đồng bộ.');hookPost(t.slice(0,900)) }
   return true;
 }
