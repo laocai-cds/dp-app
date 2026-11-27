@@ -10,3 +10,9 @@
   Pop $0
   Sleep 800
 !macroend
+
+; Xóa lối tắt tên cũ (DP-DangPhi) để không bị trùng với lối tắt mới "Đồng bộ DVC Lào Cai".
+!macro customInstall
+  Delete "$DESKTOP\DP-DangPhi.lnk"
+  Delete "$SMPROGRAMS\DP-DangPhi.lnk"
+!macroend
