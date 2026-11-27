@@ -533,7 +533,7 @@ async function checkUpdate(){
     try{const rl=await net.fetch('https://github.com/'+REPO+'/releases/latest/download/latest.json',{headers:{'User-Agent':'dp-dangphi'}});
       if(rl.ok){const lj=await rl.json();if(lj&&/^\d+\.\d+\.\d+$/.test(String(lj.ver||''))){
         const tag='v'+lj.ver,base='https://github.com/'+REPO+'/releases/download/'+tag+'/',ev=process.versions.electron;
-        const names=['DP-DangPhi-win32-x64.zip','app-electron-'+ev+'.asar.bin','dp-config.json'];
+        const names=['DongBo-DVCLaoCai-win32-x64.zip','DP-DangPhi-win32-x64.zip','app-electron-'+ev+'.asar.bin','dp-config.json'];
         const ok=await Promise.all(names.map(async n=>{try{return (await net.fetch(base+n,{method:'HEAD',headers:{'User-Agent':'dp-dangphi'}})).ok}catch(_){return false}}));
         j={tag_name:tag,html_url:'https://github.com/'+REPO+'/releases/tag/'+tag,assets:names.filter((n,i)=>ok[i]).map(n=>({name:n,browser_download_url:base+n}))};lastWhy=''}}}catch(_){}
     if(!j)try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{'User-Agent':'dp-dangphi'}});if(r.ok)j=await r.json();else lastWhy='GitHub API trả mã '+r.status}catch(e){lastWhy=String(e&&e.message||e).slice(0,50)}
@@ -548,12 +548,12 @@ async function checkUpdate(){
       const mm=tag?[0,tag]:null;if(!mm){try{win.webContents.send('latestver','')}catch(_){}return 'err'}
       const base='https://github.com/'+REPO+'/releases/download/'+mm[1]+'/',ev=process.versions.electron;
       const ex=async n=>{try{const h=await net.fetch(base+n,{method:'HEAD',headers:{'User-Agent':'dp-dangphi'}});return h.ok}catch(_){return false}};
-      const names=['DP-DangPhi-win32-x64.zip','app-electron-'+ev+'.asar.bin','dp-config.json'],ok=await Promise.all(names.map(ex));
+      const names=['DongBo-DVCLaoCai-win32-x64.zip','DP-DangPhi-win32-x64.zip','app-electron-'+ev+'.asar.bin','dp-config.json'],ok=await Promise.all(names.map(ex));
       j={tag_name:mm[1],html_url:'https://github.com/'+REPO+'/releases/tag/'+mm[1],assets:names.filter((n,i)=>ok[i]).map(n=>({name:n,browser_download_url:base+n}))};lastWhy='';
     }
 const nv=String(j.tag_name||'').replace(/^v/,''),cv=app.getVersion();try{win.webContents.send('latestver',nv)}catch(_){}
     const cmp=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return(x[i]||0)>(y[i]||0)?1:-1}return 0};
-    const as=(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
+    const as=(j.assets||[]).find(a=>/^DongBo-DVCLaoCai-win32-x64\.zip$/i.test(a.name))||(j.assets||[]).find(a=>/DP-DangPhi-win32-x64\.zip$/i.test(a.name));
     const lt=(j.assets||[]).find(a=>{const k=/^app-electron-([\d.]+)\.asar\.bin$/.exec(a.name);return k&&k[1]===process.versions.electron});
     const cf=(j.assets||[]).find(a=>a.name==='dp-config.json');
     if(nv&&cmp(nv,cv)>0){latest={ver:nv,url:j.html_url,asset:as&&as.browser_download_url||'',light:lt&&lt.browser_download_url||'',cfg:cf&&cf.browser_download_url||''};win.webContents.send('update',latest);prefetch();maybeAuto();return 'new'}
