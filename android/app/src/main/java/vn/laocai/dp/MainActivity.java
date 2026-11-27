@@ -1066,7 +1066,7 @@ public class MainActivity extends Activity {
     /* renamed from: lambda$checkUpdate$17$vn-laocai-dp-MainActivity, reason: not valid java name */
     /* synthetic */ void m0lambda$checkUpdate$17$vnlaocaidpMainActivity(boolean z, boolean z2) {
         if (z) {
-            this.updBtn.setText("⬇ Có bản mới " + this.newCode + " — bấm để tải APK về máy");
+            this.updBtn.setText("⬆ Cập nhật bản " + installedCode() + " → " + this.newCode + " — bấm để cài");
             this.updBtn.setBackground(shape(-2525434, -4959479));
             return;
         }
@@ -1083,15 +1083,6 @@ public class MainActivity extends Activity {
     }
 
     void startUpdate() {
-        if (true) {
-            try {
-                startActivity(new Intent("android.intent.action.VIEW", Uri.parse(UPD_BASE + "DongBo-DVCLaoCai.apk")));
-                say("Đang mở trang tải APK. Tải xong, mở file vừa tải để cài đè.");
-            } catch (Exception e) {
-                say("Không mở được trình duyệt để tải bản mới");
-            }
-            return;
-        }
         if (this.downloading) {
             return;
         }
@@ -1125,7 +1116,7 @@ public class MainActivity extends Activity {
         final File file = new File(getCacheDir(), "update/DP-DangPhi.apk");
         try {
             file.getParentFile().mkdirs();
-            HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("https://github.com/laocai-cds/dp-app/releases/download/android-latest/DP-DangPhi.apk").openConnection();
+            HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("https://github.com/laocai-cds/dp-app/releases/download/android-latest/DongBo-DVCLaoCai.apk").openConnection();
             httpURLConnection.setConnectTimeout(15000);
             httpURLConnection.setReadTimeout(30000);
             boolean z = false;
