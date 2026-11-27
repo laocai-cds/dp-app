@@ -623,7 +623,7 @@ async function installUpdate(){
         '$t=Join-Path $dest "resources\\app.asar"',
         '$ok=$false',
         'for($i=1;$i -le 20 -and -not $ok;$i++){try{Copy-Item -LiteralPath $asar -Destination $t -Force -ErrorAction Stop;$ok=$true}catch{L ("lan "+$i+": "+$_.Exception.Message);T ("Đang chờ phần mềm cũ đóng hẳn… ("+$i+")");W 2}}',
-        'if($ok){L "DA CHEP";T "Cài xong. Đang mở lại phần mềm…";W 1}else{L "THAT BAI: khong chep duoc app.asar";T "Không chép được file mới. Hãy cài đè bằng DP-DangPhi-Setup.exe";W 5}',
+        'if($ok){L "DA CHEP";T "Cài xong. Đang mở lại phần mềm…";W 1}else{L "THAT BAI: khong chep duoc app.asar";T "Không chép được file mới. Hãy cài đè bằng DongBo-DVCLaoCai-Setup.exe";W 5}',
         'Start-Process -FilePath $exe',
         'try{if($f){$f.Close()}}catch{}'
       ].join('\r\n'),'utf8');
@@ -686,7 +686,7 @@ function fixShortcuts(){
     if(n)setTimeout(()=>say('✅ Đã sửa '+n+' biểu tượng cũ để mở đúng bản mới này.'),4000);
   }catch(e){}
 }
-function reportUpdLog(){try{const f=path.join(os.tmpdir(),'dp-update.log');if(!fs.existsSync(f))return;const t=fs.readFileSync(f,'utf8');fs.unlinkSync(f);log('Nhật ký cập nhật: '+t.replace(/\r?\n/g,' | ').slice(0,500));if(/THAT BAI/.test(t))setTimeout(()=>say('⚠ Cập nhật lần trước KHÔNG chép được file mới ('+(t.split('\n').filter(x=>/lan /.test(x)).pop()||'').slice(0,120)+'). Hãy cài đè bằng DP-DangPhi-Setup.exe.'),3000)}catch(_){}}
+function reportUpdLog(){try{const f=path.join(os.tmpdir(),'dp-update.log');if(!fs.existsSync(f))return;const t=fs.readFileSync(f,'utf8');fs.unlinkSync(f);log('Nhật ký cập nhật: '+t.replace(/\r?\n/g,' | ').slice(0,500));if(/THAT BAI/.test(t))setTimeout(()=>say('⚠ Cập nhật lần trước KHÔNG chép được file mới ('+(t.split('\n').filter(x=>/lan /.test(x)).pop()||'').slice(0,120)+'). Hãy cài đè bằng DongBo-DVCLaoCai-Setup.exe.'),3000)}catch(_){}}
 if(!app.requestSingleInstanceLock()){app.quit()}else{app.on('second-instance',()=>showWin());
 app.whenReady().then(()=>{createWindow();announceUpdated();reportUpdLog();fixShortcuts();applySched();setInterval(tickSched,30000);armUpd();win.webContents.on('did-finish-load',()=>setTimeout(checkUpdate,1500))});
 app.on('window-all-closed',()=>app.quit());

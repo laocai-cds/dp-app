@@ -35,10 +35,12 @@ jobs:
         continue-on-error: true
         shell: bash
         run: npx electron-builder --win nsis --x64 --publish never
-      - name: Bản cài có số phiên bản trong tên
+      - name: Bản cài có số phiên bản trong tên (và bản tên cũ để link cũ vẫn tải được)
         continue-on-error: true
         shell: bash
-        run: cp release/DP-DangPhi-Setup.exe "release/DP-DangPhi-Setup-v${{ steps.ver.outputs.v }}.exe"
+        run: |
+          cp release/DongBo-DVCLaoCai-Setup.exe "release/DongBo-DVCLaoCai-Setup-v${{ steps.ver.outputs.v }}.exe"
+          cp release/DongBo-DVCLaoCai-Setup.exe release/DP-DangPhi-Setup.exe
       - name: latest.json (kiểm tra cập nhật không qua GitHub API)
         shell: bash
         run: |
@@ -55,6 +57,7 @@ jobs:
             app-electron-*.asar.bin
             dp-config.json
             latest.json
+            release/DongBo-DVCLaoCai-Setup.exe
+            release/DongBo-DVCLaoCai-Setup-v*.exe
             release/DP-DangPhi-Setup.exe
-            release/DP-DangPhi-Setup-v*.exe
           generate_release_notes: true

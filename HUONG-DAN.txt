@@ -10,7 +10,7 @@ Nhập sai mã: xóa thư mục %APPDATA%\DP-DangPhi rồi nhập lại.
 HẸN GIỜ TỰ CHẠY (chế độ quản trị): tích chọn các xã -> tích "Tự chạy hằng ngày lúc" -> chọn giờ (ví dụ 06:00). Để máy luôn bật, ứng dụng mở và đã đăng nhập gqtthc. Có thể tích "Tự mở cùng Windows". "Chạy thử ngay" để kiểm tra, "Xem nhật ký" xem kết quả các lần chạy. Ứng dụng chỉ chạy trong vòng 3 giờ sau giờ hẹn mỗi ngày; nếu gqtthc hết phiên đăng nhập thì cần đăng nhập lại.
 MÃ CHUNG: nếu các xã dùng cùng một mã đồng bộ, nhập vào ô "Mã chung" ở hàng Quản trị rồi bấm "Lưu mã chung". Xã nào chưa có mã riêng sẽ dùng mã chung. Nếu mã chung sai với xã nào thì xã đó báo không cập nhật được Google Sheet; bấm riêng nút xã đó để nhập mã đúng.
 CẬP NHẬT NHẸ: từ bản 1.1.7, khi chỉ đổi mã ứng dụng, nút "Cập nhật" chỉ tải file rất nhỏ (khoảng 0,2 MB) và xong trong vài giây. Chỉ khi đổi lõi trình duyệt mới tải lại bản đầy đủ (khoảng 100 MB).
-CÀI BẰNG MỘT FILE: tải DP-DangPhi-Setup.exe từ trang Releases, bấm đôi để cài (cài cho riêng người dùng, không cần quyền admin). Mở bằng biểu tượng "DP-DangPhi" ngoài Desktop hoặc trong Start.
+CÀI BẰNG MỘT FILE: tải DongBo-DVCLaoCai-Setup.exe từ trang Releases, bấm đôi để cài (cài cho riêng người dùng, không cần quyền admin). Mở bằng biểu tượng "DP-DangPhi" ngoài Desktop hoặc trong Start.
 
 THÊM XÃ MỚI NHANH (từ bản 1.1.42): mở website của xã trong trình duyệt, KÉO nút "ĐP" thả vào thanh nút của app (hoặc bấm "➕ Thêm xã" rồi dán mã dấu trang). App tự tạo nút "ĐP <tên xã>"; lần đầu bấm sẽ hỏi mã đồng bộ riêng của xã. Chuột phải vào nút để gỡ.
 
@@ -18,4 +18,4 @@ XÓA NÚT XÃ (từ bản 1.1.44): ở dòng "Quản trị", tích ô vuông c�
 
 ĐỒNG BỘ 03 THỦ TỤC (từ bản 1.1.90): bấm "🔄 Đồng bộ 03 thủ tục" (đã đăng nhập gqtthc, chọn đúng tháng) để lấy số hồ sơ chuyển SH chính thức, chuyển SH tạm thời, nhận xét nơi cư trú của 103 đơn vị vào Google Sheet "Theo dõi 03 thủ tục". Số một đảng bộ đã cộng cả đơn vị cấp con. Tiến độ mỗi thủ tục = 5% + 5% + 90% x hoàn thành / phải xử lý.
 ĐỔI MÃ ĐỒNG BỘ 03 (từ bản 1.1.91): bấm "🔑 Đổi mã" cạnh nút Đồng bộ 03, gõ mã mới (hiện rõ chữ, dùng bộ gõ tiếng Anh) rồi "Lưu và chạy" hoặc "Chỉ lưu mã". Báo "Mã truy cập không hợp lệ" thì ứng dụng tự xóa mã sai, bấm lại để nhập.
-TẢI BẢN MỚI: github.com/laocai-cds/dp-app/releases/latest (DP-DangPhi-Setup.exe).
+TẢI BẢN MỚI: github.com/laocai-cds/dp-app/releases/latest (DongBo-DVCLaoCai-Setup.exe).
