@@ -417,13 +417,39 @@ function applySched(){const s=readSched();
 const say=t=>{try{win.webContents.send('status',t)}catch(e){}};
 const logFile=()=>path.join(app.getPath('userData'),'lich-chay.log');
 const log=t=>{try{fs.appendFileSync(logFile(),new Date().toLocaleString('vi-VN')+'  '+t+'\n')}catch(e){}};
-async function runBatchMain(ids,label){
+/* ===== Chỉ lấy báo cáo nặng khi số liệu thay đổi (lượt tự động) =====
+   API sổ S02 trả rất nhanh (~1s/xã). Lấy 'dấu vân tay' (số chi bộ, tổng đảng viên, tiền thu trong kỳ + lũy kế);
+   xã nào không đổi và lần lấy đầy đủ cách chưa quá FULL_EVERY_MIN phút thì bỏ qua lượt này. */
+const FULL_EVERY_MIN=60;
+const fpFile=()=>path.join(app.getPath('userData'),'fingerprint.json');
+const readFp=()=>{try{return JSON.parse(fs.readFileSync(fpFile(),'utf8'))}catch(e){return{}}};
+const writeFp=o=>{try{fs.writeFileSync(fpFile(),JSON.stringify(o))}catch(e){}};
+async function s02Fingerprints(ids){
+  const targets=ids.map(id=>{const x=cfg.xa.find(v=>v.id===id);const a=x&&x.arg&&typeof x.arg==='object'?x.arg:null;const oid=a?(a.cid||a.pid):null;return oid?{id,oid}:null}).filter(Boolean);
+  if(!targets.length)return{};
+  const js="(async(T)=>{const tk=localStorage.getItem('token');if(!tk)return{};const d=new Date(),yy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),last=new Date(yy,d.getMonth()+1,0).getDate();const ks='01/'+mm+'/'+yy,ke=last+'/'+mm+'/'+yy;const H={Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'};const out={};for(const t of T){try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),20000);const r=await fetch('https://gateway-gqtthc.dcs.vn/report/s02/danh-sach',{method:'POST',headers:H,body:JSON.stringify({page:1,size:500,donViId:t.oid,fromDate:ks,toDate:ke}),signal:ac.signal});clearTimeout(to);if(!r.ok)continue;const j=await r.json();const D=j&&j.data;if(!Array.isArray(D)||!D.length)continue;let dv=0,k=0,l=0;D.forEach(z=>{dv+=+z.tongSoDangVien||0;const c=z.dangPhiDaThuCacChiBo||{};k+=+c.kyBaoCao||0;l+=+c.luyKe||0});out[t.id]=D.length+'|'+dv+'|'+k+'|'+l+'|'+mm+yy}catch(e){}}return out})("+JSON.stringify(targets)+")";
+  try{return await view.webContents.executeJavaScript(js)||{}}catch(e){return{}}
+}
+async function runBatchMain(ids,label,opts){
   ids=[...ids].sort((a,b)=>(a==='tthc')-(b==='tthc')); /* xã chậm/hay lỗi (cấp tỉnh) chạy sau cùng */
   const now=new Date(),month=now.getFullYear()+'-'+(now.getMonth()+1);const res=[];
   /* tải lại trang để làm mới phiên, kiểm tra còn đăng nhập */
   try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.loadURL(cfg.home);setTimeout(r,20000)});await new Promise(r=>setTimeout(r,2500))}catch(e){}
   let tok=false;try{tok=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(e){}
   if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc — hãy đăng nhập lại trong ứng dụng';say(t);log(t);notify('Đồng bộ đảng phí — hết phiên đăng nhập','gqtthc đã hết phiên. Hãy mở ứng dụng và đăng nhập lại để lần chạy sau lấy được dữ liệu.');hookPost('⚠ '+t);try{win.show()}catch(_){}return false}
+  /* lượt tự động: bỏ qua xã không đổi (S02) */
+  let skippedN=0,fpNow={},fpState=null;
+  if(opts&&opts.smart){
+    try{
+      fpNow=await s02Fingerprints(ids);fpState=readFp();
+      const keep=[],skipL=[];
+      ids.forEach(id=>{const st=fpState[id],f=fpNow[id];
+        if(f&&st&&st.fp===f&&Date.now()-(st.full||0)<FULL_EVERY_MIN*60e3){const x=cfg.xa.find(v=>v.id===id);skipL.push(x?x.label.replace(/^ĐP\s*/,''):id)}else keep.push(id)});
+      skippedN=skipL.length;
+      log('Kiểm tra S02 (nhanh): '+(skippedN?('bỏ qua '+skippedN+' xã không đổi ('+skipL.join(', ')+'); '):'')+'lấy đầy đủ '+keep.length+' xã'+(keep.length?': '+keep.join(', '):''));
+      ids=keep;
+    }catch(e){log('Kiểm tra S02 lỗi, lấy đầy đủ tất cả: '+(e&&e.message||e))}
+  }
   batchStop=false;
   const rm=readRM();
   if(rm.mode==='par'&&ids.length>1){
@@ -438,9 +464,11 @@ async function runBatchMain(ids,label){
     if(r.err){res.push('✕ '+x.label+': '+r.err);continue}
     if(r.result==='done')res.push('✅ '+x.label);else if(r.result==='stop'){res.push('■ '+x.label+' dừng');break}else if(r.result==='cancel'){res.push('↷ '+x.label+' bị gián đoạn (đã bỏ qua, chạy tiếp xã sau)')}else res.push('✕ '+x.label+': '+String(r.msg||'lỗi').slice(0,60));
   }
+  if(fpState){try{ids.forEach(id=>{const x=cfg.xa.find(v=>v.id===id);if(x&&fpNow[id]&&res.includes('✅ '+x.label))fpState[id]={fp:fpNow[id],full:Date.now()}});writeFp(fpState)}catch(e){}}
+  if(skippedN)res.push('⏭ '+skippedN+' xã không đổi');
   const t=label+' xong: '+res.join(' · ');say(t);log(t);
-  { const okN=res.filter(s=>s.startsWith('✅')).length,bad=res.filter(s=>!s.startsWith('✅'));
-    notify('Đồng bộ đảng phí — '+okN+'/'+res.length+' thành công',bad.length?('Chưa xong: '+bad.join(' · ').slice(0,200)):'Tất cả đơn vị đã đồng bộ.');hookPost(t.slice(0,900)) }
+  { const okN=res.filter(s=>s.startsWith('✅')).length+skippedN,bad=res.filter(s=>!s.startsWith('✅')&&!s.startsWith('⏭'));
+    notify('Đồng bộ đảng phí — '+okN+'/'+(res.length-(skippedN?1:0)+skippedN)+' thành công',bad.length?('Chưa xong: '+bad.join(' · ').slice(0,200)):'Tất cả đơn vị đã đồng bộ.');hookPost(t.slice(0,900)) }
   return true;
 }
 function tickSched(){
@@ -452,7 +480,7 @@ function tickSched(){
   /* tự động lấy dữ liệu định kỳ: cứ mỗi N phút chạy các xã đã tích */
   if(s.everyOn&&!schedBusy&&s.ids.length&&Date.now()-lastActive>180000&&Date.now()-(s.lastEvery||0)>=Math.max(5,+s.everyMins||60)*60000){
     s.lastEvery=Date.now();writeSched(s);schedBusy=true;
-    runBatchMain(s.ids,'🔁 Tự động').finally(()=>{schedBusy=false});return}if(!s.enabled||schedBusy||!s.ids.length)return;
+    runBatchMain(s.ids,'🔁 Tự động',{smart:true}).finally(()=>{schedBusy=false});return}if(!s.enabled||schedBusy||!s.ids.length)return;
   const now=new Date(),today=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
   const [h,mi]=s.time.split(':').map(Number);const due=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,mi);
   if(s.last===today||now<due||now-due>3*3600*1000)return; /* chỉ chạy trong 3 giờ sau giờ hẹn */
