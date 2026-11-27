@@ -30,7 +30,8 @@ jobs:
         run: gradle --no-daemon assembleRelease -Pvname=${{ steps.ver.outputs.v }} -Pvcode=${{ github.run_number }}
       - name: Đổi tên APK và ghi android.json (nút "Cập nhật" trong app đọc file này)
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk DP-DangPhi.apk
+          cp android/app/build/outputs/apk/release/app-release.apk DongBo-DVCLaoCai.apk
+          cp DongBo-DVCLaoCai.apk DP-DangPhi.apk # bản tên cũ cho máy chưa cập nhật
           echo '{"versionName":"v${{ steps.ver.outputs.v }}","versionCode":${{ github.run_number }}}' > android.json
           cat android.json
       - name: Đăng lên Releases (không làm thành bản mới nhất của app Windows)
@@ -38,9 +39,10 @@ jobs:
         with:
           tag_name: android-latest
           name: Bản Android (APK) mới nhất
-          body: "Tải file DP-DangPhi.apk về điện thoại Android và cài đặt. Phiên bản ${{ steps.ver.outputs.v }}."
+          body: "Tải file DongBo-DVCLaoCai.apk về điện thoại Android và cài đặt. Phiên bản ${{ steps.ver.outputs.v }}."
           prerelease: true
           make_latest: false
           files: |
+            DongBo-DVCLaoCai.apk
             DP-DangPhi.apk
             android.json
