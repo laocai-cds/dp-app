@@ -173,7 +173,7 @@ async function doRun(id,code,api,month,wc){
   if(!codes[id])return{need:'code'}; /* ĐP Tỉnh (tthc) chạy trực tiếp cần mật khẩu riêng của tthc, không dùng mã chung */
   /* ĐP Tỉnh Lào Cai (dpBookmarklet): qua DP-CHUNG thì thay địa chỉ Apps Script bằng DP-CHUNG, mật khẩu = mã chung */
   const arg=needApi?(useChung?cfg.chung:apiUrl):(useChung?Object.assign({},x.arg,{chung:cfg.chung}):x.arg);
-  const js=PRE+'window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
+  const js=PRE+'window.__dpFresh='+(fresh03?1:0)+';window.__dpMonth='+JSON.stringify(month||'')+';(()=>{window.prompt=()=>null;window.confirm=()=>true;try{localStorage.setItem('+JSON.stringify(x.key)+','+JSON.stringify(codes[id])+')}catch(e){}\n'+BM+'\n('+x.fn+')('+JSON.stringify(arg)+')})();void 0';
   try{await wc.executeJavaScript(js);return{ok:true}}catch(err){return{err:String(err&&err.message||err)}}
 }
 const BOXJS="(()=>{const b=[...document.querySelectorAll('div')].find(d=>d.style&&d.style.position==='fixed'&&d.style.top==='14px'&&d.style.right==='14px');return {t:b?b.textContent.replace(/✕\\s*$/,'').trim().slice(0,160):null,f:b?b.textContent.slice(0,1500):null,c:!!window.__dpCancelled}})()";
@@ -403,7 +403,8 @@ let tray=null,quitting=false,trayTold=false;app.on('before-quit',()=>{quitting=t
 const showWin=()=>{try{win.show();win.restore();win.focus()}catch(_){}};
 function setupTray(){if(tray)return;app.getFileIcon(process.execPath).then(img=>{tray=new Tray(img);tray.setToolTip('Đồng bộ đảng phí — đang chạy nền (bấm để mở)');
   tray.setContextMenu(Menu.buildFromTemplate([{label:'Mở cửa sổ',click:showWin},{label:'Thoát hẳn',click:()=>{quitting=true;app.quit()}}]));tray.on('click',showWin)}).catch(()=>{})}
-ipcMain.handle('runWait',(e,{id,month,code,api})=>runWaitCore(id,month,code,api));
+let fresh03=false; /* true: Đồng bộ 03 bỏ qua bộ nhớ nhánh 60 phút, lấy mới hoàn toàn */
+ipcMain.handle('runWait',async(e,{id,month,code,api,fresh})=>{fresh03=!!fresh;try{return await runWaitCore(id,month,code,api)}finally{fresh03=false}});
 
 /* ===== Hẹn giờ tự chạy hằng ngày ===== */
 const schedFile=()=>path.join(app.getPath('userData'),'schedule.json');

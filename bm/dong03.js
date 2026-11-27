@@ -61,7 +61,7 @@ function run03Bookmarklet(C){'use strict';
       /* ĐƯỜNG NHANH: API theo-tthc trả luôn số của cả 3 thủ tục (đã cộng đơn vị con nếu gqtthc làm vậy) trong MỘT lần gọi cho mỗi đơn vị.
          Chỉ dùng khi kiểm tra thấy khớp 100% với cách cộng từng đơn vị con; không khớp / lỗi thì tự dùng cách cũ. */
       const G3T = 'https://gateway-gqtthc.dcs.vn/report/api/v1/thong-ke-ho-so/theo-tthc';
-      let FAST = false, modeTxt = '';
+      let FAST = false, modeTxt = '', modeBase = ''; let brHit = 0; const BR_MIN = 60, FRESH = !!window.__dpFresh;
       const postT = (uid, mo) => gSlot().then(() => fetch(G3T, { method: 'POST', headers: { Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ tuThang: mo, denThang: mo, coQuanId: uid, page: 0, size: 1000 }) })
         .then(rr => { if (!rr.ok) throw new Error((rr.status === 401 || rr.status === 403) ? 'Phiên đăng nhập gqtthc đã hết hạn (HTTP ' + rr.status + ') — hãy đăng nhập lại gqtthc (VNeID) rồi chạy lại' : 'HTTP ' + rr.status); return rr.json(); }).then(jj => (jj.data && jj.data.data) || [])).catch(e => { gDown(); throw e; }).finally(gFree);
       const fm = {};
@@ -83,14 +83,18 @@ function run03Bookmarklet(C){'use strict';
       } catch (e) { fastWhy = 'lỗi khi thử: ' + String(e && e.message || e).slice(0, 80); return false; } };
       const kidsMonth = async (rows, mo, prog, pid) => {
         const k = pid === 10001 ? 'tthc03.k.' + mo : 'tthc03.k.' + pid + '.' + mo, memo = mo !== curMo && !sel.has(mo) ? (cget(k) || {}) : {}, added = {}, out = rows.map(r => r.slice()), failed = []; let next = 0;
+        const bk = 'tthc03.b.' + pid + '.' + mo; let branchC = {}; try { branchC = JSON.parse(localStorage.getItem(bk) || '{}') || {}; } catch (e) { branchC = {}; } let brDirty = false;
         const pk = pid + '|' + mo; PEND[pk] = PEND[pk] || new Set();
         const worker = async () => { while (next < out.length) { const r = out[next++]; PEND[pk].add(r[0]);
           if (r[5] !== 0) {
+            const bc = branchC[r[4]];
             if (memo[r[4]]) { r[1] = memo[r[4]][0]; r[2] = memo[r[4]][1]; r[3] = memo[r[4]][2]; }
-            else try { const acc = [0, 0, 0]; await aggOf(r[4], mo, pid, acc); r[1] = acc[0]; r[2] = acc[1]; r[3] = acc[2]; added[r[4]] = acc; } catch (e) { failed.push(r); lastErr[pid] = String(e && e.message || e).slice(0, 80); }
+            else if (bc && !FRESH && Date.now() - bc.t < BR_MIN * 6e4) { r[1] = bc.a[0]; r[2] = bc.a[1]; r[3] = bc.a[2]; brHit++; modeTxt = modeBase + '  ♻ dùng lại ' + brHit + ' nhánh lấy trong ' + BR_MIN + ' phút qua'; }
+            else try { const acc = [0, 0, 0]; await aggOf(r[4], mo, pid, acc); r[1] = acc[0]; r[2] = acc[1]; r[3] = acc[2]; added[r[4]] = acc; branchC[r[4]] = { t: Date.now(), a: acc.slice() }; brDirty = true; } catch (e) { failed.push(r); lastErr[pid] = String(e && e.message || e).slice(0, 80); }
           } PEND[pk].delete(r[0]); prog(r[0]); } };
         await Promise.all(Array.from({ length: 10 }, worker));
         for (let pass = 0; pass < 2 && failed.length; pass++) { const again = failed.splice(0); let j = 0; await Promise.all(Array.from({ length: 3 }, async () => { while (j < again.length) { const r = again[j++]; try { const acc = [0, 0, 0]; await aggOf(r[4], mo, pid, acc); r[1] = acc[0]; r[2] = acc[1]; r[3] = acc[2]; added[r[4]] = acc; } catch (e) { failed.push(r); lastErr[pid] = String(e && e.message || e).slice(0, 80); } } })); }
+        if (brDirty) { try { localStorage.setItem(bk, JSON.stringify(branchC)); } catch (e) {} }
         kidFail[pid] = (kidFail[pid] || 0) + failed.length;
         if (mo !== curMo && Object.keys(added).length) cset(k, Object.assign(memo, added));
         return out;
@@ -112,7 +116,9 @@ function run03Bookmarklet(C){'use strict';
         /* kết quả kiểm tra 'đường nhanh' đúng được nhớ 24 giờ: bỏ bước kiểm tra (6 đơn vị x 3 thủ tục, cộng từng đơn vị con) rất tốn thời gian */
         let fv = null; try { fv = JSON.parse(localStorage.getItem('dp03.fastv') || 'null'); } catch (e) {}
         if (fv && fv.ok && Date.now() - fv.t < 864e5) { FAST = true; modeTxt = '  ⚡ đường nhanh (đã kiểm tra trong 24 giờ qua)'; }
-        else { FAST = await detectFast(dm); if (FAST) { try { localStorage.setItem('dp03.fastv', JSON.stringify({ ok: true, t: Date.now() })); } catch (e) {} } modeTxt = FAST ? '  ⚡ đường nhanh' : '  (đường chi tiết' + (fastWhy ? ' — ' + fastWhy : '') + ')'; } }
+        else if (fv && fv.ok === false && Date.now() - fv.t < 216e5) { FAST = false; modeTxt = '  (đường chi tiết — đường nhanh không khớp, kiểm tra lại sau 6 giờ)'; }
+        else { FAST = await detectFast(dm); try { localStorage.setItem('dp03.fastv', JSON.stringify({ ok: !!FAST, t: Date.now() })); } catch (e) {} modeTxt = FAST ? '  ⚡ đường nhanh' : '  (đường chi tiết' + (fastWhy ? ' — ' + fastWhy : '') + ')'; } }
+      modeBase = modeTxt;
       const ti = setInterval(show, 1500);
       show();
       const ids = [10002, 10003, 10001];
