@@ -56,7 +56,7 @@
           ]
         }
       ],
-      "artifactName": "DP-DangPhi-Setup.exe",
+      "artifactName": "DongBo-DVCLaoCai-Setup.exe",
       "icon": "build/icon.ico"
     },
     "nsis": {
