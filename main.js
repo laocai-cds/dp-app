@@ -329,6 +329,16 @@ async function healthCore(){
 }
 const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?m+' phút trước':m<1440?Math.round(m/60)+' giờ trước':Math.round(m/1440)+' ngày trước'};
 const hhmm=t=>{const d=new Date(t),p=n=>String(n).padStart(2,'0');return p(d.getHours())+':'+p(d.getMinutes())+' '+p(d.getDate())+'/'+p(d.getMonth()+1)};
+ipcMain.handle('probe',async()=>{
+  say('🔬 Đang dò đường lấy số nhanh (ghi vào nhật ký, không gửi đi đâu)…');
+  const cfg=((loadCfg().xa)||[]).find(x=>x&&x.arg&&x.arg.pid&&x.arg.cid)||null;
+  const arg=cfg&&cfg.arg||{pid:2122408,cid:2124980};
+  const js="(async(A)=>{const tk=localStorage.getItem('token');if(!tk)return{err:'chưa đăng nhập'};const d=new Date(),yy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),last=new Date(yy,d.getMonth()+1,0).getDate();const ks='01/'+mm+'/'+yy,ke=last+'/'+mm+'/'+yy;const H={Authorization:'Bearer '+tk,'Content-Type':'application/json',Accept:'application/json'};const U='https://gateway-gqtthc.dcs.vn/report/';const T=[['A mặc định (size 1000, hasChildren)','dashboard/danh-sach-theo-doi-dang-phi',{kyNopStart:ks,kyNopEnd:ke,parentId:A.pid,hasChildren:true,page:1,size:1000}],['B size 1','dashboard/danh-sach-theo-doi-dang-phi',{kyNopStart:ks,kyNopEnd:ke,parentId:A.pid,hasChildren:true,page:1,size:1}],['C hasChildren false','dashboard/danh-sach-theo-doi-dang-phi',{kyNopStart:ks,kyNopEnd:ke,parentId:A.pid,hasChildren:false,page:1,size:1}],['D parent = đơn vị, size 1','dashboard/danh-sach-theo-doi-dang-phi',{kyNopStart:ks,kyNopEnd:ke,parentId:A.cid,hasChildren:false,page:1,size:1}],['E sổ S02 size 1','s02/danh-sach',{page:1,size:1,donViId:null,fromDate:ks,toDate:ke}]];const out=[];for(const [n,u,b] of T){const t0=performance.now();try{const ac=new AbortController();const to=setTimeout(()=>ac.abort(),120000);const r=await fetch(U+u,{method:'POST',headers:H,body:JSON.stringify(b),signal:ac.signal});const tx=await r.text();clearTimeout(to);let keys='';try{const j=JSON.parse(tx);keys=Object.keys(j).join(',')+(j.totalElements!=null?' total='+j.totalElements:'')+(Array.isArray(j.data)&&j.data[0]?' | cột: '+Object.keys(j.data[0]).slice(0,14).join(','):'')}catch(e){}out.push(n+' → HTTP '+r.status+' · '+((performance.now()-t0)/1000).toFixed(1)+'s · '+Math.round(tx.length/1024)+' KB · '+keys)}catch(e){out.push(n+' → LỖI '+(e&&e.message)+' sau '+((performance.now()-t0)/1000).toFixed(1)+'s')}}return{out}})("+JSON.stringify(arg)+")";
+  try{const r=await view.webContents.executeJavaScript(js);
+    if(r.err){say('✕ Dò API: '+r.err);return}
+    log('🔬 Dò API nhanh (đơn vị mẫu '+(cfg&&cfg.label||'?')+'):\n  '+r.out.join('\n  '));
+    say('✅ Dò xong — xem kết quả trong nhật ký (bấm "Xem nhật ký")')}catch(e){say('✕ Dò API lỗi: '+(e&&e.message||e))}
+});
 ipcMain.handle('health',async()=>{
   say('🩺 Đang kiểm tra hệ thống…');const h=await healthCore();
   const lines=[(h.login?'✅ Đã đăng nhập gqtthc':'✕ CHƯA đăng nhập gqtthc — hãy đăng nhập ở khung bên dưới')];
