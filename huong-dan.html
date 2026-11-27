@@ -21,95 +21,32 @@ table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid 
 .box.hq{background:#fff6e5;border-color:#f0c985}.box.hq:hover{background:#e07b00;border-color:#e07b00}
 nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-shadow:0 1px 4px rgba(15,58,110,.12);font-size:14px}nav a{color:#0f3a6e;font-weight:700;text-decoration:none;margin-right:14px;white-space:nowrap}nav a:hover{text-decoration:underline}
 </style></head><body>
-<header><h1>📖 Hướng dẫn sử dụng — Đồng bộ DVC Lào Cai (gqtthc → Google Sheet)</h1><p><span style="display:inline-block;background:#e8f1ff;color:#0b2a66;font-weight:800;border-radius:12px;padding:2px 12px;opacity:1">Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai</span></p></header>
+<header><h1>📖 Hướng dẫn — Đồng bộ DVC Lào Cai</h1><p><span style="display:inline-block;background:#e8f1ff;color:#0b2a66;font-weight:800;border-radius:12px;padding:2px 12px">Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai</span></p></header>
 <main>
-<nav>Đi nhanh tới: <a href="#s0">Bắt đầu</a><a href="#s1">Lấy số liệu</a><a href="#s2">Nhiều đơn vị</a><a href="#s2b">Theo dõi &amp; kiểm tra</a><a href="#s03">Đồng bộ 03</a><a href="#s3">Mã đồng bộ</a><a href="#s4">Tự động</a><a href="#s5">Cập nhật</a><a href="#s6">Sự cố</a><a href="#web">🌐 Website các đơn vị</a></nav>
-
-<section id="s0"><h2><span>0</span>Bắt đầu nhanh</h2>
-<table><tr><th>Bạn muốn</th><th>Làm thế nào</th><th>Xem mục</th></tr>
-<tr><td>Lấy <b>đảng phí</b> của một xã</td><td>Đăng nhập gqtthc → ▾ ĐP các đơn vị → <span class="b">▶ Chạy</span> cạnh xã</td><td>1</td></tr>
-<tr><td>Lấy đảng phí <b>nhiều xã</b></td><td>Tích các xã → chọn tháng → <span class="g">▶ Lấy dữ liệu các đơn vị đã chọn</span></td><td>2</td></tr>
-<tr><td>Lấy <b>03 thủ tục hồ sơ</b> của 103 đơn vị</td><td>Chọn tháng → <span class="g">🔄 Đồng bộ 03 thủ tục</span> → nhập mã truy cập</td><td>2c</td></tr>
-<tr><td><b>Tự động</b> đồng bộ 03 thủ tục</td><td>Tích <span class="k">🔁 Tự động Đồng bộ 03 thủ tục (tháng hiện tại): mỗi … phút</span> (tối thiểu 30 phút). Giữ ứng dụng mở, đã đăng nhập gqtthc và đã lưu mã 03</td><td>2c, 4</td></tr>
-<tr><td><b>Đổi mã</b> đã lưu</td><td>Đồng bộ 03: bấm <span class="k">🔑 Đổi mã</span>. Xã: xem mục 3</td><td>2c, 3</td></tr>
-<tr><td>Cập nhật phần mềm</td><td><span class="k">Kiểm tra cập nhật</span> → <span class="g">⬇ Cập nhật lên bản …</span></td><td>5</td></tr></table>
-<div class="ok">Bản hiện hành: <b>1.1.91</b>. Tải bản cài: github.com/laocai-cds/dp-app/releases/latest (file <b>DP-DangPhi-Setup.exe</b>).</div></section>
-
-<section id="s1"><h2><span>1</span>Lấy số liệu một xã (cách dùng hằng ngày)</h2>
-<ol>
-<li>Trong khung gqtthc ở bên dưới, <b>đăng nhập</b> bằng tài khoản của bạn (ứng dụng nhớ phiên đăng nhập).</li>
-<li>Mở danh sách <span class="k">▾ ĐP các đơn vị</span> rồi bấm <span class="b">▶ Chạy</span> cạnh xã cần lấy, ví dụ <b>Võ Lao</b>.</li>
-<li>Lần đầu, ứng dụng hỏi <b>mã đồng bộ</b> của xã: nhập mã rồi bấm OK (mã được nhớ trên máy, lần sau không hỏi nữa).</li>
-<li>Chọn tháng nếu được hỏi. Chờ khung xanh ở góc phải trang báo <b>✅ HOÀN THÀNH</b>. Máy chủ gqtthc có thể mất 1–2 phút.</li>
-</ol>
-<div class="ok">Bấm xong thấy khung đỏ "đã gửi … nhưng chưa thấy Google Sheet cập nhật": thường là <b>mã đồng bộ sai</b>. Bấm lại nút xã đó, ứng dụng sẽ hỏi lại mã.</div></section>
-
-<section id="s2"><h2><span>2</span>Lấy nhiều đơn vị một lúc (chế độ quản trị)</h2>
-<ol>
-<li>Bấm ô <span class="k">▾ ĐP các đơn vị · đã chọn N</span> trên thanh công cụ: một danh sách <b>xổ xuống</b> hiện ra.</li>
-<li>Tích từng đơn vị cần lấy, hoặc tích <b>Tất cả</b> ở đầu danh sách. Bấm <span class="k">Xong</span> (hoặc bấm ra ngoài / phím Esc) để thu gọn; ô sẽ báo <b>số đơn vị đã chọn</b>.</li>
-<li>Muốn lấy riêng một đơn vị ngay: bấm <span class="b">▶ Chạy</span> cạnh tên đơn vị đó trong danh sách.</li>
-<li>Chọn <b>tháng</b>, rồi bấm <span class="g">▶ Lấy dữ liệu các đơn vị đã chọn</span>. Ứng dụng chạy lần lượt từng đơn vị (phần <b>tthc</b> luôn chạy cuối).</li>
-<li><b>Một đơn vị lỗi / bị ngắt không làm dừng cả lượt</b>: ứng dụng ghi "↷ bị gián đoạn" rồi chạy tiếp đơn vị kế. Chỉ khi bấm <b>■ Dừng</b> thì mới dừng toàn bộ.</li>
-</ol>
-<p><b>Thêm xã mới vào danh sách:</b> bấm <span class="k">➕ Thêm xã</span> (hoặc kéo nút ĐP từ website xã thả vào cửa sổ). Ứng dụng tự tải lại và xã mới <b>xuất hiện trong danh sách xổ xuống</b> như các đơn vị khác. <b>ĐP Tỉnh Lào Cai</b> chạy qua Apps Script <b>DP-CHUNG</b> (dùng chung một mã).</p>
-<div class="warn">Có thể thu nhỏ cửa sổ khi đang chạy, nhưng <b>đừng đóng hẳn ứng dụng</b>. Đơn vị nào chưa có mã thì bị bỏ qua, bấm <span class="b">▶ Chạy</span> riêng đơn vị đó một lần để nhập mã.</div></section>
-
-<section id="s2b"><h2><span>2b</span>Theo dõi kết quả, kiểm tra hệ thống, chạy nền</h2>
-<ul>
-<li><b>Trạng thái từng đơn vị:</b> trong danh sách xổ xuống, dưới tên mỗi đơn vị có dòng <b>✅ giờ chạy</b> (xanh), <b>✕ lỗi</b> (đỏ) hoặc <b>⚠ cũ</b> (đã quá 24 giờ).</li>
-<li><b>↻ Chạy lại đơn vị lỗi:</b> sau một lượt chạy, nếu có đơn vị lỗi thì hiện nút cam này; bấm một lần để chạy lại đúng các đơn vị đó.</li>
-<li><b>🩺 Kiểm tra hệ thống:</b> bảng tình trạng cho biết đã đăng nhập gqtthc chưa, địa chỉ Apps Script từng xã còn đúng không, lần đồng bộ gần nhất (🟢 mới &lt;6 giờ, 🟡 &lt;24 giờ, 🔴 cũ hơn 24 giờ, ✕ lỗi địa chỉ/kết nối) và DP-CHUNG đã hỗ trợ ĐP Tỉnh chưa.</li>
-<li><b>Cảnh báo dữ liệu cũ:</b> ứng dụng tự kiểm tra mỗi giờ; xã nào quá 24 giờ chưa đồng bộ thì hiện thông báo Windows (tối đa 12 giờ một lần).</li>
-<li><b>Chạy nền:</b> khi đã bật hẹn giờ hoặc tự động lấy dữ liệu, bấm ✕ đóng cửa sổ thì ứng dụng <b>thu xuống khay hệ thống</b> và vẫn chạy. Bấm biểu tượng ở khay để mở lại hoặc <b>Thoát hẳn</b>.</li>
-<li><b>Báo kết quả:</b> sau mỗi lượt chạy tự động có thông báo Windows ("n/m thành công"). Nếu nhập địa chỉ <b>Webhook</b> (https://…) ở hàng hẹn giờ, ứng dụng còn gửi tóm tắt tới đó (Slack, Discord, Make, bot Zalo…). Khi gqtthc hết phiên đăng nhập cũng có thông báo để bạn đăng nhập lại.</li>
-<li><b>Cấu hình từ xa:</b> khi có địa chỉ Apps Script hoặc đơn vị mới trên GitHub, ứng dụng tự tải về; đóng và mở lại ứng dụng để áp dụng.</li>
-</ul></section>
-
-<section id="s03"><h2><span>2c</span>Đồng bộ 03 thủ tục hồ sơ (chuyển sinh hoạt chính thức, tạm thời, nhận xét nơi cư trú)</h2>
-<p>Nút <span class="g">🔄 Đồng bộ 03 thủ tục</span> lấy số hồ sơ của <b>103 đơn vị</b> từ gqtthc và ghi vào Google Sheet “Theo dõi 03 thủ tục”. Số mới ghi đè số cũ của tháng đó.</p>
-<ol>
-<li>Đăng nhập gqtthc trong khung bên dưới (tài khoản quản trị cao nhất của đơn vị).</li>
-<li>Chọn <b>tháng</b> ở ô chọn tháng (nút chỉ lấy đúng tháng đang chọn).</li>
-<li>Bấm <span class="g">🔄 Đồng bộ 03 thủ tục</span>. Lần đầu (hoặc sau khi đổi mã) ứng dụng hỏi <b>mã truy cập Đồng bộ 03</b>: gõ mã (hiện rõ chữ, dùng bộ gõ tiếng Anh) rồi bấm <span class="k">Lưu và chạy</span>.</li>
-<li>Chờ khung ở góc phải báo <b>✅ HOÀN THÀNH</b> (có thể 1–2 phút, tối đa khoảng 90 phút nếu gqtthc chậm). Sheet và trang tthc tự cập nhật % tiến độ, thứ hạng.</li>
-</ol>
-<h3 style="font-size:14.5px;margin:10px 0 4px;color:#0f3a6e">Đổi mã truy cập đã lưu</h3>
-<ul><li>Bấm <span class="k">🔑 Đổi mã</span> cạnh nút Đồng bộ 03, gõ mã mới rồi chọn <span class="k">Lưu và chạy</span> (lưu và chạy luôn) hoặc <span class="k">Chỉ lưu mã</span> (chưa chạy).</li><li>Khi máy chủ báo <b>“Mã truy cập không hợp lệ”</b>, ứng dụng tự xóa mã sai; bấm lại nút để nhập lại hoặc dùng 🔑 Đổi mã.</li><li>Mã này là <b>mã chung của dự án “03 thủ tục”</b>, cũng là mã dùng khi đơn vị lưu cập nhật cán bộ phụ trách trên trang tthc. Mã chỉ lưu mã hóa trên máy bạn.</li></ul>
-<div class="warn">Lỗi sai mã thường do <b>bộ gõ tiếng Việt đang bật</b> (chữ bị thêm dấu) hoặc nhầm chữ hoa/thường. Hãy chuyển sang gõ tiếng Anh.</div>
-<h3 style="font-size:14.5px;margin:10px 0 4px;color:#0f3a6e">Số liệu được tính thế nào</h3>
-<ul><li>Tiếp nhận = đang xử lý + từ chối + xong; hoàn thành = xong; phải xử lý = tiếp nhận − từ chối.</li><li>Số của một đảng bộ đã <b>cộng cả các đơn vị cấp con</b> (chi bộ, đảng bộ cấp dưới, tối đa 5 cấp, mỗi đơn vị tính một lần), nên “tiếp nhận” có thể cao hơn dòng đảng bộ trên gqtthc (số từ chối có thể lệch); số phải xử lý và tiến độ không đổi.</li><li>Tiến độ mỗi thủ tục hồ sơ = 5% (có cán bộ phụ trách) + 5% (đã hướng dẫn quy trình) + 90% × hoàn thành ÷ phải xử lý.</li></ul></section>
-
-<section id="s3"><h2><span>3</span>Mã đồng bộ: mã chung và mã riêng</h2>
-<table><tr><th>Loại mã</th><th>Dùng khi nào</th></tr>
-<tr><td><b>Mã riêng</b> của từng xã</td><td>Nhập khi bấm nút xã. Chỉ dùng cho xã đó.</td></tr>
-<tr><td><b>Mã chung</b></td><td>Nhập vào ô <b>Mã chung</b> ở hàng Quản trị rồi bấm <span class="k">Lưu mã chung</span>. Dấu <b style="color:#169a4a">✓</b> xanh báo đã lưu. Xã nào chưa có mã riêng sẽ dùng mã chung. Nếu cấu hình qua Apps Script <b>DP-CHUNG</b>, một mã chung dùng được cho tất cả xã.</td></tr></table>
-<ul><li>Muốn xóa mã chung: xóa trống ô rồi bấm Lưu mã chung.</li><li>Nhập sai mã riêng của xã: ứng dụng tự xóa mã sai khi máy chủ báo không hợp lệ, bấm lại nút xã để nhập lại. Cách cuối: xóa thư mục <code>%APPDATA%\DP-DangPhi</code> rồi nhập lại.</li><li><b>Mã Đồng bộ 03</b> là mã riêng, không dùng Mã chung; đổi bằng nút <span class="k">🔑 Đổi mã</span> (mục 2c).</li></ul></section>
-
-<section id="s4"><h2><span>4</span>Tự động lấy dữ liệu</h2>
-<p><b>🔁 Tự động lấy dữ liệu (API đảng phí): mỗi [N] phút</b></p>
-<ul><li>Chọn đơn vị trong danh sách xổ xuống, tích ô 🔁, nhập số phút (<b>tối thiểu 5</b>; nên 15–30 phút nếu nhiều xã).</li><li>Mỗi N phút ứng dụng tự lấy số liệu các xã đã tích rồi đẩy lên Google Sheet. Lần đầu chạy sau N phút kể từ lúc bật.</li></ul>
-<p><b>⏰ Tự chạy hằng ngày lúc [giờ]</b></p>
-<ul><li>Chọn đơn vị, tích ô ⏰, chọn giờ (ví dụ 06:00). Chỉ chạy trong 3 giờ sau giờ hẹn, mỗi ngày một lần.</li><li>Tích <b>Tự mở cùng Windows</b> để ứng dụng tự bật khi mở máy.</li><li><span class="k">Chạy thử ngay</span> để kiểm tra; <span class="k">Xem nhật ký</span> để xem kết quả các lần chạy.</li></ul>
-<div class="warn">Điều kiện: máy <b>luôn bật</b>, ứng dụng <b>đang mở</b> và <b>đã đăng nhập gqtthc</b>. Nếu gqtthc hết phiên đăng nhập thì cần đăng nhập lại.</div></section>
-
-<section id="s5"><h2><span>5</span>Cập nhật phiên bản mới</h2>
-<ul><li>Góc trên bên trái ghi <b>"Phiên bản mới nhất: …"</b> (xanh = đang dùng bản mới nhất, vàng = còn bản mới hơn).</li><li>Bấm <span class="k">Kiểm tra cập nhật</span> rồi <span class="g">⬇ Cập nhật lên bản …</span>: ứng dụng tự tải, đóng, mở lại bằng bản mới (cài đặt và mã được giữ nguyên). Nên cập nhật khi <b>không đang chạy</b>.</li><li><b>Cách chắc chắn nhất:</b> tải <b>DP-DangPhi-Setup.exe</b> mới và chạy đè lên bản cũ. Ứng dụng sẽ <b>tự thay biểu tượng cũ ngoài Desktop/Start</b> trỏ về bản mới.</li><li>Nếu cập nhật xong vẫn hiện bản cũ: đóng hết cửa sổ DP-DangPhi, cài lại bằng Setup.exe. Có thể xem nhật ký cập nhật ở <code>%TEMP%\dp-update.log</code>.</li></ul></section>
-
-<section id="s6"><h2><span>6</span>Xử lý sự cố thường gặp</h2>
-<table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
-<tr><td>Chưa đăng nhập / không thấy tiến độ</td><td>Đăng nhập lại gqtthc trong khung bên dưới, bấm <span class="k">Trang gqtthc</span> hoặc <span class="k">Tải lại</span> rồi bấm lại nút xã.</td></tr>
-<tr><td>Lỗi 500 / 504, API chậm</td><td>Máy chủ gqtthc đang bận. Ứng dụng tự thử lại tối đa 3 lần. Nếu vẫn lỗi, chạy lại vào giờ ít người dùng (sáng sớm, trưa).</td></tr>
-<tr><td>"Đã gửi … nhưng chưa thấy Google Sheet cập nhật"</td><td>Mã đồng bộ sai. Bấm lại nút xã và nhập đúng mã.</td></tr>
-<tr><td>Đồng bộ 03 báo “Mã truy cập không hợp lệ”</td><td>Bấm <span class="k">🔑 Đổi mã</span>, gõ lại mã (bộ gõ tiếng Anh, đúng chữ hoa/thường) rồi Lưu và chạy.</td></tr>
-<tr><td>Nút xã báo "chưa có mã"</td><td>Bấm riêng nút xã đó một lần để nhập mã, hoặc lưu Mã chung.</td></tr>
-<tr><td>Chạy nhiều đơn vị, một đơn vị báo lỗi</td><td>Không cần làm gì: ứng dụng tự chạy tiếp các đơn vị còn lại. Xong lượt, chạy lại riêng đơn vị lỗi bằng <span class="b">▶ Chạy</span>.</td></tr>
-<tr><td>Muốn xem lịch sử các lần chạy</td><td>Bấm <span class="k">Xem nhật ký</span> (mở bằng Notepad).</td></tr></table></section>
-
-<section><h2><span>7</span>Cài đặt</h2>
-<ul><li><b>Bản một file:</b> tải <b>DP-DangPhi-Setup.exe</b> tại github.com/laocai-cds/dp-app/releases/latest, bấm đôi để cài (không cần quyền admin). Mở bằng biểu tượng DP-DangPhi ngoài Desktop hoặc trong Start.</li><li>Windows có thể cảnh báo: bấm <b>More info → Run anyway</b>.</li></ul></section>
-
-<section id="web"><h2><span>8</span>🌐 Website các đơn vị</h2><p>Bấm vào ô của đơn vị để mở website theo dõi thu nộp đảng phí trong trình duyệt.</p><div class="grid">
+<nav>Đi nhanh tới: <a href="#s1">Bắt đầu</a><a href="#s2">Lấy dữ liệu</a><a href="#s3">Đồng bộ 03</a><a href="#s4">Tự động</a><a href="#s5">Kiểm tra</a><a href="#s6">Mã</a><a href="#s7">Cập nhật</a><a href="#s8">Sự cố</a><a href="#web">🌐 Website</a></nav>
+<section id="s1"><h2><span>1</span>Bắt đầu (3 bước)</h2><ol><li>Đăng nhập <b>gqtthc</b> trong khung bên dưới (ứng dụng nhớ phiên).</li><li>Mở <span class="g">▾ ĐP các đơn vị</span>, bấm <span class="b">▶ Chạy</span> cạnh xã cần lấy. Lần đầu nhập <b>mã đồng bộ</b> của xã (lưu trên máy).</li><li>Chờ khung góc phải báo <b>✅ HOÀN THÀNH</b> (có thể 1–2 phút).</li></ol>
+<div class="warn">Dải đỏ <b>"mất phiên đăng nhập"</b> hiện ra: bấm <span class="k">🔑 Đăng nhập lại</span> rồi chạy lại.</div></section>
+<section id="s2"><h2><span>2</span>Lấy dữ liệu đảng phí</h2><table><tr><th>Muốn</th><th>Làm</th></tr>
+<tr><td>Nhiều xã</td><td>Tích các xã (hoặc <b>Tất cả</b>) → chọn tháng → <span class="g">▶ Lấy dữ liệu các đơn vị đã chọn</span>. Xã lỗi không làm dừng cả lượt.</td></tr>
+<tr><td>Chạy lại xã lỗi</td><td>Bấm nút cam <b>↻ Chạy lại đơn vị lỗi</b>.</td></tr>
+<tr><td>Dừng</td><td><b>■ Dừng</b> (cả lượt tự động cũng có nút <b>■ Dừng lượt tự động</b>).</td></tr>
+<tr><td>Thêm xã</td><td>Mục <b>Công cụ → ➕ Thêm xã</b>, hoặc kéo nút ĐP của site xã thả vào cửa sổ.</td></tr>
+<tr><td>Xem xã nào cũ</td><td>Trong danh sách, dòng dưới tên xã: <b>✅</b> mới (≤2 giờ), <b>🕒</b> hơi cũ (2–6 giờ), <b>⚠ cũ</b> (&gt;6 giờ), <b>✕</b> lỗi.</td></tr></table></section>
+<section id="s3"><h2><span>3</span>Đồng bộ 03 thủ tục (103 đơn vị)</h2><ol><li>Chọn <b>tháng</b> (chỉ lấy đúng tháng đang chọn).</li><li>Bấm <span class="g">🔄 Đồng bộ 03 thủ tục</span>. Lần đầu nhập <b>mã truy cập</b> (gõ bằng bộ gõ tiếng Anh) → <b>Lưu và chạy</b>.</li><li>Chờ <b>✅ HOÀN THÀNH</b>. Sheet và trang tthc tự cập nhật % và thứ hạng.</li></ol>
+<ul><li>Để nhanh, ứng dụng <b>dùng lại kết quả từng nhánh trong 60 phút</b>. Cần số mới ngay: bấm <span class="k">⚡ Lấy mới ngay</span>.</li><li>Đổi mã: <span class="k">🔑 Đổi mã</span>. Báo "Mã truy cập không hợp lệ" thường do đang bật gõ tiếng Việt hoặc nhầm chữ hoa/thường.</li><li>Tiếp nhận = đang xử lý + từ chối + xong · hoàn thành = xong · đảng bộ đã cộng cả đơn vị cấp con.</li></ul></section>
+<section id="s4"><h2><span>4</span>Tự động</h2><ul><li><b>🔁 Tự động lấy dữ liệu đảng phí:</b> tích xã, tích ô, nhập số phút (≥5, nên 15–30).</li><li><b>🔁 Tự động Đồng bộ 03:</b> tích ô, nhập số phút (≥30), đã lưu mã 03.</li><li><b>⏰ Tự chạy hằng ngày:</b> chọn xã, tích ô, chọn giờ (vd 06:00). Có <b>Tự mở cùng Windows</b>, <b>Chạy thử ngay</b>, <b>Xem nhật ký</b>.</li></ul>
+<div class="ok">Điều kiện: máy bật, ứng dụng mở (có thể thu nhỏ hoặc thu xuống khay), đã đăng nhập gqtthc. Xong mỗi lượt có thông báo Windows; nhập địa chỉ <b>Webhook</b> để nhận tóm tắt qua Zalo/Slack…</div></section>
+<section id="s5"><h2><span>5</span>Kiểm tra và đối chiếu</h2><ul><li><span class="k">🩺 Kiểm tra hệ thống</span>: đã đăng nhập chưa, địa chỉ Apps Script từng xã, lần đồng bộ gần nhất.</li><li><span class="k">🔍 Đối chiếu S02</span>: so số đảng viên và số tiền trong Sheet từng xã với sổ S02 của gqtthc (tháng hiện tại). Kết quả ghi vào nhật ký; lệch thì báo qua Webhook. <b>Tự chạy sau lượt tự chạy hằng ngày.</b> Đơn vị chưa lập sổ S02 không tính là lệch.</li><li>Cuối mỗi site xã có dòng <b>"Dữ liệu cập nhật lúc …"</b>: vàng &gt;2 giờ, đỏ &gt;6 giờ.</li></ul></section>
+<section id="s6"><h2><span>6</span>Mã đồng bộ</h2><table><tr><th>Mã</th><th>Dùng khi</th></tr><tr><td>Riêng từng xã</td><td>Nhập khi bấm nút xã.</td></tr><tr><td>Chung</td><td>Ô <b>Mã chung</b> → <b>Lưu mã chung</b> (✓ xanh). Xã chưa có mã riêng dùng mã này.</td></tr><tr><td>Mã 03</td><td>Riêng, không dùng mã chung; đổi bằng 🔑 Đổi mã.</td></tr></table>
+<p>Nhập sai: ứng dụng tự xóa mã sai, bấm lại để nhập. Cách cuối: xóa thư mục <code>%APPDATA%\DP-DangPhi</code>.</p></section>
+<section id="s7"><h2><span>7</span>Cập nhật và cài đặt</h2><ul><li>Góc trên trái ghi <b>"Phiên bản mới nhất"</b> (xanh = mới nhất, vàng = có bản mới). Bấm <span class="k">Kiểm tra cập nhật</span> → <b>⬇ Cập nhật lên bản …</b>; ứng dụng tự đóng và mở lại, giữ nguyên cài đặt và mã.</li><li>Cài mới hoặc đổi biểu tượng: tải <b>DP-DangPhi-Setup.exe</b> tại github.com/laocai-cds/dp-app/releases/latest, chạy đè (không cần quyền admin). Windows cảnh báo: <b>More info → Run anyway</b>.</li><li>Cập nhật không ăn: đóng hết cửa sổ, cài lại bằng Setup.exe. Nhật ký: <code>%TEMP%\dp-update.log</code>.</li></ul></section>
+<section id="s8"><h2><span>8</span>Sự cố thường gặp</h2><table><tr><th>Hiện tượng</th><th>Cách xử lý</th></tr>
+<tr><td>Dải đỏ mất phiên / không thấy tiến độ</td><td>Bấm <b>Đăng nhập lại</b> (VNeID/OTP), rồi chạy lại.</td></tr>
+<tr><td>Lỗi 500/504, API chậm</td><td>gqtthc đang bận. Ứng dụng tự thử lại 3 lần; chạy lại vào sáng sớm hoặc trưa.</td></tr>
+<tr><td>"Đã gửi … nhưng chưa thấy Sheet cập nhật"</td><td>Mã đồng bộ sai: bấm lại nút xã, nhập đúng mã.</td></tr>
+<tr><td>Xã báo "chưa có mã"</td><td>Bấm riêng xã đó một lần để nhập, hoặc lưu Mã chung.</td></tr>
+<tr><td>Cần xem lịch sử chạy</td><td>Bấm <b>Xem nhật ký</b>.</td></tr></table></section>
+<section id="web"><h2><span>9</span>🌐 Website các đơn vị</h2><p>Bấm vào ô của đơn vị để mở website theo dõi thu nộp đảng phí trong trình duyệt.</p><div class="grid">
 <a class="box hq" href="https://laocai-tthc.pages.dev/" target="_blank" rel="noopener"><b>Cổng thu nộp đảng phí tỉnh Lào Cai (tthc)</b><small>laocai-tthc.pages.dev</small></a>
 <a class="box" href="https://vanban.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Văn Bàn</b><small>vanban.pages.dev</small></a>
 <a class="box" href="https://xuanhoa.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Xuân Hòa</b><small>xuanhoa.pages.dev</small></a>
@@ -126,5 +63,4 @@ nav{background:#fff;margin:14px 0 0;border-radius:12px;padding:10px 16px;box-sha
 <a class="box" href="https://baoyen.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Bảo Yên</b><small>baoyen.pages.dev</small></a>
 <a class="box" href="https://xavolao.pages.dev/" target="_blank" rel="noopener"><b>Đảng bộ xã Võ Lao</b><small>xavolao.pages.dev</small></a>
 </div></section>
-
 </main></body></html>
