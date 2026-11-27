@@ -125,7 +125,7 @@ final class VC: UIViewController, WKNavigationDelegate, WKUIDelegate {
         let dark = UIColor(red: 0.059, green: 0.227, blue: 0.431, alpha: 1)
         let orange = UIColor(red: 0.91, green: 0.514, blue: 0.102, alpha: 1)
         let blue = UIColor(red: 0.18, green: 0.42, blue: 0.69, alpha: 1)
-        let title = UILabel(); title.text = "ĐỒNG BỘ ĐẢNG PHÍ 2026"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 12)
+        let title = UILabel(); title.text = "ĐỒNG BỘ DVC LÀO CAI"; title.textColor = .white; title.textAlignment = .center; title.font = UIFont.boldSystemFont(ofSize: 12)
         let author = UILabel(); author.text = "Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai"; author.textColor = UIColor(red: 0.75, green: 0.84, blue: 0.96, alpha: 1); author.textAlignment = .center; author.font = UIFont.systemFont(ofSize: 9); author.adjustsFontSizeToFitWidth = true
 
         pickBtn = btn("▼ Chọn ĐP", orange, .white, 11) { [weak self] in self?.pick() }

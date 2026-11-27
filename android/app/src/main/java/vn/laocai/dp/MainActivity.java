@@ -214,7 +214,7 @@ public class MainActivity extends Activity {
         linearLayout.setBackgroundColor(-15779218);
         linearLayout.setFitsSystemWindows(true);
         TextView textView = new TextView(this);
-        textView.setText("ĐỒNG BỘ ĐẢNG PHÍ 2026");
+        textView.setText("ĐỒNG BỘ DVC LÀO CAI");
         textView.setTextColor(-1);
         textView.setTypeface(Typeface.DEFAULT_BOLD);
         textView.setTextSize(16.0f);
