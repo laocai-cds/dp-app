@@ -184,6 +184,7 @@ ipcMain.handle('code:get',()=>readCodes().__all||'');
 ipcMain.handle('code:set',(e,id,c)=>{if(id!=='dong03'||!c)return{ok:false};const o=readCodes();o[id]=String(c).trim();writeCodes(o);return{ok:true}});
 ipcMain.handle('code:hasAll',()=>!!readCodes().__all);
 ipcMain.handle('stop',()=>{batchStop=true;return true});
+ipcMain.handle('autoBusy',()=>!!schedBusy);
 /* chạy một xã ở chế độ lô: chờ tới khi có kết quả (✅ xong / ✕ lỗi / bị hủy) */
 let lastActive=0;
 /* Dừng hẳn mọi việc còn dang dở trong trang gqtthc (tải lại trang) để lần chạy bị lỗi/hủy không chạy ngầm tiếp */
