@@ -108,7 +108,11 @@ function run03Bookmarklet(C){'use strict';
         if ((kidFail[id] || 0) > 25) throw new Error('lấy đơn vị con lỗi ' + kidFail[id] + ' đơn vị (' + lastErr[id] + ')');
         st[id] = '✓'; show(); return true;
       } catch (e2) { st[id] = '✕'; errs[id] = String(e2 && e2.message || e2).slice(0, 160); show(); return null; } };
-      { const dm = sel.has(curMo) ? curMo : [...sel][0]; FAST = await detectFast(dm); modeTxt = FAST ? '  ⚡ đường nhanh' : '  (đường chi tiết' + (fastWhy ? ' — ' + fastWhy : '') + ')'; }
+      { const dm = sel.has(curMo) ? curMo : [...sel][0];
+        /* kết quả kiểm tra 'đường nhanh' đúng được nhớ 24 giờ: bỏ bước kiểm tra (6 đơn vị x 3 thủ tục, cộng từng đơn vị con) rất tốn thời gian */
+        let fv = null; try { fv = JSON.parse(localStorage.getItem('dp03.fastv') || 'null'); } catch (e) {}
+        if (fv && fv.ok && Date.now() - fv.t < 864e5) { FAST = true; modeTxt = '  ⚡ đường nhanh (đã kiểm tra trong 24 giờ qua)'; }
+        else { FAST = await detectFast(dm); if (FAST) { try { localStorage.setItem('dp03.fastv', JSON.stringify({ ok: true, t: Date.now() })); } catch (e) {} } modeTxt = FAST ? '  ⚡ đường nhanh' : '  (đường chi tiết' + (fastWhy ? ' — ' + fastWhy : '') + ')'; } }
       const ti = setInterval(show, 1500);
       show();
       const ids = [10002, 10003, 10001];
