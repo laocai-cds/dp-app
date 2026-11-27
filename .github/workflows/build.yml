@@ -30,8 +30,7 @@ jobs:
           EV=$(node -p "require('electron/package.json').version")
           cp $D/resources/app.asar "app-electron-$EV.asar.bin"
           cp config.json dp-config.json
-          cd dist && 7z a -tzip -mx=9 ../DongBo-DVCLaoCai-win32-x64.zip DP-DangPhi-win32-x64
-          cd .. && cp DongBo-DVCLaoCai-win32-x64.zip DP-DangPhi-win32-x64.zip # bản tên cũ cho máy chưa cập nhật
+          cd dist && 7z a -tzip -mx=9 ../DP-DangPhi-win32-x64.zip DP-DangPhi-win32-x64
       - name: Bộ cài một file (Setup.exe)
         continue-on-error: true
         shell: bash
@@ -54,7 +53,6 @@ jobs:
           name: v${{ steps.ver.outputs.v }}
           target_commitish: ${{ github.sha }}
           files: |
-            DongBo-DVCLaoCai-win32-x64.zip
             DP-DangPhi-win32-x64.zip
             app-electron-*.asar.bin
             dp-config.json
