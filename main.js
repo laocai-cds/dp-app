@@ -6,7 +6,7 @@ let win,view;
 /* không cho Windows/Chromium làm chậm hoặc dừng trang khi cửa sổ bị thu nhỏ xuống thanh tác vụ */
 for(const s of ['disable-renderer-backgrounding','disable-background-timer-throttling','disable-backgrounding-occluded-windows'])app.commandLine.appendSwitch(s);
 app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
-const WIN_TITLE='Đồng bộ DVC Lào Cai - Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai';
+const WIN_TITLE='ĐỒNG BỘ DVC LÀO CAI - Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai';
 const exeDir=app.isPackaged?path.dirname(process.execPath):__dirname;
 function loadCfg(){
   for(const p of [path.join(exeDir,'config.json'),path.join(__dirname,'config.json')]){try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch(e){}}
@@ -98,7 +98,7 @@ window.__dpCancelled=false;})();\n`;
 let helpWin=null;
 ipcMain.handle('help:open',()=>{
   if(helpWin&&!helpWin.isDestroyed()){helpWin.show();helpWin.focus();return true}
-  helpWin=new BrowserWindow({width:900,height:780,parent:win,title:'Hướng dẫn sử dụng - Đồng bộ DVC Lào Cai',icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{sandbox:true}});
+  helpWin=new BrowserWindow({width:900,height:780,parent:win,title:'Hướng dẫn sử dụng - ĐỒNG BỘ DVC LÀO CAI',icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{sandbox:true}});
   helpWin.setMenuBarVisibility(false);helpWin.loadFile('huong-dan.html');
   helpWin.webContents.setWindowOpenHandler(({url})=>{if(/^https:\/\//.test(url))shell.openExternal(url);return{action:'deny'}});
   helpWin.webContents.on('will-navigate',(e,u)=>{if(!u.startsWith('file:')){e.preventDefault();if(/^https:\/\//.test(u))shell.openExternal(u)}});
@@ -125,7 +125,7 @@ ipcMain.on('pop:run',(e,id)=>{popClose();try{win.webContents.send('pop:run',id)}
 ipcMain.on('pop:close',()=>popClose());
 function createWindow(){
   win=new BrowserWindow({width:1320,height:860,title:WIN_TITLE,icon:path.join(__dirname,'build','icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),backgroundThrottling:false}});
-  win.setTitle(WIN_TITLE);win.on('close',e=>{try{const s=readSched();if(!quitting&&process.platform==='win32'){e.preventDefault();win.hide();setupTray();if(!trayTold){trayTold=true;notify('Đồng bộ DVC Lào Cai','Ứng dụng vẫn chạy nền ở khay hệ thống (góc phải thanh tác vụ, bấm mũi tên ^ nếu không thấy). Bấm biểu tượng để mở lại hoặc chọn Thoát hẳn.')}}}catch(_){}});win.on('page-title-updated',e=>e.preventDefault());win.on('resize',()=>popClose());win.on('minimize',()=>popClose());
+  win.setTitle(WIN_TITLE);win.on('close',e=>{try{const s=readSched();if(!quitting&&process.platform==='win32'){e.preventDefault();win.hide();setupTray();if(!trayTold){trayTold=true;notify('ĐỒNG BỘ DVC LÀO CAI','Ứng dụng vẫn chạy nền ở khay hệ thống (góc phải thanh tác vụ, bấm mũi tên ^ nếu không thấy). Bấm biểu tượng để mở lại hoặc chọn Thoát hẳn.')}}}catch(_){}});win.on('page-title-updated',e=>e.preventDefault());win.on('resize',()=>popClose());win.on('minimize',()=>popClose());
   win.loadFile('toolbar.html');
   /* mở lên phía trước và hiện giao diện (kể cả khi vừa tự khởi động lại sau cập nhật) */
   win.once('ready-to-show',()=>{try{if(win.isMinimized())win.restore();win.show();win.setAlwaysOnTop(true);win.focus();setTimeout(()=>{try{win.setAlwaysOnTop(false)}catch(_){}},1500)}catch(e){}});
@@ -402,7 +402,7 @@ setTimeout(syncRemoteCfg,25e3);setInterval(syncRemoteCfg,3*3600e3);
 /* chạy nền ở khay hệ thống khi đang bật hẹn giờ / tự động */
 let tray=null,quitting=false,trayTold=false;app.on('before-quit',()=>{quitting=true});
 const showWin=()=>{try{win.show();win.restore();win.focus()}catch(_){}};
-let tipText='';function tipSet(t){tipText=String(t||'');try{if(tray)tray.setToolTip(('Đồng bộ DVC Lào Cai'+(tipText?'\n'+tipText:' — đang chạy nền (bấm để mở)')).slice(0,127))}catch(_){}}
+let tipText='';function tipSet(t){tipText=String(t||'');try{if(tray)tray.setToolTip(('ĐỒNG BỘ DVC LÀO CAI'+(tipText?'\n'+tipText:' — đang chạy nền (bấm để mở)')).slice(0,127))}catch(_){}}
 function setupTray(){if(tray)return;Promise.resolve().then(()=>{const im=require('electron').nativeImage.createFromPath(path.join(__dirname,'build','icon.png'));if(im.isEmpty())throw 0;return im.resize({width:32,height:32})}).catch(()=>app.getFileIcon(process.execPath)).then(img=>{tray=new Tray(img);tipSet(tipText);
   tray.setContextMenu(Menu.buildFromTemplate([{label:'Mở cửa sổ',click:showWin},{label:'Thoát hẳn',click:()=>{quitting=true;app.quit()}}]));tray.on('click',showWin)}).catch(()=>{})}
 let fresh03=false; /* true: Đồng bộ 03 bỏ qua bộ nhớ nhánh 60 phút, lấy mới hoàn toàn */
@@ -439,7 +439,7 @@ async function runBatchMain(ids,label,opts){
   /* tải lại trang để làm mới phiên, kiểm tra còn đăng nhập */
   try{await new Promise(r=>{view.webContents.once('did-finish-load',r);view.webContents.loadURL(cfg.home);setTimeout(r,20000)});await new Promise(r=>setTimeout(r,2500))}catch(e){}
   let tok=false;try{tok=await view.webContents.executeJavaScript("!!localStorage.getItem('token')")}catch(e){}
-  if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc — hãy đăng nhập lại trong ứng dụng';say(t);log(t);notify('Đồng bộ DVC Lào Cai — hết phiên đăng nhập','gqtthc đã hết phiên. Hãy mở ứng dụng và đăng nhập lại để lần chạy sau lấy được dữ liệu.');hookPost('⚠ '+t);try{win.show()}catch(_){}return false}
+  if(!tok){const t='⚠ '+label+': chưa đăng nhập gqtthc — hãy đăng nhập lại trong ứng dụng';say(t);log(t);notify('ĐỒNG BỘ DVC LÀO CAI — hết phiên đăng nhập','gqtthc đã hết phiên. Hãy mở ứng dụng và đăng nhập lại để lần chạy sau lấy được dữ liệu.');hookPost('⚠ '+t);try{win.show()}catch(_){}return false}
   /* lượt tự động: bỏ qua xã không đổi (S02) */
   let skippedN=0,fpNow={},fpState=null;
   if(opts&&opts.smart){
@@ -472,7 +472,7 @@ async function runBatchMain(ids,label,opts){
   const t=label+' xong: '+res.join(' · ');say(t);log(t);
   { const okN=res.filter(s=>s.startsWith('✅')).length+skippedN,bad=res.filter(s=>!s.startsWith('✅')&&!s.startsWith('⏭'));
     {const dd=new Date(),q=n=>String(n).padStart(2,'0');tipSet(label+' xong '+q(dd.getHours())+':'+q(dd.getMinutes())+' · '+okN+'/'+(res.length-(skippedN?1:0)+skippedN)+' thành công'+(bad.length?' · '+bad.length+' lỗi':''))}
-    notify('Đồng bộ DVC Lào Cai — '+okN+'/'+(res.length-(skippedN?1:0)+skippedN)+' thành công',bad.length?('Chưa xong: '+bad.join(' · ').slice(0,200)):'Tất cả đơn vị đã đồng bộ.');hookPost(t.slice(0,900)) }
+    notify('ĐỒNG BỘ DVC LÀO CAI — '+okN+'/'+(res.length-(skippedN?1:0)+skippedN)+' thành công',bad.length?('Chưa xong: '+bad.join(' · ').slice(0,200)):'Tất cả đơn vị đã đồng bộ.');hookPost(t.slice(0,900)) }
   return true;
 }
 
@@ -595,7 +595,7 @@ async function prefetch(){
 const PS_UI=['$ver=$args[0]','$f=$null;$lb=$null',
   'function W($s){$e=(Get-Date).AddSeconds($s);while((Get-Date) -lt $e){try{[System.Windows.Forms.Application]::DoEvents()}catch{};Start-Sleep -Milliseconds 80}}',
   'function T($m){try{if($lb){$lb.Text=$m;[System.Windows.Forms.Application]::DoEvents()}}catch{}}',
-  'try{Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing;$f=New-Object System.Windows.Forms.Form;$f.Text="Đồng bộ DVC Lào Cai - Cập nhật";$f.ClientSize=New-Object System.Drawing.Size(420,90);$f.StartPosition="CenterScreen";$f.TopMost=$true;$f.ControlBox=$false;$f.FormBorderStyle="FixedDialog";$lb=New-Object System.Windows.Forms.Label;$lb.Location=New-Object System.Drawing.Point(14,12);$lb.Size=New-Object System.Drawing.Size(392,26);$lb.Font=New-Object System.Drawing.Font("Segoe UI",10);$lb.Text="Đang cài đặt bản mới…";$f.Controls.Add($lb);$pb=New-Object System.Windows.Forms.ProgressBar;$pb.Style="Marquee";$pb.MarqueeAnimationSpeed=25;$pb.Location=New-Object System.Drawing.Point(14,48);$pb.Size=New-Object System.Drawing.Size(392,22);$f.Controls.Add($pb);$f.Show();[System.Windows.Forms.Application]::DoEvents()}catch{$f=$null;$lb=$null}'];
+  'try{Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing;$f=New-Object System.Windows.Forms.Form;$f.Text="ĐỒNG BỘ DVC LÀO CAI - Cập nhật";$f.ClientSize=New-Object System.Drawing.Size(420,90);$f.StartPosition="CenterScreen";$f.TopMost=$true;$f.ControlBox=$false;$f.FormBorderStyle="FixedDialog";$lb=New-Object System.Windows.Forms.Label;$lb.Location=New-Object System.Drawing.Point(14,12);$lb.Size=New-Object System.Drawing.Size(392,26);$lb.Font=New-Object System.Drawing.Font("Segoe UI",10);$lb.Text="Đang cài đặt bản mới…";$f.Controls.Add($lb);$pb=New-Object System.Windows.Forms.ProgressBar;$pb.Style="Marquee";$pb.MarqueeAnimationSpeed=25;$pb.Location=New-Object System.Drawing.Point(14,48);$pb.Size=New-Object System.Drawing.Size(392,22);$f.Controls.Add($pb);$f.Show();[System.Windows.Forms.Application]::DoEvents()}catch{$f=$null;$lb=$null}'];
 async function installUpdate(){
   if(!latest||(!latest.asset&&!latest.light))return{err:'Chưa có file cập nhật trong Release (đợi GitHub Actions đóng gói xong hoặc tải tay từ trang Releases).'};
   if(!app.isPackaged||process.platform!=='win32')return{err:'Chỉ cập nhật tự động khi chạy bản .exe trên Windows.'};
