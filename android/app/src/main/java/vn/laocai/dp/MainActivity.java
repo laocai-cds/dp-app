@@ -1066,7 +1066,7 @@ public class MainActivity extends Activity {
     /* renamed from: lambda$checkUpdate$17$vn-laocai-dp-MainActivity, reason: not valid java name */
     /* synthetic */ void m0lambda$checkUpdate$17$vnlaocaidpMainActivity(boolean z, boolean z2) {
         if (z) {
-            this.updBtn.setText("⬆ Cập nhật bản " + installedCode() + " → " + this.newCode + " — bấm để cài");
+            this.updBtn.setText("⬇ Có bản mới " + this.newCode + " — bấm để tải APK về máy");
             this.updBtn.setBackground(shape(-2525434, -4959479));
             return;
         }
@@ -1083,6 +1083,15 @@ public class MainActivity extends Activity {
     }
 
     void startUpdate() {
+        if (true) {
+            try {
+                startActivity(new Intent("android.intent.action.VIEW", Uri.parse(UPD_BASE + "DongBo-DVCLaoCai.apk")));
+                say("Đang mở trang tải APK. Tải xong, mở file vừa tải để cài đè.");
+            } catch (Exception e) {
+                say("Không mở được trình duyệt để tải bản mới");
+            }
+            return;
+        }
         if (this.downloading) {
             return;
         }
