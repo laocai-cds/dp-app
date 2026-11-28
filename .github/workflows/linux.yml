@@ -1,0 +1,27 @@
+name: Build Linux app
+# Chỉ chạy tay (Actions → Build Linux app → Run workflow), không ảnh hưởng bản Windows/Android/iOS.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-24.04-arm, arch: arm64 }
+          - { os: ubuntu-24.04, arch: x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Đóng gói Linux (${{ matrix.arch }})
+        run: npx electron-builder --linux tar.gz AppImage --${{ matrix.arch }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DongBo-DVCLaoCai-linux-${{ matrix.arch }}
+          path: |
+            release/DongBo-DVCLaoCai-linux-*.tar.gz
+            release/DongBo-DVCLaoCai-linux-*.AppImage

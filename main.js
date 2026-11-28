@@ -6,6 +6,8 @@ let win,view;
 /* không cho Windows/Chromium làm chậm hoặc dừng trang khi cửa sổ bị thu nhỏ xuống thanh tác vụ */
 for(const s of ['disable-renderer-backgrounding','disable-background-timer-throttling','disable-backgrounding-occluded-windows'])app.commandLine.appendSwitch(s);
 app.commandLine.appendSwitch('disable-features','CalculateNativeWinOcclusion');
+/* Linux (VM/đám mây chạy bằng Remote Desktop): bỏ sandbox vì thường chạy bằng user thường không có quyền tạo sandbox */
+if(process.platform==='linux')app.commandLine.appendSwitch('no-sandbox');
 const WIN_TITLE='ĐỒNG BỘ DVC LÀO CAI - Phát triển bởi: Mr. Dũng - Phòng CĐS-CY VPTU Lào Cai';
 const exeDir=app.isPackaged?path.dirname(process.execPath):__dirname;
 function loadCfg(){
